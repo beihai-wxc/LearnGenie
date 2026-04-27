@@ -13,14 +13,8 @@
     "pdfParser": "Парсер",
     "pdfUpload": "Загрузить PDF",
     "removePdf": "Удалить файл",
-    "webSearchOn": "Включено",
-    "webSearchOff": "Нажмите для включения",
-    "webSearchDesc": "Поиск актуальной информации в интернете перед генерацией",
-    "webSearchProvider": "Поисковый движок",
-    "webSearchNoProvider": "Настройте API-ключ поиска в Настройках",
-    "selectProvider": "Выбрать провайдера",
-    "configureProvider": "Настроить модель",
-    "configureProviderHint": "Настройте хотя бы одного провайдера моделей для генерации курсов",
+    "generateClassroom": "Создать класс",
+    "uploadPdf": "Загрузить PDF",
     "enterClassroom": "Войти в класс",
     "advancedSettings": "Расширенные настройки",
     "ttsTitle": "Синтез речи",
@@ -120,10 +114,6 @@
     "skip": "Пропустить",
     "pause": "Пауза",
     "resume": "Продолжить"
-  },
-  "voice": {
-    "startListening": "Голосовой ввод",
-    "stopListening": "Остановить запись"
   },
   "stage": {
     "currentScene": "Текущая сцена",

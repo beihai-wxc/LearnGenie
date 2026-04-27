@@ -16,26 +16,22 @@ import { useDraftCache } from '@/lib/hooks/use-draft-cache';
 import type { UserRequirements } from '@/lib/types/generation';
 import type { SettingsSection } from '@/lib/types/settings';
 import { SettingsDialog } from '@/components/settings';
-import { HomeTopBar } from '@/components/home/home-top-bar';
 import { HomeHero } from '@/components/home/home-hero';
 import { Sidebar } from '@/components/sidebar/sidebar';
 
 const log = createLogger('HomePage');
 
-const WEB_SEARCH_STORAGE_KEY = 'webSearchEnabled';
 const INTERACTIVE_MODE_STORAGE_KEY = 'interactiveModeEnabled';
 
 interface FormState {
   pdfFile: File | null;
   requirement: string;
-  webSearch: boolean;
   interactiveMode: boolean;
 }
 
 const initialFormState: FormState = {
   pdfFile: null,
   requirement: '',
-  webSearch: false,
   interactiveMode: false,
 };
 
@@ -52,11 +48,9 @@ export default function Page() {
 
   useEffect(() => {
     try {
-      const savedWebSearch = localStorage.getItem(WEB_SEARCH_STORAGE_KEY);
       const savedInteractiveMode = localStorage.getItem(INTERACTIVE_MODE_STORAGE_KEY);
       setForm((prev) => ({
         ...prev,
-        webSearch: savedWebSearch === 'true',
         interactiveMode: savedInteractiveMode === 'true',
         requirement: cachedRequirement || prev.requirement,
       }));
@@ -76,7 +70,6 @@ export default function Page() {
   const updateForm = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     try {
-      if (field === 'webSearch') localStorage.setItem(WEB_SEARCH_STORAGE_KEY, String(value));
       if (field === 'interactiveMode') {
         localStorage.setItem(INTERACTIVE_MODE_STORAGE_KEY, String(value));
       }
@@ -134,7 +127,6 @@ export default function Page() {
         requirement: form.requirement,
         userNickname: userProfile.nickname || undefined,
         userBio: userProfile.bio || undefined,
-        webSearch: form.webSearch || undefined,
         interactiveMode: form.interactiveMode,
       };
 
@@ -199,57 +191,54 @@ export default function Page() {
         <div className="home-bg-glow home-bg-glow-right" />
         <div className="home-bg-grid" />
 
-      <SettingsDialog
-        open={settingsOpen}
-        onOpenChange={(open) => {
-          setSettingsOpen(open);
-          if (!open) setSettingsSection(undefined);
-        }}
-        initialSection={settingsSection}
-      />
-
-      <HomeTopBar
-        onSettingsOpen={() => setSettingsOpen(true)}
-        onScrollToHero={() => {
-          document
-            .getElementById('home-hero')
-            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }}
-      />
-
-      <main className="relative z-10 px-4 md:px-8">
-        <div className="mx-auto max-w-7xl">
-          <HomeHero
-            requirement={form.requirement}
-            onRequirementChange={(value) => updateForm('requirement', value)}
-            onSubmit={handleGenerate}
-            onSettingsOpen={(section) => {
-              setSettingsSection(section);
-              setSettingsOpen(true);
-            }}
-            onKeyDown={handleKeyDown}
-            pdfFile={form.pdfFile}
-            onPdfFileChange={(file) => updateForm('pdfFile', file)}
-            onPdfError={setError}
-            webSearch={form.webSearch}
-            onWebSearchChange={(value) => updateForm('webSearch', value)}
-            interactiveMode={form.interactiveMode}
-            onInteractiveModeChange={(value) => updateForm('interactiveMode', value)}
-            onVoiceTranscription={(text) => {
-              const next = form.requirement + (form.requirement ? ' ' : '') + text;
-              updateForm('requirement', next);
-            }}
-            canSubmit={canGenerate}
-            error={error}
-            classroomCount={0}
-          />
+        {/* Settings button - top right corner */}
+        <div className="fixed top-4 right-4 z-50">
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200/70 bg-white/75 text-slate-500 transition-colors hover:text-slate-900 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-400 dark:hover:text-white backdrop-blur-xl shadow-lg"
+            aria-label={t('settings.title')}
+          >
+            <Settings className="size-4" />
+          </button>
         </div>
-      </main>
 
-      <footer className="relative z-10 px-4 pb-6 pt-6 text-center text-xs text-slate-400 md:px-8 dark:text-slate-500">
-        LearnGenie • immersive AI classroom
-      </footer>
-    </div>
+        <SettingsDialog
+          open={settingsOpen}
+          onOpenChange={(open) => {
+            setSettingsOpen(open);
+            if (!open) setSettingsSection(undefined);
+          }}
+          initialSection={settingsSection}
+        />
+
+        <main className="relative z-10 px-4 md:px-8">
+          <div className="mx-auto max-w-7xl">
+            <HomeHero
+              requirement={form.requirement}
+              onRequirementChange={(value) => updateForm('requirement', value)}
+              onSubmit={handleGenerate}
+              onSettingsOpen={(section) => {
+                setSettingsSection(section);
+                setSettingsOpen(true);
+              }}
+              onKeyDown={handleKeyDown}
+              pdfFile={form.pdfFile}
+              onPdfFileChange={(file) => updateForm('pdfFile', file)}
+              onPdfError={setError}
+              interactiveMode={form.interactiveMode}
+              onInteractiveModeChange={(value) => updateForm('interactiveMode', value)}
+              canSubmit={canGenerate}
+              error={error}
+              classroomCount={0}
+            />
+          </div>
+        </main>
+
+        <footer className="relative z-10 px-4 pb-6 pt-6 text-center text-xs text-slate-400 md:px-8 dark:text-slate-500">
+          LearnGenie • immersive AI classroom
+        </footer>
+      </div>
     </>
   );
 }

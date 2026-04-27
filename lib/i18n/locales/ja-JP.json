@@ -11,16 +11,10 @@
   },
   "toolbar": {
     "pdfParser": "パーサー",
-    "pdfUpload": "PDFをアップロード",
+    "pdfUpload": "PDF をアップロード",
     "removePdf": "ファイルを削除",
-    "webSearchOn": "有効",
-    "webSearchOff": "クリックして有効化",
-    "webSearchDesc": "生成前にウェブ検索で最新情報を取得します",
-    "webSearchProvider": "検索エンジン",
-    "webSearchNoProvider": "設定画面で検索APIキーを設定してください",
-    "selectProvider": "プロバイダーを選択",
-    "configureProvider": "モデルを設定",
-    "configureProviderHint": "コースを生成するには、少なくとも1つのモデルプロバイダーを設定してください",
+    "generateClassroom": "教室を生成",
+    "uploadPdf": "PDF をアップロード",
     "enterClassroom": "教室に入る",
     "advancedSettings": "詳細設定",
     "ttsTitle": "音声合成",
@@ -120,10 +114,6 @@
     "skip": "スキップ",
     "pause": "一時停止",
     "resume": "再開"
-  },
-  "voice": {
-    "startListening": "音声入力",
-    "stopListening": "録音を停止"
   },
   "stage": {
     "currentScene": "現在のシーン",

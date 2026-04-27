@@ -19,11 +19,8 @@ interface HomeHeroProps {
   pdfFile: File | null;
   onPdfFileChange: (file: File | null) => void;
   onPdfError: (error: string | null) => void;
-  webSearch: boolean;
-  onWebSearchChange: (value: boolean) => void;
   interactiveMode: boolean;
   onInteractiveModeChange: (value: boolean) => void;
-  onVoiceTranscription: (text: string) => void;
   canSubmit: boolean;
   error: string | null;
   classroomCount: number;
@@ -112,7 +109,20 @@ export function HomeHero(props: HomeHeroProps) {
           transition={{ delay: 0.15, duration: 0.7, ease: 'easeOut' }}
           className="relative z-10 mt-10 w-full"
         >
-          <HomePromptBar {...props} />
+          <HomePromptBar
+            requirement={props.requirement}
+            onRequirementChange={props.onRequirementChange}
+            onSubmit={props.onSubmit}
+            onSettingsOpen={props.onSettingsOpen}
+            onKeyDown={props.onKeyDown}
+            pdfFile={props.pdfFile}
+            onPdfFileChange={props.onPdfFileChange}
+            onPdfError={props.onPdfError}
+            interactiveMode={props.interactiveMode}
+            onInteractiveModeChange={props.onInteractiveModeChange}
+            canSubmit={props.canSubmit}
+            error={props.error}
+          />
         </motion.div>
       </div>
     </section>
