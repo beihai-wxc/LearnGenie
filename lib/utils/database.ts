@@ -167,6 +167,27 @@ export interface GeneratedAgentRecord {
   createdAt: number;
 }
 
+export interface BookshelfRecord {
+  id: string; // PK (UUID)
+  title: string;
+  type: 'classroom' | 'document';
+  stageId?: string; // FK for classroom type
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
+  blobKey?: string;
+  category: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface BookshelfCategoryRecord {
+  id: string; // PK (category name)
+  name: string;
+  color?: string;
+  createdAt: number;
+}
+
 /** Build the compound primary key for mediaFiles: `${stageId}:${elementId}` */
 export function mediaFileKey(stageId: string, elementId: string): string {
   return `${stageId}:${elementId}`;
@@ -175,7 +196,7 @@ export function mediaFileKey(stageId: string, elementId: string): string {
 // ==================== Database Definition ====================
 
 const DATABASE_NAME = 'MAIC-Database';
-const _DATABASE_VERSION = 9;
+const _DATABASE_VERSION = 11;
 
 /**
  * MAIC Database Instance
@@ -186,12 +207,14 @@ class MAICDatabase extends Dexie {
   scenes!: EntityTable<SceneRecord, 'id'>;
   audioFiles!: EntityTable<AudioFileRecord, 'id'>;
   imageFiles!: EntityTable<ImageFileRecord, 'id'>;
-  snapshots!: EntityTable<Snapshot, 'id'>; // Undo/redo snapshots (legacy)
+  snapshots!: EntityTable<Snapshot, 'id'>;
   chatSessions!: EntityTable<ChatSessionRecord, 'id'>;
   playbackState!: EntityTable<PlaybackStateRecord, 'stageId'>;
   stageOutlines!: EntityTable<StageOutlinesRecord, 'stageId'>;
   mediaFiles!: EntityTable<MediaFileRecord, 'id'>;
   generatedAgents!: EntityTable<GeneratedAgentRecord, 'id'>;
+  bookshelf!: EntityTable<BookshelfRecord, 'id'>;
+  categories!: EntityTable<BookshelfCategoryRecord, 'id'>;
 
   constructor() {
     super(DATABASE_NAME);
@@ -343,6 +366,37 @@ class MAICDatabase extends Dexie {
           delete stage.language;
         });
       });
+
+    // Version 10: Add bookshelf table for user-uploaded documents
+    this.version(10).stores({
+      stages: 'id, updatedAt',
+      scenes: 'id, stageId, order, [stageId+order]',
+      audioFiles: 'id, createdAt',
+      imageFiles: 'id, createdAt',
+      snapshots: '++id',
+      chatSessions: 'id, stageId, [stageId+createdAt]',
+      playbackState: 'stageId',
+      stageOutlines: 'stageId',
+      mediaFiles: 'id, stageId, [stageId+type]',
+      generatedAgents: 'id, stageId',
+      bookshelf: 'id, type, category, createdAt',
+    });
+
+    // Version 11: Add categories table for bookshelf grouping
+    this.version(11).stores({
+      stages: 'id, updatedAt',
+      scenes: 'id, stageId, order, [stageId+order]',
+      audioFiles: 'id, createdAt',
+      imageFiles: 'id, createdAt',
+      snapshots: '++id',
+      chatSessions: 'id, stageId, [stageId+createdAt]',
+      playbackState: 'stageId',
+      stageOutlines: 'stageId',
+      mediaFiles: 'id, stageId, [stageId+type]',
+      generatedAgents: 'id, stageId',
+      bookshelf: 'id, type, category, createdAt',
+      categories: 'id',
+    });
   }
 }
 

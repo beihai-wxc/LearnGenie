@@ -449,7 +449,7 @@ export function useChatSessions(options: UseChatSessionsOptions = {}) {
           agentConfigs?: Record<string, unknown>[];
           [key: string]: unknown;
         };
-        userProfile?: { nickname?: string; bio?: string };
+        userProfile?: { nickname?: string; bio?: string; learningProfile?: import('@/lib/types/student-profile').StudentProfileDimensions };
         apiKey: string;
         baseUrl?: string;
         model?: string;
@@ -900,6 +900,7 @@ export function useChatSessions(options: UseChatSessionsOptions = {}) {
             userProfile: {
               nickname: userProfileState.nickname || undefined,
               bio: userProfileState.bio || undefined,
+              learningProfile: userProfileState.learningProfile,
             },
             apiKey: mc.apiKey,
             baseUrl: mc.baseUrl,
@@ -1111,6 +1112,7 @@ export function useChatSessions(options: UseChatSessionsOptions = {}) {
             userProfile: {
               nickname: userProfileState.nickname || undefined,
               bio: userProfileState.bio || undefined,
+              learningProfile: userProfileState.learningProfile,
             },
             apiKey: mc.apiKey,
             baseUrl: mc.baseUrl,
@@ -1253,6 +1255,7 @@ export function useChatSessions(options: UseChatSessionsOptions = {}) {
             userProfile: {
               nickname: userProfileState.nickname || undefined,
               bio: userProfileState.bio || undefined,
+              learningProfile: userProfileState.learningProfile,
             },
             apiKey: mc.apiKey,
             baseUrl: mc.baseUrl,
