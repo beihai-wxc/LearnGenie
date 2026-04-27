@@ -7,6 +7,7 @@
 import type { StatelessChatRequest } from '@/lib/types/chat';
 import type { AgentConfig } from '@/lib/orchestration/registry/types';
 import type { WhiteboardActionRecord, AgentTurnSummary } from './types';
+import type { StudentProfileDimensions } from '@/lib/types/student-profile';
 import { getActionDescriptions, getEffectiveActions } from './tool-schemas';
 import { buildStateContext } from './summarizers/state-context';
 import { buildVirtualWhiteboardContext } from './summarizers/whiteboard-ledger';
@@ -76,11 +77,65 @@ const MUTUAL_EXCLUSION_NOTE = `- IMPORTANT — Whiteboard / Canvas mutual exclus
 
 // ==================== Private helpers ====================
 
-function buildStudentProfileSection(userProfile?: { nickname?: string; bio?: string }): string {
-  if (!userProfile?.nickname && !userProfile?.bio) return '';
-  return `\n# Student Profile
-You are teaching ${userProfile.nickname || 'a student'}.${userProfile.bio ? `\nTheir background: ${userProfile.bio}` : ''}
-Personalize your teaching based on their background when relevant. Address them by name naturally.\n`;
+function buildStudentProfileSection(
+  userProfile?: {
+    nickname?: string;
+    bio?: string;
+    learningProfile?: StudentProfileDimensions;
+  },
+): string {
+  const hasBasicInfo = userProfile?.nickname || userProfile?.bio;
+  const hasProfile = !!userProfile?.learningProfile;
+  if (!hasBasicInfo && !hasProfile) return '';
+
+  let section = `\n# Student Profile\n`;
+  if (userProfile?.nickname) {
+    section += `You are teaching ${userProfile.nickname}.\n`;
+  } else {
+    section += `You are teaching a student.\n`;
+  }
+
+  if (userProfile?.bio) {
+    section += `Their background: ${userProfile.bio}\n`;
+  }
+
+  if (hasProfile && userProfile.learningProfile) {
+    const lp = userProfile.learningProfile;
+    const parts: string[] = [];
+
+    if (lp.knowledgeFoundation.score > 30) {
+      parts.push(`Knowledge foundation: ${lp.knowledgeFoundation.description}`);
+    }
+    if (lp.cognitiveStyle.score > 30 && lp.cognitiveStyle.style !== 'unknown') {
+      parts.push(`Cognitive style: ${lp.cognitiveStyle.style} learner — ${lp.cognitiveStyle.description}`);
+    }
+    if (lp.errorPronePatterns.score > 30 && lp.errorPronePatterns.patterns.length > 0) {
+      parts.push(`Common errors: ${lp.errorPronePatterns.description}`);
+    }
+    if (lp.learningPace.score > 30 && lp.learningPace.paceLevel !== 'unknown') {
+      parts.push(`Learning pace: ${lp.learningPace.paceLevel} — ${lp.learningPace.description}`);
+    }
+    if (lp.interestDirection.score > 30 && lp.interestDirection.areas.length > 0) {
+      parts.push(`Interests: ${lp.interestDirection.areas.join(', ')} — ${lp.interestDirection.description}`);
+    }
+    if (lp.metaCognitiveStrategy.score > 30 && lp.metaCognitiveStrategy.strategy !== 'unknown') {
+      parts.push(`Meta-cognitive strategy: ${lp.metaCognitiveStrategy.strategy} — ${lp.metaCognitiveStrategy.description}`);
+    }
+    if (lp.emotionalMotivation.score > 30 && lp.emotionalMotivation.motivation !== 'unknown') {
+      parts.push(`Motivation: ${lp.emotionalMotivation.motivation} — ${lp.emotionalMotivation.description}`);
+    }
+    if (lp.interactionPreference.score > 30 && lp.interactionPreference.preference !== 'unknown') {
+      parts.push(`Interaction preference: ${lp.interactionPreference.preference} — ${lp.interactionPreference.description}`);
+    }
+
+    if (parts.length > 0) {
+      section += `\n## Learning Profile (dynamically built from conversations)\n`;
+      section += parts.map((p) => `- ${p}`).join('\n') + '\n';
+    }
+  }
+
+  section += `Personalize your teaching based on their background and learning profile when relevant. Address them by name naturally.\n`;
+  return section;
 }
 
 function buildLanguageConstraint(langDirective?: string): string {
@@ -125,7 +180,11 @@ export function buildStructuredPrompt(
   storeState: StatelessChatRequest['storeState'],
   discussionContext?: DiscussionContext,
   whiteboardLedger?: WhiteboardActionRecord[],
-  userProfile?: { nickname?: string; bio?: string },
+  userProfile?: {
+    nickname?: string;
+    bio?: string;
+    learningProfile?: StudentProfileDimensions;
+  },
   agentResponses?: AgentTurnSummary[],
 ): string {
   // Determine current scene type for action filtering

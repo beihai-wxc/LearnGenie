@@ -218,6 +218,7 @@ export interface LectureNoteEntry {
 
 import type { Stage, Scene, StageMode } from '@/lib/types/stage';
 import type { AgentTurnSummary, WhiteboardActionRecord } from '@/lib/orchestration/types';
+import type { StudentProfileDimensions } from '@/lib/types/student-profile';
 
 /**
  * Accumulated director state passed between per-agent requests.
@@ -274,6 +275,7 @@ export interface StatelessChatRequest {
   userProfile?: {
     nickname?: string;
     bio?: string;
+    learningProfile?: StudentProfileDimensions;
   };
   /** OpenAI-compatible API credentials */
   apiKey: string;

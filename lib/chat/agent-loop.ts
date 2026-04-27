@@ -11,6 +11,7 @@
  */
 
 import type { StatelessEvent, DirectorState } from '@/lib/types/chat';
+import type { StudentProfileDimensions } from '@/lib/types/student-profile';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('AgentLoop');
@@ -34,7 +35,7 @@ export interface AgentLoopRequest {
     agentConfigs?: Record<string, unknown>[];
     [key: string]: unknown;
   };
-  userProfile?: { nickname?: string; bio?: string };
+  userProfile?: { nickname?: string; bio?: string; learningProfile?: StudentProfileDimensions };
   apiKey: string;
   baseUrl?: string;
   model?: string;
