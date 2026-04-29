@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { Brain, RefreshCw } from 'lucide-react';
 import * as echarts from 'echarts';
+import 'echarts-wordcloud';
 import { Sidebar } from '@/components/sidebar/sidebar';
 import { useUserProfileStore } from '@/lib/store/user-profile';
 import type { StudentProfileDimensions, DimensionKey } from '@/lib/types/student-profile';
@@ -114,34 +115,49 @@ function generateProfileSummary(learningProfile: StudentProfileDimensions | unde
   return `该生在学习上 ${highestName}表现最为突出，但在 ${lowestName}方面仍需加强，建议多关注 ${lowestName}的针对性练习。`;
 }
 
-// Simulated feature tags for word cloud
-const FEATURE_TAGS = [
-  { name: 'JavaScript基础', value: 35, category: '知识基础' },
-  { name: '异步编程', value: 28, category: '易错点' },
-  { name: '前端框架', value: 25, category: '兴趣方向' },
-  { name: 'React', value: 30, category: '兴趣方向' },
-  { name: '闭包', value: 22, category: '易错点' },
-  { name: '视觉型学习', value: 40, category: '认知风格' },
-  { name: '序列型', value: 35, category: '认知风格' },
-  { name: '自我检查', value: 32, category: '元认知' },
-  { name: '内在驱动', value: 38, category: '情感动机' },
-  { name: '成就感', value: 30, category: '情感动机' },
-  { name: '带例子', value: 45, category: '交互偏好' },
-  { name: 'TypeScript', value: 20, category: '知识基础' },
-  { name: 'API设计', value: 18, category: '兴趣方向' },
-  { name: '事件循环', value: 26, category: '易错点' },
-  { name: '全局型', value: 25, category: '认知风格' },
-  { name: '快节奏', value: 28, category: '学习节奏' },
-  { name: '独立探索', value: 22, category: '元认知' },
-  { name: '社交驱动', value: 20, category: '情感动机' },
-  { name: '带类比', value: 24, category: '交互偏好' },
-  { name: 'CSS布局', value: 15, category: '知识基础' },
-  { name: '状态管理', value: 28, category: '兴趣方向' },
-  { name: 'this指向', value: 24, category: '易错点' },
-  { name: '中等节奏', value: 30, category: '学习节奏' },
-  { name: 'Vue.js', value: 18, category: '兴趣方向' },
-  { name: '调试技巧', value: 20, category: '元认知' },
-];
+function extractWordCloudData(profile: StudentProfileDimensions | undefined) {
+  if (!profile) return [];
+  const tags: { name: string; value: number; category: string }[] = [];
+  const kf = profile.knowledgeFoundation;
+  if (kf?.score && kf.score > 0) {
+    (kf.keywords || []).forEach((kw) => tags.push({ name: kw, value: kf.score, category: '知识基础' }));
+  }
+  const cs = profile.cognitiveStyle;
+  if (cs?.score && cs.score > 0) {
+    (cs.keywords || []).forEach((kw) => tags.push({ name: kw, value: cs.score, category: '认知风格' }));
+    const styleMap: Record<string, string> = { visual: '视觉型', textual: '文本型', sequential: '序列型', global: '全局型', analytical: '分析型', intuitive: '直觉型' };
+    if (cs.style && cs.style !== 'unknown' && styleMap[cs.style]) tags.push({ name: styleMap[cs.style], value: cs.score, category: '认知风格' });
+  }
+  const ep = profile.errorPronePatterns;
+  if (ep?.score && ep.score > 0) {
+    (ep.patterns || []).forEach((p) => tags.push({ name: p, value: ep.score, category: '易错点' }));
+  }
+  const lp = profile.learningPace;
+  if (lp?.score && lp.score > 0) {
+    const paceMap: Record<string, string> = { slow: '慢节奏', medium: '中等节奏', fast: '快节奏' };
+    if (lp.paceLevel && lp.paceLevel !== 'unknown' && paceMap[lp.paceLevel]) tags.push({ name: paceMap[lp.paceLevel], value: lp.score, category: '学习节奏' });
+  }
+  const id = profile.interestDirection;
+  if (id?.score && id.score > 0) {
+    (id.areas || []).forEach((a) => tags.push({ name: a, value: id.score, category: '兴趣方向' }));
+  }
+  const mc = profile.metaCognitiveStrategy;
+  if (mc?.score && mc.score > 0) {
+    const strategyMap: Record<string, string> = { 'self-checking': '自我检查', 'direct-answer': '直接求答', 'independent-exploration': '独立探索', mixed: '混合型' };
+    if (mc.strategy && mc.strategy !== 'unknown' && strategyMap[mc.strategy]) tags.push({ name: strategyMap[mc.strategy], value: mc.score, category: '元认知' });
+  }
+  const em = profile.emotionalMotivation;
+  if (em?.score && em.score > 0) {
+    const motivationMap: Record<string, string> = { intrinsic: '内在驱动', extrinsic: '外在驱动', social: '社交驱动', achievement: '成就感', mixed: '混合型' };
+    if (em.motivation && em.motivation !== 'unknown' && motivationMap[em.motivation]) tags.push({ name: motivationMap[em.motivation], value: em.score, category: '情感动机' });
+  }
+  const ip = profile.interactionPreference;
+  if (ip?.score && ip.score > 0) {
+    const prefMap: Record<string, string> = { brief: '简答', detailed: '详答', 'with-code': '带代码', 'with-analogy': '带类比', 'with-example': '带例子', mixed: '混合型' };
+    if (ip.preference && ip.preference !== 'unknown' && prefMap[ip.preference]) tags.push({ name: prefMap[ip.preference], value: ip.score, category: '交互偏好' });
+  }
+  return tags;
+}
 
 export default function ProfilePage() {
   const radarChartRef = useRef<HTMLDivElement>(null);
@@ -410,39 +426,59 @@ export default function ProfilePage() {
         wordCloudChartInstance.current.dispose();
       }
       wordCloudChartInstance.current = echarts.init(wordCloudChartRef.current);
-      wordCloudChartInstance.current.setOption({
-        backgroundColor: 'transparent',
-        tooltip: { show: true, formatter: (p: any) => `${p.name}: ${p.value}` },
-        series: [
-          {
-            type: 'wordCloud',
-            shape: 'circle',
-            left: 'center',
-            top: 'center',
-            width: '90%',
-            height: '90%',
-            sizeRange: [14, 48],
-            rotationRange: [-45, 45],
-            rotationStep: 15,
-            gridSize: 8,
-            drawOutOfBound: false,
-            textStyle: {
-              fontFamily: 'sans-serif',
-              fontWeight: 'bold',
-              color: function () {
-                const colors = ['#0ea5e9', '#8b5cf6', '#ef4444', '#f59e0b', '#10b981', '#6366f1', '#ec4899', '#14b8a6'];
-                return colors[Math.floor(Math.random() * colors.length)];
+      const profile = useUserProfileStore.getState().learningProfile;
+      const wordCloudData = extractWordCloudData(profile);
+      if (wordCloudData.length === 0) {
+        wordCloudChartInstance.current.setOption({
+          backgroundColor: 'transparent',
+          graphic: [
+            {
+              type: 'text',
+              left: 'center',
+              top: 'center',
+              style: {
+                text: '暂无特征标签，开始对话后自动生成',
+                fill: '#94a3b8',
+                fontSize: 14,
               },
             },
-            emphasis: {
-              textStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.3)' },
+          ],
+        } as any as echarts.EChartsOption);
+      } else {
+        wordCloudChartInstance.current.setOption({
+          backgroundColor: 'transparent',
+          tooltip: { show: true, formatter: (p: any) => `${p.name}: ${p.value}` },
+          series: [
+            {
+              type: 'wordCloud',
+              shape: 'circle',
+              left: 'center',
+              top: 'center',
+              width: '90%',
+              height: '90%',
+              sizeRange: [14, 48],
+              rotationRange: [-45, 45],
+              rotationStep: 15,
+              gridSize: 8,
+              drawOutOfBound: false,
+              textStyle: {
+                fontFamily: 'sans-serif',
+                fontWeight: 'bold',
+                color: function () {
+                  const colors = ['#0ea5e9', '#8b5cf6', '#ef4444', '#f59e0b', '#10b981', '#6366f1', '#ec4899', '#14b8a6'];
+                  return colors[Math.floor(Math.random() * colors.length)];
+                },
+              },
+              emphasis: {
+                textStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.3)' },
+              },
+              data: wordCloudData.map((t) => ({ name: t.name, value: t.value })),
             },
-            data: FEATURE_TAGS.map((t) => ({ name: t.name, value: t.value })),
-          },
-        ],
-      } as echarts.EChartsOption);
+          ],
+        } as any as echarts.EChartsOption);
+      }
     }
-  }, []);
+  }, [learningProfile]);
 
   useEffect(() => {
     initCharts();
