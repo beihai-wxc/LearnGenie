@@ -27,6 +27,11 @@ export interface GenerationSessionState {
   researchSources?: Array<{ title: string; url: string }>;
   // Language directive inferred from outline generation
   languageDirective?: string;
+  // Optional knowledge-base ingest after successful generation
+  knowledgeIngest?: {
+    title: string;
+    text: string;
+  };
 }
 
 export type GenerationStep = {

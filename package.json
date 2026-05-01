@@ -11,6 +11,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "rag:build-index": "tsx rag/build-index.ts",
     "lint": "eslint",
     "check:i18n-keys": "node scripts/check-i18n-keys.mjs",
     "check": "prettier . --check",

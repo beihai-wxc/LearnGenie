@@ -8,15 +8,19 @@ import { nanoid } from 'nanoid';
 import { useRouter } from 'next/navigation';
 import { createLogger } from '@/lib/logger';
 import { useI18n } from '@/lib/hooks/use-i18n';
-import { storePdfBlob } from '@/lib/utils/image-storage';
+import { storeImages } from '@/lib/utils/image-storage';
 import { useSettingsStore } from '@/lib/store/settings';
 import { useUserProfileStore } from '@/lib/store/user-profile';
 import { useMediaGenerationStore } from '@/lib/store/media-generation';
 import { useDraftCache } from '@/lib/hooks/use-draft-cache';
 import type { UserRequirements } from '@/lib/types/generation';
 import type { SettingsSection } from '@/lib/types/settings';
+import type { PdfImage } from '@/lib/types/generation';
+import type { ParsedPdfContent } from '@/lib/types/pdf';
+import type { KnowledgeSearchResult } from '@/lib/knowledge-base/types';
 import { SettingsDialog } from '@/components/settings';
 import { HomeHero } from '@/components/home/home-hero';
+import { KnowledgeSearchResults } from '@/components/knowledge/knowledge-search-results';
 import { Sidebar } from '@/components/sidebar/sidebar';
 
 const log = createLogger('HomePage');
@@ -27,6 +31,24 @@ interface FormState {
   pdfFile: File | null;
   requirement: string;
   interactiveMode: boolean;
+}
+
+interface SessionDraft {
+  requirements: UserRequirements;
+  pdfText?: string;
+  pdfImages?: PdfImage[];
+  imageStorageIds?: string[];
+  knowledgeIngest?: {
+    title: string;
+    text: string;
+  };
+}
+
+interface KnowledgeResultPanelState {
+  title: string;
+  query: string;
+  results: KnowledgeSearchResult[];
+  fallbackSession: SessionDraft;
 }
 
 const initialFormState: FormState = {
@@ -43,6 +65,8 @@ export default function Page() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsSection, setSettingsSection] = useState<SettingsSection | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
+  const [isKnowledgeSearching, setIsKnowledgeSearching] = useState(false);
+  const [knowledgePanel, setKnowledgePanel] = useState<KnowledgeResultPanelState | null>(null);
   const { cachedValue: cachedRequirement, updateCache: updateRequirementCache } =
     useDraftCache<string>({ key: 'requirementDraft' });
 
@@ -69,6 +93,9 @@ export default function Page() {
 
   const updateForm = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+    if (field === 'requirement' || field === 'pdfFile') {
+      setKnowledgePanel(null);
+    }
     try {
       if (field === 'interactiveMode') {
         localStorage.setItem(INTERACTIVE_MODE_STORAGE_KEY, String(value));
@@ -103,6 +130,94 @@ export default function Page() {
     );
   };
 
+  const createGenerationSession = async (draft: SessionDraft) => {
+    const sessionState = {
+      sessionId: nanoid(),
+      requirements: draft.requirements,
+      pdfText: draft.pdfText || '',
+      pdfImages: draft.pdfImages || [],
+      imageStorageIds: draft.imageStorageIds || [],
+      sceneOutlines: null,
+      currentStep: 'generating' as const,
+      knowledgeIngest: draft.knowledgeIngest,
+    };
+    sessionStorage.setItem('generationSession', JSON.stringify(sessionState));
+    router.push('/generation-preview');
+  };
+
+  const parsePdfForKnowledge = async (file: File) => {
+    const parseFormData = new FormData();
+    parseFormData.append('pdf', file);
+
+    const settings = useSettingsStore.getState();
+    if (settings.pdfProviderId) {
+      parseFormData.append('providerId', settings.pdfProviderId);
+    }
+    const providerConfig = settings.pdfProvidersConfig?.[settings.pdfProviderId];
+    if (providerConfig?.apiKey?.trim()) {
+      parseFormData.append('apiKey', providerConfig.apiKey);
+    }
+    if (providerConfig?.baseUrl?.trim()) {
+      parseFormData.append('baseUrl', providerConfig.baseUrl);
+    }
+
+    const parseResponse = await fetch('/api/parse-pdf', {
+      method: 'POST',
+      body: parseFormData,
+    });
+    const parseJson = (await parseResponse.json()) as {
+      success?: boolean;
+      data?: ParsedPdfContent;
+      error?: string;
+    };
+    if (!parseResponse.ok || !parseJson.success || !parseJson.data) {
+      throw new Error(parseJson.error || t('generation.pdfParseFailed'));
+    }
+
+    const rawPdfImages = parseJson.data.metadata?.pdfImages;
+    const images: Array<{
+      id: string;
+      src: string;
+      pageNumber: number;
+      description?: string;
+      width?: number;
+      height?: number;
+    }> = rawPdfImages
+      ? rawPdfImages.map((img) => ({
+          id: img.id,
+          src: img.src || '',
+          pageNumber: img.pageNumber || 1,
+          description: img.description,
+          width: img.width,
+          height: img.height,
+        }))
+      : (parseJson.data.images || []).map((src, index) => ({
+          id: `img_${index + 1}`,
+          src,
+          pageNumber: 1,
+        }));
+
+    const imageStorageIds = await storeImages(
+      images.map((img) => ({ id: img.id, src: img.src, pageNumber: img.pageNumber })),
+    );
+
+    const pdfImages: PdfImage[] = images.map((img, index) => ({
+      id: img.id,
+      src: '',
+      pageNumber: img.pageNumber,
+      description: img.description,
+      width: img.width,
+      height: img.height,
+      storageId: imageStorageIds[index],
+    }));
+
+    return {
+      text: parseJson.data.text,
+      pdfImages,
+      imageStorageIds,
+    };
+  };
+
   const handleGenerate = async () => {
     if (!currentModelId) {
       showSetupToast(
@@ -114,66 +229,104 @@ export default function Page() {
       return;
     }
 
-    if (!form.requirement.trim()) {
+    if (!form.requirement.trim() && !form.pdfFile) {
       setError(t('upload.requirementRequired'));
       return;
     }
 
     setError(null);
+    setIsKnowledgeSearching(true);
 
     try {
       const userProfile = useUserProfileStore.getState();
-      const requirements: UserRequirements = {
-        requirement: form.requirement,
+      const baseRequirements: UserRequirements = {
+        requirement: form.requirement.trim(),
         userNickname: userProfile.nickname || undefined,
         userBio: userProfile.bio || undefined,
         interactiveMode: form.interactiveMode,
       };
 
-      let pdfStorageKey: string | undefined;
-      let pdfFileName: string | undefined;
-      let pdfProviderId: string | undefined;
-      let pdfProviderConfig: { apiKey?: string; baseUrl?: string } | undefined;
-
       if (form.pdfFile) {
-        pdfStorageKey = await storePdfBlob(form.pdfFile);
-        pdfFileName = form.pdfFile.name;
-
-        const settings = useSettingsStore.getState();
-        pdfProviderId = settings.pdfProviderId;
-        const providerConfig = settings.pdfProvidersConfig?.[settings.pdfProviderId];
-        if (providerConfig) {
-          pdfProviderConfig = {
-            apiKey: providerConfig.apiKey,
-            baseUrl: providerConfig.baseUrl,
-          };
+        const parsedPdf = await parsePdfForKnowledge(form.pdfFile);
+        const uploadMatchResponse = await fetch('/api/knowledge/match-upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: parsedPdf.text,
+            title: form.pdfFile.name.replace(/\.pdf$/i, ''),
+          }),
+        });
+        const uploadMatchJson = await uploadMatchResponse.json();
+        if (!uploadMatchResponse.ok || !uploadMatchJson.success) {
+          throw new Error(uploadMatchJson.error || 'Knowledge match failed');
         }
+
+        const finalRequirement =
+          baseRequirements.requirement || uploadMatchJson.recommendedRequirement;
+        const fallbackSession: SessionDraft = {
+          requirements: { ...baseRequirements, requirement: finalRequirement },
+          pdfText: parsedPdf.text,
+          pdfImages: parsedPdf.pdfImages,
+          imageStorageIds: parsedPdf.imageStorageIds,
+          knowledgeIngest: {
+            title: form.pdfFile.name.replace(/\.pdf$/i, ''),
+            text: parsedPdf.text,
+          },
+        };
+
+        if (uploadMatchJson.matched && uploadMatchJson.results?.length > 0) {
+          setKnowledgePanel({
+            title: '发现相似的人工智能课程资料',
+            query: form.pdfFile.name,
+            results: uploadMatchJson.results as KnowledgeSearchResult[],
+            fallbackSession,
+          });
+          return;
+        }
+
+        await createGenerationSession(fallbackSession);
+        return;
       }
 
-      const sessionState = {
-        sessionId: nanoid(),
-        requirements,
-        pdfText: '',
-        pdfImages: [],
-        imageStorageIds: [],
-        pdfStorageKey,
-        pdfFileName,
-        pdfProviderId,
-        pdfProviderConfig,
-        sceneOutlines: null,
-        currentStep: 'generating' as const,
+      const knowledgeResponse = await fetch('/api/knowledge/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: baseRequirements.requirement,
+          intent: 'learn',
+        }),
+      });
+      const knowledgeJson = await knowledgeResponse.json();
+      if (!knowledgeResponse.ok || !knowledgeJson.success) {
+        throw new Error(knowledgeJson.error || 'Knowledge search failed');
+      }
+
+      const fallbackSession: SessionDraft = {
+        requirements: baseRequirements,
       };
-      sessionStorage.setItem('generationSession', JSON.stringify(sessionState));
-      router.push('/generation-preview');
+
+      if (knowledgeJson.matched && knowledgeJson.results?.length > 0) {
+        setKnowledgePanel({
+          title: '发现相关的人工智能课程知识',
+          query: baseRequirements.requirement,
+          results: knowledgeJson.results as KnowledgeSearchResult[],
+          fallbackSession,
+        });
+        return;
+      }
+
+      await createGenerationSession(fallbackSession);
     } catch (generationError) {
       log.error('Error preparing generation', generationError);
       setError(
         generationError instanceof Error ? generationError.message : t('upload.generateFailed'),
       );
+    } finally {
+      setIsKnowledgeSearching(false);
     }
   };
 
-  const canGenerate = !!form.requirement.trim();
+  const canGenerate = !!form.requirement.trim() || !!form.pdfFile;
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
@@ -228,10 +381,18 @@ export default function Page() {
               onPdfError={setError}
               interactiveMode={form.interactiveMode}
               onInteractiveModeChange={(value) => updateForm('interactiveMode', value)}
-              canSubmit={canGenerate}
+              canSubmit={canGenerate && !isKnowledgeSearching}
               error={error}
               classroomCount={0}
             />
+            {knowledgePanel ? (
+              <KnowledgeSearchResults
+                title={knowledgePanel.title}
+                query={knowledgePanel.query}
+                results={knowledgePanel.results}
+                onBack={() => createGenerationSession(knowledgePanel.fallbackSession)}
+              />
+            ) : null}
           </div>
         </main>
 
