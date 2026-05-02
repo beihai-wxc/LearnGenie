@@ -13,15 +13,9 @@
     "pdfParser": "محلل PDF",
     "pdfUpload": "رفع PDF",
     "removePdf": "إزالة الملف",
-    "webSearchOn": "مُفعّل",
-    "webSearchOff": "انقر للتفعيل",
-    "webSearchDesc": "البحث في الإنترنت عن معلومات محدّثة قبل التوليد",
-    "webSearchProvider": "مزوّد البحث",
-    "webSearchNoProvider": "قم بإعداد مفتاح API للبحث من صفحة الإعدادات",
-    "selectProvider": "اختر المزوّد",
-    "configureProvider": "إعداد المزوّد",
-    "configureProviderHint": "قم بتكوين مزوّد نماذج واحد على الأقل لتوليد المقررات",
-    "interactiveModeHint": "تفعيل وضع التفاعل_first للمحتوى العملي",
+    "generateClassroom": "توليد الفصل",
+    "uploadPdf": "رفع PDF",
+    "interactiveModeHint": "تفعيل وضع التفاعل-first للمحتوى العملي",
     "interactiveModeLabel": "وضع التفاعل",
     "enterClassroom": "دخول الفصل",
     "advancedSettings": "إعدادات متقدمة",
@@ -120,10 +114,6 @@
     "skip": "تخطي",
     "pause": "إيقاف مؤقت",
     "resume": "استئناف"
-  },
-  "voice": {
-    "startListening": "إدخال صوتي",
-    "stopListening": "إيقاف التسجيل"
   },
   "stage": {
     "currentScene": "المشهد الحالي",

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Plus, Search, FolderPlus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { nanoid } from 'nanoid';
-import * as echarts from 'echarts';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { cn } from '@/lib/utils';
 import { Sidebar } from '@/components/sidebar/sidebar';
@@ -35,8 +34,6 @@ import type { BookshelfCategoryRecord } from '@/lib/utils/database';
 export default function BookshelfPage() {
   const { t } = useI18n();
   const router = useRouter();
-  const pieChartRef = useRef<HTMLDivElement>(null);
-  const pieChartInstance = useRef<echarts.ECharts | null>(null);
 
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -84,95 +81,6 @@ export default function BookshelfPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  // Init pie chart
-  const initPieChart = useCallback(() => {
-    if (!pieChartRef.current) return;
-    if (pieChartInstance.current) {
-      pieChartInstance.current.dispose();
-    }
-    pieChartInstance.current = echarts.init(pieChartRef.current);
-
-    const classroomCount = classrooms.length;
-    const docCount = documents.length;
-    const total = classroomCount + docCount;
-
-    const option: echarts.EChartsOption = {
-      backgroundColor: 'transparent',
-      tooltip: {
-        trigger: 'item',
-        formatter: '{b}: {c} ({d}%)',
-      },
-      series: [
-        {
-          type: 'pie',
-          radius: ['40%', '70%'],
-          avoidLabelOverlap: false,
-          label: {
-            show: true,
-            position: 'outside',
-            formatter: '{b}\n{c}',
-            fontSize: 12,
-          },
-          emphasis: {
-            label: { show: true, fontSize: 14, fontWeight: 'bold' },
-          },
-          data: [
-            { value: classroomCount, name: 'AI 课堂', itemStyle: { color: '#0ea5e9' } },
-            { value: docCount, name: '上传文档', itemStyle: { color: '#10b981' } },
-          ],
-        },
-      ],
-      graphic: total === 0
-        ? [
-            {
-              type: 'text',
-              left: 'center',
-              top: 'center',
-              style: {
-                text: '暂无数据',
-                fill: '#94a3b8',
-                fontSize: 14,
-              },
-            },
-          ]
-        : [
-            {
-              type: 'text',
-              left: 'center',
-              top: '48%',
-              style: {
-                text: String(total),
-                fill: '#64748b',
-                fontSize: 28,
-                fontWeight: 'bold',
-              },
-            },
-            {
-              type: 'text',
-              left: 'center',
-              top: '58%',
-              style: {
-                text: '总计',
-                fill: '#94a3b8',
-                fontSize: 12,
-              },
-            },
-          ],
-    };
-
-    pieChartInstance.current.setOption(option);
-  }, [classrooms, documents]);
-
-  useEffect(() => {
-    initPieChart();
-    const handleResize = () => pieChartInstance.current?.resize();
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      pieChartInstance.current?.dispose();
-    };
-  }, [initPieChart]);
 
   // Actions
   const handleOpenClassroom = (id: string) => {
@@ -377,34 +285,6 @@ export default function BookshelfPage() {
             <BookshelfEmpty onUploadClick={() => setShowUpload(true)} />
           ) : (
             <>
-              {/* Stats overview */}
-              <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-4">
-                <div className="col-span-1 rounded-2xl border border-slate-200/50 bg-white/80 p-4 shadow-sm dark:border-slate-700/50 dark:bg-slate-900/80">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">AI 课堂</p>
-                  <p className="mt-1 text-2xl font-bold text-sky-600">{classrooms.length}</p>
-                </div>
-                <div className="col-span-1 rounded-2xl border border-slate-200/50 bg-white/80 p-4 shadow-sm dark:border-slate-700/50 dark:bg-slate-900/80">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">上传文档</p>
-                  <p className="mt-1 text-2xl font-bold text-emerald-600">{documents.length}</p>
-                </div>
-                <div className="col-span-1 rounded-2xl border border-slate-200/50 bg-white/80 p-4 shadow-sm dark:border-slate-700/50 dark:bg-slate-900/80">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">分类</p>
-                  <p className="mt-1 text-2xl font-bold text-purple-600">{categories.length}</p>
-                </div>
-                <div className="col-span-1 rounded-2xl border border-slate-200/50 bg-white/80 p-4 shadow-sm dark:border-slate-700/50 dark:bg-slate-900/80">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">总计</p>
-                  <p className="mt-1 text-2xl font-bold text-slate-700 dark:text-slate-300">
-                    {classrooms.length + documents.length}
-                  </p>
-                </div>
-              </div>
-
-              {/* Pie chart */}
-              <div className="mb-6 rounded-2xl border border-slate-200/50 bg-white/80 p-4 shadow-sm dark:border-slate-700/50 dark:bg-slate-900/80">
-                <h2 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-300">内容分布</h2>
-                <div ref={pieChartRef} className="h-[200px]" />
-              </div>
-
               {/* Tab content */}
               {(activeTab === 'all' || activeTab === 'classroom') && classrooms.length > 0 && (
                 <div className="mb-8">

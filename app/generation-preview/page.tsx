@@ -810,6 +810,21 @@ function GenerationPreviewContent() {
         }),
       );
 
+      if (currentSession.knowledgeIngest?.text?.trim()) {
+        try {
+          await fetch('/api/knowledge/ingest', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: currentSession.knowledgeIngest.title,
+              text: currentSession.knowledgeIngest.text,
+            }),
+          });
+        } catch (ingestError) {
+          log.warn('[KnowledgeIngest] Failed after classroom generation:', ingestError);
+        }
+      }
+
       sessionStorage.removeItem('generationSession');
       await store.saveToStorage();
       router.push(`/classroom/${stage.id}`);
