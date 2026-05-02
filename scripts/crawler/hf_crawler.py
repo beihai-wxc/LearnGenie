@@ -43,13 +43,11 @@ HEADERS = {
     "Connection": "keep-alive",
 }
 
-# 代理配置（如果需要）
-# 取消注释并修改以下行来使用代理
-# PROXIES = {
-#     "http": "http://127.0.0.1:7890",   # 修改为你的 HTTP 代理地址
-#     "https": "http://127.0.0.1:7890",  # 修改为你的 HTTPS 代理地址
-# }
-PROXIES = None  # 默认不使用代理
+# 代理配置（Clash）
+PROXIES = {
+    "http": "http://127.0.0.1:7897",   # Clash HTTP 代理地址
+    "https": "http://127.0.0.1:7897",  # Clash HTTPS 代理地址
+}
 
 BLOG_BASE = "https://huggingface.co/blog"
 
@@ -131,34 +129,61 @@ def generate_summary(text: str, max_len: int = 200) -> str:
 
 
 def classify_module(title: str, content: str, source: str) -> str:
-    """根据内容分类到课程模块"""
+    """根据内容分类到课程模块 - 基于 Huggingface 库的特定分类"""
     text = (title + " " + content).lower()
 
-    # 模块分类规则
-    if any(kw in text for kw in ['transformer', 'bert', 'gpt', 'llm', '大语言模型', 'nlp', '自然语言处理']):
-        return "07_计算机视觉与NLP概览"
-    elif any(kw in text for kw in ['cnn', 'vision', '图像', '目标检测', 'computer vision']):
-        return "07_计算机视觉与NLP概览"
-    elif any(kw in text for kw in ['reinforcement learning', '强化学习', 'agent', '智能体', 'rl']):
+    # 根据 Huggingface 库名称进行分类（优先级最高）
+    library_modules = {
+        # 09_模型微调与优化
+        'peft': '09_模型微调与优化',
+        'trl': '09_模型微调与优化',
+
+        # 10_生成式AI与多模态
+        'diffusers': '10_生成式AI与多模态',
+
+        # 11_数据处理与工程
+        'datasets': '11_数据处理与工程',
+        'tokenizers': '11_数据处理与工程',
+
+        # 12_模型部署与工程化
+        'accelerate': '12_模型部署与工程化',
+        'optimum': '12_模型部署与工程化',
+        'safetensors': '12_模型部署与工程化',
+        'timm': '12_模型部署与工程化',
+
+        # 07_计算机视觉与NLP概览
+        'transformers': '07_计算机视觉与NLP概览',
+
+        # 评估与测试
+        'evaluate': '11_数据处理与工程',
+        'lighteval': '11_数据处理与工程',
+
+        # 其他工具
+        'autotrain': '09_模型微调与优化',
+        'lerobot': '08_强化学习与智能体',
+        'bitsandbytes': '12_模型部署与工程化',
+    }
+
+    # 检查标题中的库名称
+    for lib, module in library_modules.items():
+        if lib in title.lower() or lib in text[:500]:  # 只检查前500字符
+            return module
+
+    # 基于内容关键词的分类（备用规则）
+    if any(kw in text for kw in ['reinforcement learning', '强化学习', 'agent', '智能体', 'rl', 'robot']):
         return "08_强化学习与智能体"
-    elif any(kw in text for kw in ['neural network', '神经网络', 'deep learning', '深度学习', 'cnn', 'rnn']):
-        return "06_神经网络与深度学习"
-    elif any(kw in text for kw in ['supervised learning', '监督学习', 'classification', 'regression', '分类', '回归']):
-        return "04_监督学习"
-    elif any(kw in text for kw in ['unsupervised learning', '无监督学习', 'clustering', '聚类', 'pca', '降维']):
-        return "05_无监督学习与聚类"
-    elif any(kw in text for kw in ['machine learning', 'ml', '机器学习基础', '特征工程', '过拟合', '泛化']):
-        return "03_机器学习基础"
-    elif any(kw in text for kw in ['knowledge', '知识表示', 'search', '搜索', 'expert system', '专家系统']):
-        return "02_知识表示与搜索"
-    elif any(kw in text for kw in ['fine-tuning', '微调', 'peft', 'lora', 'adapter', '训练', 'optimization']):
-        return "09_模型微调与优化"
-    elif any(kw in text for kw in ['diffusion', '生成模型', 'generative', '图像生成', 'text-to-image']):
+    elif any(kw in text for kw in ['diffusion', '生成模型', 'generative', '图像生成', 'text-to-image', 'stable diffusion']):
         return "10_生成式AI与多模态"
-    elif any(kw in text for kw in ['dataset', 'datasets', '数据', '数据处理', '数据增强']):
-        return "11_数据处理与工程"
-    elif any(kw in text for kw in ['deployment', '推理', 'inference', 'production', '部署', '优化']):
+    elif any(kw in text for kw in ['fine-tuning', '微调', 'lora', 'adapter', 'parameter-efficient', 'peft']):
+        return "09_模型微调与优化"
+    elif any(kw in text for kw in ['deployment', '推理', 'inference', 'production', '部署', 'optimization', '量化', 'quantization']):
         return "12_模型部署与工程化"
+    elif any(kw in text for kw in ['dataset', '数据', '数据处理', '数据增强', 'preprocessing']):
+        return "11_数据处理与工程"
+    elif any(kw in text for kw in ['vision', '图像', '目标检测', 'image', 'cnn', 'computer vision']) and 'nlp' not in text:
+        return "07_计算机视觉与NLP概览"
+    elif any(kw in text for kw in ['nlp', '自然语言处理', 'text', 'tokenization', 'bert', 'gpt']):
+        return "07_计算机视觉与NLP概览"
     else:
         return "扩展阅读资料"
 
