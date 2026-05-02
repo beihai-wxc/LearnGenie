@@ -15,6 +15,8 @@ import os
 import re
 import json
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 import argparse
@@ -22,9 +24,32 @@ import time
 from datetime import datetime
 from typing import List, Dict, Any
 
+# 配置请求会话，添加重试机制
+session = requests.Session()
+retry_strategy = Retry(
+    total=3,  # 总重试次数
+    backoff_factor=2,  # 重试间隔倍数
+    status_forcelist=[429, 500, 502, 503, 504],  # 需要重试的 HTTP 状态码
+)
+adapter = HTTPAdapter(max_retries=retry_strategy)
+session.mount("http://", adapter)
+session.mount("https://", adapter)
+
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
 }
+
+# 代理配置（如果需要）
+# 取消注释并修改以下行来使用代理
+# PROXIES = {
+#     "http": "http://127.0.0.1:7890",   # 修改为你的 HTTP 代理地址
+#     "https": "http://127.0.0.1:7890",  # 修改为你的 HTTPS 代理地址
+# }
+PROXIES = None  # 默认不使用代理
 
 BLOG_BASE = "https://huggingface.co/blog"
 
@@ -175,11 +200,14 @@ def convert_to_knowledge_doc(
 def crawl_blog(output_file: str, max_articles: int = None):
     """爬取 Huggingface Blog"""
     print("[Start] 正在爬取 Huggingface Blog...")
+    print(f"[Info] 代理设置: {'已启用' if PROXIES else '未启用'}")
 
     documents = []
 
     try:
-        res = requests.get(BLOG_BASE, headers=HEADERS, timeout=30)
+        print(f"[Progress] 正在获取博客列表...")
+        res = session.get(BLOG_BASE, headers=HEADERS, proxies=PROXIES, timeout=60)
+        res.raise_for_status()
         soup = BeautifulSoup(res.text, "html.parser")
         links = soup.select("a[href^='/blog/']")
         urls = list(set(urljoin(BLOG_BASE, a["href"]) for a in links if a["href"].count("/") == 2))
@@ -192,7 +220,8 @@ def crawl_blog(output_file: str, max_articles: int = None):
 
             try:
                 print(f"[Progress] 正在处理 ({i+1}/{len(urls)}): {url}")
-                resp = requests.get(url, headers=HEADERS, timeout=30)
+                resp = session.get(url, headers=HEADERS, proxies=PROXIES, timeout=60)
+                resp.raise_for_status()
                 page = BeautifulSoup(resp.text, "html.parser")
 
                 title = page.find("h1").text.strip() if page.find("h1") else "Untitled"
@@ -213,12 +242,27 @@ def crawl_blog(output_file: str, max_articles: int = None):
                 documents.append(doc)
                 print(f"[Success] 已处理: {title[:60]}...")
 
-                time.sleep(1)  # 礼貌爬取
+                time.sleep(2)  # 增加延迟，避免请求过快
 
+            except requests.exceptions.ProxyError as e:
+                print(f"[Error] 代理错误 {url}: {e}")
+                print("[Hint] 请检查 PROXIES 配置是否正确")
+                continue
+            except requests.exceptions.Timeout as e:
+                print(f"[Error] 请求超时 {url}: {e}")
+                continue
+            except requests.exceptions.RequestException as e:
+                print(f"[Error] 请求失败 {url}: {e}")
+                continue
             except Exception as e:
                 print(f"[Error] 处理失败 {url}: {e}")
                 continue
 
+    except requests.exceptions.ProxyError as e:
+        print(f"[Error] 代理错误: {e}")
+        print("[Hint] 请检查 PROXIES 配置是否正确")
+    except requests.exceptions.RequestException as e:
+        print(f"[Error] 爬取 Blog 列表失败: {e}")
     except Exception as e:
         print(f"[Error] 爬取 Blog 列表失败: {e}")
 
@@ -229,6 +273,7 @@ def crawl_blog(output_file: str, max_articles: int = None):
 def crawl_docs(output_file: str, max_articles: int = None):
     """爬取 Huggingface Docs"""
     print("[Start] 正在爬取 Huggingface Docs...")
+    print(f"[Info] 代理设置: {'已启用' if PROXIES else '未启用'}")
 
     documents = []
     doc_bases_tuple = tuple(DOC_BASE)
@@ -250,7 +295,8 @@ def crawl_docs(output_file: str, max_articles: int = None):
                 continue
 
             try:
-                resp = requests.get(url, headers=HEADERS, timeout=30)
+                resp = session.get(url, headers=HEADERS, proxies=PROXIES, timeout=60)
+                resp.raise_for_status()
                 page = BeautifulSoup(resp.text, "html.parser")
 
                 title = page.find("h1").text.strip() if page.find("h1") else "Untitled"
@@ -288,8 +334,18 @@ def crawl_docs(output_file: str, max_articles: int = None):
                     if full_url.startswith(doc_bases_tuple) and full_url not in visited:
                         queue.append(full_url)
 
-                time.sleep(0.5)
+                time.sleep(1)  # 增加延迟
 
+            except requests.exceptions.ProxyError as e:
+                print(f"[Error] 代理错误 {url}: {e}")
+                print("[Hint] 请检查 PROXIES 配置是否正确")
+                continue
+            except requests.exceptions.Timeout as e:
+                print(f"[Error] 请求超时 {url}: {e}")
+                continue
+            except requests.exceptions.RequestException as e:
+                print(f"[Error] 请求失败 {url}: {e}")
+                continue
             except Exception as e:
                 print(f"[Error] {url}: {e}")
                 continue
