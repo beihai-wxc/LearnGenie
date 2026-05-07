@@ -1,18 +1,18 @@
 [
   {
     "docId": "core-ai-overview",
-    "title": "Core AI Overview",
-    "course": "Artificial Intelligence",
-    "module": "Foundations",
-    "summary": "Introduces the major branches of AI, including reasoning, learning, search, and perception.",
+    "title": "人工智能核心概览",
+    "course": "人工智能课程",
+    "module": "基础认知",
+    "summary": "介绍人工智能的主要分支，以及推理、学习、搜索和感知之间的联系。",
     "keywords": [
-      "artificial intelligence",
-      "reasoning",
-      "machine learning",
-      "search",
-      "perception"
+      "人工智能",
+      "机器学习",
+      "知识表示",
+      "搜索",
+      "感知"
     ],
-    "content": "Artificial intelligence combines reasoning, learning, search, perception, and planning into systems that can solve useful tasks. Machine learning helps models improve from data, while symbolic techniques organize explicit knowledge and rules. Modern AI applications often combine retrieval, generation, and evaluation so their outputs stay grounded in source material. This overview gives beginners a map of the field before they explore specialized topics.",
+    "content": "人工智能是一个跨越推理、学习、搜索与感知的综合领域。\n\n机器学习帮助系统从数据中持续改进，知识表示方法则把规则、概念和关系组织成机器可用的结构。\n\n现代人工智能产品常常把检索、生成、规划和评估组合在一起，让回答既贴近需求又有来源依据。\n\n这份概览面向初学者，帮助学习者在继续深入计算机视觉、自然语言处理和机器人之前，先建立清晰的知识地图。",
     "pdfPath": "core-ai-overview.pdf",
     "sourceType": "seed",
     "createdAt": "2026-01-01T00:00:00.000Z",

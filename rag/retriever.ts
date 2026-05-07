@@ -19,6 +19,7 @@ import type { KnowledgeChunk, KnowledgeDocument } from '@/lib/knowledge-base/typ
 interface KnowledgeIndexMetadata {
   version: number;
   generatedAt: string;
+  sourceSignature: string;
   documentCount: number;
   chunkCount: number;
   seedDocumentCount: number;
@@ -28,6 +29,7 @@ interface KnowledgeIndexMetadata {
 interface KnowledgeIndexPayload {
   version: number;
   generatedAt: string;
+  sourceSignature: string;
   documents: KnowledgeDocument[];
   chunks: KnowledgeChunk[];
 }
@@ -36,6 +38,7 @@ interface KnowledgeRetrieverState {
   documents: KnowledgeDocument[];
   chunks: KnowledgeChunk[];
   documentMap: Map<string, KnowledgeDocument>;
+  chunksByDocId: Map<string, KnowledgeChunk[]>;
   metadata: KnowledgeIndexMetadata;
 }
 
@@ -110,24 +113,35 @@ async function readDocumentFile(
 ): Promise<KnowledgeDocument[]> {
   await ensureFile(filePath);
 
-  try {
-    const raw = await fs.readFile(filePath, 'utf8');
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) {
-      throw new Error('Knowledge store must be an array.');
-    }
+  const raw = await fs.readFile(filePath, 'utf8');
 
-    return parsed
-      .filter(isKnowledgeDocument)
-      .map((doc) => ({
-        ...doc,
-        sourceType,
-        keywords: [...new Set(doc.keywords.map((keyword) => keyword.trim()).filter(Boolean))],
-      }));
-  } catch {
-    await fs.writeFile(filePath, EMPTY_FILE_CONTENT, 'utf8');
-    return [];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (error) {
+    throw new Error(
+      `Invalid knowledge store at ${filePath}: failed to parse JSON. ${
+        error instanceof Error ? error.message : 'Unknown parse error.'
+      }`,
+    );
   }
+
+  if (!Array.isArray(parsed)) {
+    throw new Error(`Invalid knowledge store at ${filePath}: expected a JSON array of documents.`);
+  }
+
+  const invalidIndex = parsed.findIndex((value) => !isKnowledgeDocument(value));
+  if (invalidIndex >= 0) {
+    throw new Error(
+      `Invalid knowledge store at ${filePath}: item ${invalidIndex} is not a valid knowledge document.`,
+    );
+  }
+
+  return parsed.map((doc) => ({
+    ...doc,
+    sourceType,
+    keywords: [...new Set(doc.keywords.map((keyword) => keyword.trim()).filter(Boolean))],
+  }));
 }
 
 function inferSection(doc: KnowledgeDocument): string | undefined {
@@ -199,10 +213,31 @@ async function loadDocumentsFromStore() {
   return [...seedDocuments, ...uploadedDocuments];
 }
 
-function buildMetadata(documents: KnowledgeDocument[], chunks: KnowledgeChunk[]): KnowledgeIndexMetadata {
+function computeSourceSignature(documents: KnowledgeDocument[]) {
+  return documents
+    .map((doc) => `${doc.docId}:${doc.updatedAt}:${doc.content.length}:${doc.pdfPath}:${doc.sourceType}`)
+    .join('|');
+}
+
+function buildChunkMap(chunks: KnowledgeChunk[]) {
+  const chunksByDocId = new Map<string, KnowledgeChunk[]>();
+  for (const chunk of chunks) {
+    const list = chunksByDocId.get(chunk.docId) ?? [];
+    list.push(chunk);
+    chunksByDocId.set(chunk.docId, list);
+  }
+  return chunksByDocId;
+}
+
+function buildMetadata(
+  documents: KnowledgeDocument[],
+  chunks: KnowledgeChunk[],
+  sourceSignature: string,
+): KnowledgeIndexMetadata {
   return {
     version: KNOWLEDGE_INDEX_VERSION,
     generatedAt: new Date().toISOString(),
+    sourceSignature,
     documentCount: documents.length,
     chunkCount: chunks.length,
     seedDocumentCount: documents.filter((doc) => doc.sourceType === 'seed').length,
@@ -211,19 +246,47 @@ function buildMetadata(documents: KnowledgeDocument[], chunks: KnowledgeChunk[])
 }
 
 async function writeIndexFiles(documents: KnowledgeDocument[], chunks: KnowledgeChunk[]) {
+  const sourceSignature = computeSourceSignature(documents);
   const payload: KnowledgeIndexPayload = {
     version: KNOWLEDGE_INDEX_VERSION,
     generatedAt: new Date().toISOString(),
+    sourceSignature,
     documents,
     chunks,
   };
-  const metadata = buildMetadata(documents, chunks);
+  const metadata = buildMetadata(documents, chunks, sourceSignature);
 
   await ensureDir(KNOWLEDGE_INDEX_DIR);
   await fs.writeFile(KNOWLEDGE_INDEX_FILE, JSON.stringify(payload, null, 2), 'utf8');
   await fs.writeFile(KNOWLEDGE_METADATA_FILE, JSON.stringify(metadata, null, 2), 'utf8');
 
   return metadata;
+}
+
+async function readPersistedIndex() {
+  try {
+    const [indexRaw, metadataRaw] = await Promise.all([
+      fs.readFile(KNOWLEDGE_INDEX_FILE, 'utf8'),
+      fs.readFile(KNOWLEDGE_METADATA_FILE, 'utf8'),
+    ]);
+    const payload = JSON.parse(indexRaw) as KnowledgeIndexPayload;
+    const metadata = JSON.parse(metadataRaw) as KnowledgeIndexMetadata;
+
+    if (
+      payload.version !== KNOWLEDGE_INDEX_VERSION ||
+      metadata.version !== KNOWLEDGE_INDEX_VERSION ||
+      !Array.isArray(payload.documents) ||
+      !Array.isArray(payload.chunks) ||
+      typeof payload.sourceSignature !== 'string' ||
+      typeof metadata.sourceSignature !== 'string'
+    ) {
+      return null;
+    }
+
+    return { payload, metadata };
+  } catch {
+    return null;
+  }
 }
 
 async function ensureRetrieverState(options: BuildKnowledgeIndexOptions = {}) {
@@ -234,6 +297,26 @@ async function ensureRetrieverState(options: BuildKnowledgeIndexOptions = {}) {
   await ensureKnowledgeAssets();
 
   const documents = await loadDocumentsFromStore();
+  const sourceSignature = computeSourceSignature(documents);
+
+  if (!options.force) {
+    const persisted = await readPersistedIndex();
+    if (
+      persisted &&
+      persisted.payload.sourceSignature === sourceSignature &&
+      persisted.metadata.sourceSignature === sourceSignature
+    ) {
+      retrieverState = {
+        documents: persisted.payload.documents,
+        chunks: persisted.payload.chunks,
+        documentMap: new Map(persisted.payload.documents.map((doc) => [doc.docId, doc])),
+        chunksByDocId: buildChunkMap(persisted.payload.chunks),
+        metadata: persisted.metadata,
+      };
+      return retrieverState;
+    }
+  }
+
   if (options.ensurePdfFiles) {
     for (const document of documents) {
       await ensurePdfForDocument(document);
@@ -246,6 +329,7 @@ async function ensureRetrieverState(options: BuildKnowledgeIndexOptions = {}) {
     documents,
     chunks,
     documentMap: new Map(documents.map((doc) => [doc.docId, doc])),
+    chunksByDocId: buildChunkMap(chunks),
     metadata,
   };
   return retrieverState;
@@ -306,8 +390,7 @@ export async function searchKnowledgeIndex(query: string, topK = 5): Promise<Sea
         const normalizedKeyword = normalizeText(keyword);
         return normalizedKeyword.includes(normalizedQuery) || queryTokens.includes(normalizedKeyword);
       });
-      const topChunks = state.chunks
-        .filter((chunk) => chunk.docId === doc.docId)
+      const topChunks = (state.chunksByDocId.get(doc.docId) ?? [])
         .map((chunk) => ({
           chunkId: chunk.chunkId,
           section: chunk.section,

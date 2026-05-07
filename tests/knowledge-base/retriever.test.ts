@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import {
   KNOWLEDGE_CHUNK_OVERLAP,
   KNOWLEDGE_CHUNK_SIZE,
@@ -19,22 +19,23 @@ import {
   getKnowledgeDocumentMap,
   getKnowledgeDocumentsFromStore,
   resetRetrieverCache,
+  searchKnowledgeIndex,
 } from '@/rag/retriever';
 
 const seedDoc: KnowledgeDocument = {
   docId: 'core-ai-overview',
-  title: 'Core AI Overview',
-  course: 'Artificial Intelligence',
-  module: 'Foundations',
-  summary: 'Introduces the main branches of AI and how they connect.',
-  keywords: ['ai', 'machine learning', 'knowledge systems'],
-  content: `Artificial intelligence is a broad field that connects reasoning, learning, search, and perception.
+  title: '人工智能核心概览',
+  course: '人工智能课程',
+  module: '基础认知',
+  summary: '介绍人工智能的主要分支，以及推理、学习、搜索和感知之间的联系。',
+  keywords: ['人工智能', '机器学习', '知识系统', '搜索', '感知'],
+  content: `人工智能是一个跨越推理、学习、搜索与感知的综合领域。
 
-Machine learning helps systems improve from data, while knowledge-based approaches encode expert rules and representations.
+机器学习帮助系统从数据中持续改进，知识表示方法则把规则、概念和关系组织成机器可用的结构。
 
-Modern AI products often combine planning, retrieval, generation, and evaluation so that systems can respond with grounded answers.
+现代人工智能产品常常把检索、生成、规划和评估组合在一起，让回答既贴近需求又有来源依据。
 
-The goal of this overview is to give beginners a map of the space before they dive into specialized topics such as computer vision, language models, or robotics.`,
+这份概览面向初学者，帮助学习者在继续深入计算机视觉、自然语言处理和机器人之前，先建立清晰的知识地图。`,
   pdfPath: 'core-ai-overview.pdf',
   sourceType: 'seed',
   createdAt: '2026-01-01T00:00:00.000Z',
@@ -55,6 +56,14 @@ const uploadDoc: KnowledgeDocument = {
   createdAt: '2026-01-02T00:00:00.000Z',
   updatedAt: '2026-01-02T00:00:00.000Z',
 };
+
+let originalKnowledgeBaseFile: string | null = null;
+
+async function restoreOriginalKnowledgeBaseFile() {
+  if (originalKnowledgeBaseFile === null) return;
+  await fs.mkdir(KNOWLEDGE_RAG_ROOT, { recursive: true });
+  await fs.writeFile(KNOWLEDGE_KNOWLEDGE_FILE, originalKnowledgeBaseFile, 'utf8');
+}
 
 async function removeKnowledgeAssets() {
   await fs.rm(KNOWLEDGE_KNOWLEDGE_FILE, { force: true });
@@ -96,6 +105,14 @@ function expectedChunkCount(text: string) {
 }
 
 describe('knowledge retriever bootstrap and indexing', () => {
+  beforeAll(async () => {
+    try {
+      originalKnowledgeBaseFile = await fs.readFile(KNOWLEDGE_KNOWLEDGE_FILE, 'utf8');
+    } catch {
+      originalKnowledgeBaseFile = null;
+    }
+  });
+
   beforeEach(async () => {
     resetRetrieverCache();
     await removeKnowledgeAssets();
@@ -104,6 +121,7 @@ describe('knowledge retriever bootstrap and indexing', () => {
   afterEach(async () => {
     resetRetrieverCache();
     await removeKnowledgeAssets();
+    await restoreOriginalKnowledgeBaseFile();
   });
 
   it('recreates missing rag assets for local tests', async () => {
@@ -160,5 +178,50 @@ describe('knowledge retriever bootstrap and indexing', () => {
     const uploadStoreOnDisk = JSON.parse(await fs.readFile(KNOWLEDGE_UPLOADS_FILE, 'utf8'));
     expect(seedStoreOnDisk).toEqual([expect.objectContaining({ docId: 'core-ai-overview' })]);
     expect(uploadStoreOnDisk).toEqual([expect.objectContaining({ docId: 'upload-ai-notes' })]);
+  });
+
+  it('fails loudly without rewriting stores when a knowledge file is invalid', async () => {
+    await fs.mkdir(KNOWLEDGE_RAG_ROOT, { recursive: true });
+    await fs.writeFile(KNOWLEDGE_KNOWLEDGE_FILE, '{"broken": true}', 'utf8');
+
+    await expect(getKnowledgeDocumentsFromStore()).rejects.toThrow(
+      `Invalid knowledge store at ${KNOWLEDGE_KNOWLEDGE_FILE}`,
+    );
+    await expect(fs.readFile(KNOWLEDGE_KNOWLEDGE_FILE, 'utf8')).resolves.toBe('{"broken": true}');
+  });
+
+  it('supports Chinese retrieval for built-in seed knowledge', async () => {
+    await seedStore({
+      seeds: [seedDoc],
+      uploads: [],
+    });
+
+    await buildKnowledgeIndex({ force: true });
+    const results = await searchKnowledgeIndex('什么是人工智能中的知识表示', 3);
+
+    expect(results[0]?.docId).toBe('core-ai-overview');
+    expect(results[0]?.sourceType).toBe('seed');
+    expect(results[0]?.previewText).toContain('知识表示');
+  });
+
+  it('reuses a valid persisted index after cache reset without rewriting it', async () => {
+    await seedStore({
+      seeds: [seedDoc],
+      uploads: [uploadDoc],
+    });
+
+    await buildKnowledgeIndex({ force: true });
+    const firstIndexRaw = await fs.readFile(KNOWLEDGE_INDEX_FILE, 'utf8');
+    const firstMetadataRaw = await fs.readFile(KNOWLEDGE_METADATA_FILE, 'utf8');
+
+    resetRetrieverCache();
+
+    const rebuilt = await buildKnowledgeIndex();
+    const secondIndexRaw = await fs.readFile(KNOWLEDGE_INDEX_FILE, 'utf8');
+    const secondMetadataRaw = await fs.readFile(KNOWLEDGE_METADATA_FILE, 'utf8');
+
+    expect(rebuilt.documents).toHaveLength(2);
+    expect(secondIndexRaw).toBe(firstIndexRaw);
+    expect(secondMetadataRaw).toBe(firstMetadataRaw);
   });
 });
