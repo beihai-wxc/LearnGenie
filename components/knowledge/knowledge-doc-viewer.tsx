@@ -1,10 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, BookOpen, Sparkles } from 'lucide-react';
 import { nanoid } from 'nanoid';
 import type { UserRequirements } from '@/lib/types/generation';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('KnowledgeDocViewer');
 
 interface KnowledgeDocViewerProps {
   docId: string;
@@ -18,6 +21,7 @@ interface KnowledgeDocViewerProps {
 }
 
 export function KnowledgeDocViewer({
+  docId,
   title,
   module,
   summary,
@@ -28,6 +32,30 @@ export function KnowledgeDocViewer({
 }: KnowledgeDocViewerProps) {
   const router = useRouter();
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // Record access history when the knowledge document is viewed
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { saveAccessHistory } = await import('@/lib/utils/access-history');
+        if (!cancelled) {
+          await saveAccessHistory({
+            type: 'knowledge',
+            targetId: docId,
+            title,
+            subtitle: module,
+            url: `/knowledge/${docId}`,
+          });
+        }
+      } catch (err) {
+        log.warn('Failed to save knowledge access history:', err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [docId, title, module]);
 
   const handleGenerate = () => {
     setIsGenerating(true);

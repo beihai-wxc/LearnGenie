@@ -81,13 +81,32 @@ async function writeUploadedDocuments(documents: KnowledgeDocument[]) {
 
 export async function ensureKnowledgePdf(doc: KnowledgeDocument): Promise<string> {
   const targetPath = path.join(KNOWLEDGE_PDF_DIR, doc.pdfPath);
+  
   try {
     await fs.access(targetPath);
     return targetPath;
   } catch {
-    const pdf = buildSimplePdf(doc.title, `${doc.summary}\n\n${doc.content}`);
+    // 目录不存在则创建
     await fs.mkdir(KNOWLEDGE_PDF_DIR, { recursive: true });
+    
+    // 优先级1：使用原始PDF（如果存在）
+    if (doc.hasOriginalPdf && doc.originalPdfPath) {
+      const originalPath = path.join(KNOWLEDGE_PDF_DIR, doc.originalPdfPath);
+      try {
+        await fs.access(originalPath);
+        // 创建软链接或复制文件
+        await fs.copyFile(originalPath, targetPath);
+        log.info(`[PDF] Using original PDF for ${doc.docId}`);
+        return targetPath;
+      } catch {
+        log.warn(`[PDF] Original PDF not found, falling back to generated: ${doc.originalPdfPath}`);
+      }
+    }
+    
+    // 优先级2：生成简单PDF
+    const pdf = buildSimplePdf(doc.title, `${doc.summary}\n\n${doc.content}`);
     await fs.writeFile(targetPath, pdf);
+    log.info(`[PDF] Generated simple PDF for ${doc.docId}`);
     return targetPath;
   }
 }

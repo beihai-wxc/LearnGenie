@@ -827,6 +827,20 @@ function GenerationPreviewContent() {
 
       sessionStorage.removeItem('generationSession');
       await store.saveToStorage();
+
+      // Record access history for the newly generated classroom
+      try {
+        const { saveAccessHistory } = await import('@/lib/utils/access-history');
+        await saveAccessHistory({
+          type: 'classroom',
+          targetId: stage.id,
+          title: stage.name || '未命名课堂',
+          url: `/classroom/${stage.id}`,
+        });
+      } catch (historyErr) {
+        log.warn('Failed to save classroom access history:', historyErr);
+      }
+
       router.push(`/classroom/${stage.id}`);
     } catch (err) {
       // AbortError is expected when navigating away — don't show as error

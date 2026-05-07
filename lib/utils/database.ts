@@ -188,6 +188,22 @@ export interface BookshelfCategoryRecord {
   createdAt: number;
 }
 
+/**
+ * AccessHistory table - Records of visited/generated classrooms, knowledge docs, etc.
+ */
+export interface AccessHistoryRecord {
+  id: string; // PK (UUID)
+  type: 'classroom' | 'knowledge' | 'document';
+  targetId: string; // classroomId / docId / documentId
+  title: string;
+  subtitle?: string; // module name, category, etc.
+  url: string; // navigable URL path
+  thumbnailUrl?: string;
+  createdAt: number; // first access time
+  updatedAt: number; // last access time
+  accessCount: number;
+}
+
 /** Build the compound primary key for mediaFiles: `${stageId}:${elementId}` */
 export function mediaFileKey(stageId: string, elementId: string): string {
   return `${stageId}:${elementId}`;
@@ -196,7 +212,7 @@ export function mediaFileKey(stageId: string, elementId: string): string {
 // ==================== Database Definition ====================
 
 const DATABASE_NAME = 'MAIC-Database';
-const _DATABASE_VERSION = 11;
+const _DATABASE_VERSION = 12;
 
 /**
  * MAIC Database Instance
@@ -215,6 +231,7 @@ class MAICDatabase extends Dexie {
   generatedAgents!: EntityTable<GeneratedAgentRecord, 'id'>;
   bookshelf!: EntityTable<BookshelfRecord, 'id'>;
   categories!: EntityTable<BookshelfCategoryRecord, 'id'>;
+  accessHistory!: EntityTable<AccessHistoryRecord, 'id'>;
 
   constructor() {
     super(DATABASE_NAME);
@@ -396,6 +413,23 @@ class MAICDatabase extends Dexie {
       generatedAgents: 'id, stageId',
       bookshelf: 'id, type, category, createdAt',
       categories: 'id',
+    });
+
+    // Version 12: Add accessHistory table for unified visit history
+    this.version(12).stores({
+      stages: 'id, updatedAt',
+      scenes: 'id, stageId, order, [stageId+order]',
+      audioFiles: 'id, createdAt',
+      imageFiles: 'id, createdAt',
+      snapshots: '++id',
+      chatSessions: 'id, stageId, [stageId+createdAt]',
+      playbackState: 'stageId',
+      stageOutlines: 'stageId',
+      mediaFiles: 'id, stageId, [stageId+type]',
+      generatedAgents: 'id, stageId',
+      bookshelf: 'id, type, category, createdAt',
+      categories: 'id',
+      accessHistory: 'id, type, targetId, updatedAt, [type+updatedAt]',
     });
   }
 }

@@ -96,6 +96,22 @@ export default function ClassroomDetailPage() {
             cleanIds && cleanIds.length > 0 ? cleanIds : ['default-1', 'default-2', 'default-3'],
           );
       }
+
+      // Update access history after successful load
+      const stage = useStageStore.getState().stage;
+      if (stage) {
+        try {
+          const { touchAccessHistory } = await import('@/lib/utils/access-history');
+          await touchAccessHistory(
+            'classroom',
+            classroomId,
+            stage.name || '未命名课堂',
+            `/classroom/${classroomId}`,
+          );
+        } catch (historyErr) {
+          log.warn('Failed to touch classroom access history:', historyErr);
+        }
+      }
     } catch (error) {
       log.error('Failed to load classroom:', error);
       setError(error instanceof Error ? error.message : 'Failed to load classroom');

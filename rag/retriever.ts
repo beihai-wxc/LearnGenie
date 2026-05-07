@@ -182,7 +182,20 @@ export async function getKnowledgeDocumentsFromStore(): Promise<KnowledgeDocumen
     loadSeedDocuments(),
     loadUploadedDocuments(),
   ]);
-  documentsCache = [...seedDocuments, ...uploadedDocuments];
+
+  // 合并并去重，优先使用 seedDocuments 中的文档
+  const docMap = new Map<string, KnowledgeDocument>();
+  for (const doc of seedDocuments) {
+    docMap.set(doc.docId, doc);
+  }
+  for (const doc of uploadedDocuments) {
+    // 只有当 docId 不存在时才添加，避免覆盖 seed 文档
+    if (!docMap.has(doc.docId)) {
+      docMap.set(doc.docId, doc);
+    }
+  }
+
+  documentsCache = [...docMap.values()];
   documentMapCache = new Map(documentsCache.map((doc) => [doc.docId, doc]));
   return documentsCache;
 }
@@ -289,69 +302,80 @@ export async function searchKnowledgeIndex(query: string, topK = 5): Promise<Sea
     chunksByDocId.set(chunk.docId, list);
   }
 
-  return indexCache.documents
-    .map((doc) => {
-      const matchedChunks = (chunksByDocId.get(doc.docId) ?? [])
-        .map((chunk) => {
-          const chunkScore = overlapScore(queryTokens, chunk.tokenSet);
-          const keywordScore = overlapScore(queryTokens, chunk.keywords);
-          const textScore = normalizeText(chunk.text).includes(normalizeText(query)) ? 0.3 : 0;
-          return {
-            ...chunk,
-            score: chunkScore * 0.62 + keywordScore * 0.28 + textScore,
-          };
-        })
-        .filter((chunk) => chunk.score > 0.02)
-        .sort((a, b) => b.score - a.score);
+  // 使用 Map 对文档进行去重，保留得分最高的版本
+  const docScores = new Map<string, SearchCandidate>();
 
-      const bestChunkScore = matchedChunks[0]?.score ?? 0;
-      const titleMatch =
-        !!simplifiedQuery &&
-        (simplifiedQuery.includes(normalizeText(doc.title)) ||
-          normalizeText(doc.title).includes(simplifiedQuery));
-      const keywordMatches = doc.keywords.filter((keyword) => {
-        const normalizedKeyword = normalizeText(keyword);
-        return (
-          queryTokens.includes(normalizedKeyword) ||
-          (!!simplifiedQuery &&
-            normalizedKeyword.length > 1 &&
-            (simplifiedQuery.includes(normalizedKeyword) ||
-              normalizedKeyword.includes(simplifiedQuery)))
-        );
-      });
-      const docKeywordScore = overlapScore(queryTokens, [...doc.keywordTokens, ...doc.titleTokens]);
-      const docTextScore = overlapScore(queryTokens, doc.contentTokens);
-      const titlePhraseMatch = titleMatch ? 0.45 : 0;
-      const keywordPhraseMatch = keywordMatches.length > 0 ? 0.32 : 0;
-      const score =
-        bestChunkScore * 0.52 +
-        docKeywordScore * 0.18 +
-        docTextScore * 0.08 +
-        titlePhraseMatch +
-        keywordPhraseMatch;
+  for (const doc of indexCache.documents) {
+    const matchedChunks = (chunksByDocId.get(doc.docId) ?? [])
+      .map((chunk) => {
+        const chunkScore = overlapScore(queryTokens, chunk.tokenSet);
+        const keywordScore = overlapScore(queryTokens, chunk.keywords);
+        const textScore = normalizeText(chunk.text).includes(normalizeText(query)) ? 0.3 : 0;
+        return {
+          ...chunk,
+          score: chunkScore * 0.62 + keywordScore * 0.28 + textScore,
+        };
+      })
+      .filter((chunk) => chunk.score > 0.02)
+      .sort((a, b) => b.score - a.score);
 
-      let matchedBy: 'title' | 'keyword' | 'chunk' = 'chunk';
-      if (titleMatch) {
-        matchedBy = 'title';
-      } else if (keywordMatches.length > 0) {
-        matchedBy = 'keyword';
-      }
+    const bestChunkScore = matchedChunks[0]?.score ?? 0;
+    const titleMatch =
+      !!simplifiedQuery &&
+      (simplifiedQuery.includes(normalizeText(doc.title)) ||
+        normalizeText(doc.title).includes(simplifiedQuery));
+    const keywordMatches = doc.keywords.filter((keyword) => {
+      const normalizedKeyword = normalizeText(keyword);
+      return (
+        queryTokens.includes(normalizedKeyword) ||
+        (!!simplifiedQuery &&
+          normalizedKeyword.length > 1 &&
+          (simplifiedQuery.includes(normalizedKeyword) ||
+            normalizedKeyword.includes(simplifiedQuery)))
+      );
+    });
+    const docKeywordScore = overlapScore(queryTokens, [...doc.keywordTokens, ...doc.titleTokens]);
+    const docTextScore = overlapScore(queryTokens, doc.contentTokens);
+    const titlePhraseMatch = titleMatch ? 0.45 : 0;
+    const keywordPhraseMatch = keywordMatches.length > 0 ? 0.32 : 0;
+    const score =
+      bestChunkScore * 0.52 +
+      docKeywordScore * 0.18 +
+      docTextScore * 0.08 +
+      titlePhraseMatch +
+      keywordPhraseMatch;
 
-      return {
-        docId: doc.docId,
-        title: doc.title,
-        module: doc.module,
-        summary: doc.summary,
-        score,
-        sourceType: doc.sourceType,
-        matchedBy,
-        previewText: matchedChunks[0]?.text.slice(0, 220) ?? doc.summary,
-        titleMatch,
-        keywordMatches,
-        topChunks: matchedChunks.slice(0, 3),
-      };
-    })
-    .filter((candidate) => candidate.score > 0.04)
+    if (score <= 0.04) continue;
+
+    let matchedBy: 'title' | 'keyword' | 'chunk' = 'chunk';
+    if (titleMatch) {
+      matchedBy = 'title';
+    } else if (keywordMatches.length > 0) {
+      matchedBy = 'keyword';
+    }
+
+    const candidate: SearchCandidate = {
+      docId: doc.docId,
+      title: doc.title,
+      module: doc.module,
+      summary: doc.summary,
+      score,
+      sourceType: doc.sourceType,
+      matchedBy,
+      previewText: matchedChunks[0]?.text.slice(0, 220) ?? doc.summary,
+      titleMatch,
+      keywordMatches,
+      topChunks: matchedChunks.slice(0, 3),
+    };
+
+    // 如果同一个 docId 已存在，保留得分更高的版本
+    const existing = docScores.get(doc.docId);
+    if (!existing || existing.score < score) {
+      docScores.set(doc.docId, candidate);
+    }
+  }
+
+  return [...docScores.values()]
     .sort((a, b) => b.score - a.score)
     .slice(0, topK);
 }

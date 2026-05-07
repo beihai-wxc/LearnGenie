@@ -21,6 +21,10 @@ export interface KnowledgeDocument {
   sourceType: 'seed' | 'upload';
   createdAt: string;
   updatedAt: string;
+  // 新增字段：用于存储原始网页PDF
+  sourceUrl?: string;           // 原始网页URL
+  hasOriginalPdf?: boolean;     // 是否已保存原始PDF
+  originalPdfPath?: string;     // 原始PDF文件路径
 }
 
 export interface KnowledgeSearchResult {

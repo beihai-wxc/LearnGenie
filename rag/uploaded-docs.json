@@ -1,1 +1,290 @@
-[]
+[
+  {
+    "docId": "hf-blog-the-pr-you-would-have-opened-yourself-20260502",
+    "title": "The PR you would have opened yourself",
+    "course": "人工智能课程",
+    "module": "07_计算机视觉与NLP概览",
+    "summary": "+61 TL;DR The advent of code agents What does this have to do with MLX",
+    "keywords": [
+      "LLM",
+      "AI",
+      "agent",
+      "The",
+      "transformer",
+      "inference"
+    ],
+    "content": "来源：https://huggingface.co/blog/transformers-to-mlx\n分类：07_计算机视觉与NLP概览\n\n\n\n\n\n\n\n\n\n\n\n\n\n+61\n\nTL;DR The advent of code agents What does this have to do with MLX? What we did How we did it Test harness How to use the Skill Next steps and known shortcomings What's next What doesn't work yet Conclusion Resources Thank you! Making transformers models available in mlx-lm using a Skill and test harness\n\nTL;DR\n\nThe advent of code agents\n\nWhat does this have to do with MLX?\n\nWhat we did\n\nHow we did it\n\nTest harness\n\nHow to use the Skill\n\nNext steps and known shortcomings What's next What doesn't work yet\n\nWhat's next\n\nWhat doesn't work yet\n\nConclusion\n\nResources\n\nThank you!\n\nTL;DR\n\nWe provide a Skill and a test harness to help port language models from transformers to mlx-lm, so they become (almost) instantly available the moment they are added to transformers. The Skill is designed to support contributors and reviewers as an aide, not an automation. We explain why we did it, how, and comment about how to meaningfully contribute to open source in the age of agents.\n\nThe advent of code agents\n\nIn 2026, code agents started to actually work. What used to be auto-completion at the side of your editor turned into a system that one-shots reasonable solutions from brief specifications. The generated code usually works out of the box, covers what you asked for, and makes reasonable assumptions about details you didn't specify. This is great. As Jensen Huang puts it, we've instantly gone from 30 million to one billion coders in the world. Creative minds are unleashed.\n\nBut it forces us to rethink open source.\n\nTake the transformers library as an example. It has hundreds of contributors, is used in thousands of projects, has been downloaded over a billion times. Suddenly, anyone with an agent can instruct it to find some open issue, fix it, and submit a PR. And that's exactly what's happening. Those people feel happy because they are contributing to a great library, but the sad reality is that, most of the time, they don't realize they are not.\n\nWhy not? There are two assumptions that agent-generated PRs usually miss.\n\nCodebases like transformers care deeply about the code. It's cool to build projects where it doesn't matter what the code looks like, but transformers is not one of them. Being used by thousands of people, transformers is primarily built as a human-to-human communication method, through code. Model files read top to bottom, because we want practitioners to understand them without jumping through complex abstractions. This permeates throughout the library design and is the reason why, for example, we favor flat hierarchies.\n\nCodebases like transformers care deeply about the code. It's cool to build projects where it doesn't matter what the code looks like, but transformers is not one of them. Being used by thousands of people, transformers is primarily built as a human-to-human communication method, through code. Model files read top to bottom, because we want practitioners to understand them without jumping through complex abstractions. This permeates throughout the library design and is the reason why, for example, we favor flat hierarchies.\n\nAgents don't have that context. Because design decisions are not explicit, agents suggest refactors to \"improve\" the codebase by following \"best practices\", without realizing they are breaking implicit contracts between the library and its users. They are verbose, generalize too early, don't notice when a change affects other areas, introduce subtle bugs, break performance. They are also sycophantic, and accept any idea as good and follow it through diligently, including ones a maintainer would have pushed back early on with a terse comment.\n\nAgents don't have that context. Because design decisions are not explicit, agents suggest refactors to \"improve\" the codebase by following \"best practices\", without realizing they are breaking implicit contracts between the library and its users. They are verbose, generalize too early, don't notice when a change affects other areas, introduce subtle bugs, break performance. They are also sycophantic, and accept any idea as good and follow it through diligently, including ones a maintainer would have pushed back early on with a terse comment.\n\nA small number of maintainers still has to read every PR, understand it, decide if the design direction is right, identify side effects, and write feedback. PR volume has gone up tenfold, but the amount of maintainers has not (and cannot, because team coordination does not scale).\n\nWhat does this have to do with MLX?\n\nTransformers is one of the first projects to feel this pressure because of sheer volume, but the same dynamic is happening everywhere. As an example from a different domain, App Store reviewers are swamped because anyone can now build and submit an app, so many do.\n\nThe same logic applies to MLX: their maintainers care deeply about the code and read every PR carefully. We wanted to see whether agents could help contributors land high-quality model ports fast, and at the same time support reviewers in their work. Not only do we aspire to produce PRs that could have come from a careful human submission, but we also provide additional artifacts to increase the signal: generation examples, numerical comparisons, and a separate non-agentic test harness for reproducibility.\n\n\n\nAnother connection between transformers and MLX is that, most times, mlx-lm models are ported from transformers implementations. Because transformers focuses on clarity and readability, it has become the source of truth for model definitions. Downstream contributors wait until the transformers implementations are ready before they port to other frameworks. As a side effect, this is an excellent environment for an agent because it naturally limits the scope: rather than creating an implementation from scratch, the agent relies on transformers code as the source of truth.\n\nThis approach supports our goal: when a model lands in transformers, it should be available on MLX shortly after.\n\nWhat we did\n\nWe built a Skill that mlx-lm contributors can use to port a model from transformers to MLX. Given a prompt like \"convert the olmo_hybrid architecture to MLX\", the Skill sets up a virtual environment to work on, discovers and downloads the relevant models from the Hub, reads the transformers modeling code, writes the MLX implementation, and runs a battery of tests. If results don't look right, it debugs and iterates, and does not declare success until it's satisfied.\n\nWe designed it to be useful to reviewers as much as contributors.\n\nFor the contributor, the Skill of course handles all the scaffolding: finding model variants on the Hub, diffing their configs to spot parameters that vary across model variants, downloading checkpoints, setting up editable installs of both mlx-lm and transformers. But it also handles the more difficult modeling tasks. It pays attention to salient architecture details and verifies sensitive areas, like RoPE configurations, that may result in hard-to-find bugs. It detects when the config doesn't declare a dtype and infers it from the safetensors metadata header. It runs per-layer comparisons between transformers and MLX to pinpoint exactly where divergence occurs. These are the kinds of checks that only someone with porting experience would think to run.\n\nFor the reviewer, the Skill produces a PR that is upfront about being agent-assisted, but does look like a careful human submission. Reviewers will see that the code follows mlx-lm conventions: idiomatic solutions, no unnecessary comments, no speculative abstractions, no modifications to shared utilities without explicit approval. Given that the code is agent-assisted, we try to include more data than the median PR, to provide as much signal as possible. The PR body includes a report with a summary of the variants and their architectural differences, generation examples, numerical comparisons, dtype verification, per-layer comparisons against the transformers baseline. The PR always discloses that it was agent-assisted, and the Skill will not open it until the contributor has accepted the results.\n\nFor verification, the Skill generates a test manifest for a separate, non-agentic test harness that is, by design, easily reproducible and not subject to LLM hallucinations or complacency (more on this below).\n\nHow we did it\n\nSkills are recipes for agents: simple text files with guidelines that steer the model through a complex task. They are not magic; you can achieve the same results via prompting and iteration. But they provide consistency (every run follows the same process, whereas different people would prompt differently), minimize ambiguity and serve as documentation: anyone can read the Skill to understand what it does, identify missing cases and suggest improvements.\n\nWe bootstrapped the Skill by porting a model ourselves, in conversation with Claude. I asked it to port GLM 4.7 from transformers to mlx-lm, giving instructions as I would during a normal session. One trick: I pointed Claude at a checkout of mlx-lm from which I had deleted the already-existing implementation, so I could compare the output against the ground truth. After a few iterations I had a working implementation, a conversation that revealed how Claude approached the problem, and the first draft of the Skill, which Claude created as a summary of the process. I edited it heavily, and incorporated the learnings from @gabegoodhart, who kindly shared their own porting conversation for a different model 🙌.\n\nWe repeated this loop several times and the Skill grew. On the technical side, we covered stuff such as RoPE bugs that may produce plausible output that degrades with long sequences, float32 precision contamination that silently kills inference speed (you'd be surprised how frequently these things happen!), config fields that vary across model variants in ways the implementation must handle, distributed inference for super large models that don't fit on a single machine. We taught it how to invoke the hf CLI to discover and download models. Most importantly, we instructed it to run the tests that experienced porters would, and to not declare success until they pass.\n\nSource: @Prince_Canuma\n\nOn the cultural side, we covered softer characteristics and explained the conventions that make a PR easy to review: don't use comments to explain code (the reviewer has to parse the comment and the code 🤦‍♂️), never propose refactors, don't touch shared utilities without asking. These rules cost the agent nothing but save the reviewer lots of time.\n\nThe end result: the contributor types a prompt, and the Skill produces a PR like this one, plus a test manifest for the external test harness.\n\nTest harness\n\nThe Skill shares a comprehensive results report as part of the PR. All these come from tests the agent runs during conversion, but we didn't want the reviewer to take a leap of faith to accept them. To go a step forward, we created a separate, non-agentic test harness that runs systematic tests on the converted code. This brings a couple of benefits:\n\nRemoves uncertainty about the LLM hallucinating results, or being too complacent about them.\n\nGuarantees reproducibility: anyone can download the test harness repo and run the tests.\n\nDocumentation and transparency. All results are saved at various levels: summary reports, per-model details, raw inputs/outputs saved as JSON files. The tests are also copied to results folders so we know what we ran even if we make changes to the harness in the future.\n\nThe test harness is not a CI gate. Some checks are straightforward (is the output dtype correct?), but most are qualitative. Is it normal that a pre-trained model repeats itself in long sequences? Is a 4% relative logits difference against the transformers baseline acceptable? These are judgement calls based on experience with similar architectures. The harness provides useful signal, but it's the reviewer and contributor who still have to make the call.\n\nHow to use the Skill\n\nThe Skill is designed for the people who are already opening mlx-lm model PRs, or who would do it manually on their own. It's not meant for mass consumption, because PRs to mlx-lm are rarely accepted on sight. The typical cycle is: contributor opens a PR, reviewers point out improvements, both sides iterate until the quality bar is met. If this is true for expert submissions, it will remain true for agent-assisted ones.\n\nIf you're not prepared to engage in that cycle, you probably shouldn't be opening a PR. The reviewers will make an effort to understand your code (even knowing it was agent-assisted), so you should do the same. Own the code, and be ready to incorporate their feedback. In particular, don't hand reviewer comments back to an agent and post whatever it produces. LLMs double down on their decisions, go on tangents, and don't push back effectively. Once you engage with the reviewer, this becomes a person-to-person conversation, so it's your turn to discuss and be respectful of the time they put in.\n\nYou can also use the Skill to learn; you don't need to submit anything until your confidence and experience build. Read the Skill to identify problem areas you weren't aware of: it contains nearly 15 thousand words among the skill file, reference docs and utility scripts. Point it to your own fork of mlx-lm, try a conversion, and compare your output against the accepted implementation once it lands in the official repo. If you do this a few times, you'll learn a lot about transformers, MLX, and language model architectures.\n\nIf you're ready:\n\nWe developed and tested the Skill using Claude Code. The same approach would work with Codex or other coding agents, but we haven't tested them. If you try the Skill in a different environment, please let us know how it goes!\n\nNext steps and known shortcomings\n\nThe Skill works well for LLMs in mlx-lm, but there's plenty of room to grow.\n\nWhat's next\n\nmlx-vlm. Vision-language models live in a separate repo with different conventions. Beyond the modeling code, mlx-vlm requires processors to handle image pre-processing before the LLM sees the input. We're looking forward to collaborating with Prince Canuma to help him do what he does.\n\nllama.cpp. Some of the same challenges apply. Processors require image processing algorithms to be replicated in C++, and numerical differences are unavoidable. This is an area where a tightly scoped agent might help.\n\nThe test harness. We want to expand the test battery and potentially explore safe automation to run tests automatically on our infra.\n\nWhat doesn't work yet\n\nShared utilities in mlx-lm. mlx-lm is less strict than transformers about extracting common patterns into shared functions. The Skill is purposefully biased towards self-contained model files (same as transformers), but reviewers regularly ask for refactors to move repeated code into shared modules.\n\nVLMs and other architectures, as noted above.\n\nQuantized model uploads. The Skill tests quantization but doesn't upload quantized models to the Hub. We think it doesn't make sense to upload while the PR is being reviewed, but we could create a flow to do it later.\n\nThinking tests. No thinking-specific tests have been designed yet. The Skill will convert and verify generations from these models, but won't validate the thinking structure.\n\nConclusion\n\nThe bottleneck in open source is not typing speed: it's understaning the codebase to change it without breaking the implicit and explicit contracts with users. Agents can help in this process, if we teach them what matters. We explored what this looks like in the context of mlx-lm, and hope it's useful for contributors and reviewers to land high-quality model conversions faster!\n\nResources\n\nContributions:\n\ntransformers-to-mlx Skill repo\n\nTest Harnes repo\n\nExample agent-assisted conversion against a fork\n\nThe libraries:\n\nmlx-lm, the target library\n\ntransformers, the source of truth for modeling code\n\nBackground:\n\nClaude Code Skills docs\n\nTransformers design philosophy\n\nThe Transformers Library: standardizing model definitions\n\nThank you!\n\nThanks a lot to Ben, Shaun, Aritra for reading previous versions of this post and making it so much better 🙌\n\nWe are incredibly indebted to Apple for making MLX an open-source project, and to the community for instantly recognizing its value and contributing enthusiastically 🙏\n\nMore Articles from our Blog\n\nDeepSeek-V4: a million-token context that agents can actually use\n\n\n\n\n\nAI and the Future of Cybersecurity: Why Openness Matters\n\n\n\n\n\n\n\n\n\nCommunity\n\n· Sign up or log in to comment\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n+55",
+    "pdfPath": "hf-blog-the-pr-you-would-have-opened-yourself-20260502.pdf",
+    "sourceType": "upload",
+    "createdAt": "2026-05-02T22:01:50.572548",
+    "updatedAt": "2026-05-02T22:01:50.572548"
+  },
+  {
+    "docId": "hf-docs-peft-peft-20260502",
+    "title": "[PEFT] PEFT",
+    "course": "人工智能课程",
+    "module": "09_模型微调与优化",
+    "summary": "PEFT documentation PEFT and get access to the augmented documentation experience to get started 🤗 PEFT (Parameter-Efficient Fine-Tuning) is a library for efficiently adapting large pretrained models t...",
+    "keywords": [
+      "RAG",
+      "LLM",
+      "AI",
+      "transformer",
+      "fine-tuning",
+      "inference"
+    ],
+    "content": "来源：https://huggingface.co/docs/peft/index\n分类：09_模型微调与优化\n\nPEFT documentation\n\nPEFT\n\nand get access to the augmented documentation experience\n\nto get started\n\n\n\n🤗 PEFT (Parameter-Efficient Fine-Tuning) is a library for efficiently adapting large pretrained models to various downstream applications without fine-tuning all of a model’s parameters because it is prohibitively costly. PEFT methods only fine-tune a small number of (extra) model parameters - significantly decreasing computational and storage costs - while yielding performance comparable to a fully fine-tuned model. This makes it more accessible to train and store large language models (LLMs) on consumer hardware.\n\nPEFT is integrated with the Transformers, Diffusers, and Accelerate libraries to provide a faster and easier way to load, train, and use large models for inference.\n\nStart here if you're new to 🤗 PEFT to get an overview of the library's main features, and how to train a model with a PEFT method.\n\nPractical guides demonstrating how to apply various PEFT methods across different types of tasks like image classification, causal language modeling, automatic speech recognition, and more. Learn how to use 🤗 PEFT with the DeepSpeed and Fully Sharded Data Parallel scripts.\n\nGet a better theoretical understanding of how LoRA and various soft prompting methods help reduce the number of trainable parameters to make training more efficient.\n\nTechnical descriptions of how 🤗 PEFT classes and methods work.\n\n",
+    "pdfPath": "hf-docs-peft-peft-20260502.pdf",
+    "sourceType": "upload",
+    "createdAt": "2026-05-02T22:01:53.287158",
+    "updatedAt": "2026-05-02T22:01:53.287158"
+  },
+  {
+    "docId": "hf-docs-transformers-transformers-20260502",
+    "title": "[TRANSFORMERS] Transformers",
+    "course": "人工智能课程",
+    "module": "07_计算机视觉与NLP概览",
+    "summary": "Transformers documentation Transformers and get access to the augmented documentation experience to get started Transformers acts as the model-definition framework for state-of-the-art machine learnin...",
+    "keywords": [
+      "dataset",
+      "LLM",
+      "RAG",
+      "Transformers",
+      "multimodal",
+      "AI",
+      "machine learning",
+      "PyTorch",
+      "transformer",
+      "fine-tuning",
+      "inference"
+    ],
+    "content": "来源：https://huggingface.co/docs/transformers/index\n分类：07_计算机视觉与NLP概览\n\nTransformers documentation\n\nTransformers\n\nand get access to the augmented documentation experience\n\nto get started\n\n\n\n\n\nTransformers acts as the model-definition framework for state-of-the-art machine learning models in text, computer\nvision, audio, video, and multimodal models, for both inference and training.\n\nIt centralizes the model definition so that this definition is agreed upon across the ecosystem. transformers is the\npivot across frameworks: if a model definition is supported, it will be compatible with the majority of training\nframeworks (Axolotl, Unsloth, DeepSpeed, FSDP, PyTorch-Lightning, …), inference engines (vLLM, SGLang, TGI, …),\nand adjacent modeling libraries (llama.cpp, mlx, …) which leverage the model definition from transformers.\n\ntransformers\n\ntransformers\n\nWe pledge to help support new state-of-the-art models and democratize their usage by having their model definition be\nsimple, customizable, and efficient.\n\nThere are over 1M+ Transformers model checkpoints on the Hugging Face Hub you can use.\n\nExplore the Hub today to find a model and use Transformers to help you get started right away.\n\nExplore the Models Timeline to discover the latest text, vision, audio and multimodal model architectures in Transformers.\n\nFeatures\n\nTransformers provides everything you need for inference or training with state-of-the-art pretrained models. Some of the main features include:\n\nPipeline: Simple and optimized inference class for many machine learning tasks like text generation, image segmentation, automatic speech recognition, document question answering, and more.\n\nTrainer: A comprehensive trainer that supports features such as mixed precision, torch.compile, and FlashAttention for training and distributed training for PyTorch models.\n\ngenerate: Fast text generation with large language models (LLMs) and vision language models (VLMs), including support for streaming and multiple decoding strategies.\n\nDesign\n\nRead our Philosophy to learn more about Transformers’ design principles.\n\nTransformers is designed for developers and machine learning engineers and researchers. Its main design principles are:\n\nFast and easy to use: Every model is implemented from only three main classes (configuration, model, and preprocessor) and can be quickly used for inference or training with Pipeline or Trainer.\n\nPretrained models: Reduce your carbon footprint, compute cost and time by using a pretrained model instead of training an entirely new one. Each pretrained model is reproduced as closely as possible to the original model and offers state-of-the-art performance.\n\nLearn\n\nIf you’re new to Transformers or want to learn more about transformer models, we recommend starting with the LLM course. This comprehensive course covers everything from the fundamentals of how transformer models work to practical applications across various tasks. You’ll learn the complete workflow, from curating high-quality datasets to fine-tuning large language models and implementing reasoning capabilities. The course contains both theoretical and hands-on exercises to build a solid foundational knowledge of transformer models as you learn.\n\n",
+    "pdfPath": "hf-docs-transformers-transformers-20260502.pdf",
+    "sourceType": "upload",
+    "createdAt": "2026-05-02T22:01:57.637585",
+    "updatedAt": "2026-05-02T22:01:57.637585"
+  },
+  {
+    "docId": "hf-docs-datasets-datasets-20260502",
+    "title": "[DATASETS] Datasets",
+    "course": "人工智能课程",
+    "module": "11_数据处理与工程",
+    "summary": "Datasets documentation Datasets and get access to the augmented documentation experience to get started 🤗 Datasets is a library for easily accessing and sharing AI datasets for Audio, Computer Vision,...",
+    "keywords": [
+      "deep learning",
+      "dataset",
+      "NLP",
+      "AI",
+      "machine learning",
+      "Datasets"
+    ],
+    "content": "来源：https://huggingface.co/docs/datasets/index\n分类：11_数据处理与工程\n\nDatasets documentation\n\nDatasets\n\nand get access to the augmented documentation experience\n\nto get started\n\n\n\n🤗 Datasets is a library for easily accessing and sharing AI datasets for Audio, Computer Vision, and Natural Language Processing (NLP) tasks.\n\nLoad a dataset in a single line of code, and use our powerful data processing and streaming methods to quickly get your dataset ready for training in a deep learning model. Backed by the Apache Arrow format, process large datasets with zero-copy reads without any memory constraints for optimal speed and efficiency. We also feature a deep integration with the Hugging Face Hub, allowing you to easily load and share a dataset with the wider machine learning community.\n\nFind your dataset today on the Hugging Face Hub, and take an in-depth look inside of it with the live viewer.\n\nLearn the basics and become familiar with loading, accessing, and processing a dataset. Start here if you are using 🤗 Datasets for the first time!\n\nPractical guides to help you achieve a specific goal. Take a look at these guides to learn how to use 🤗 Datasets to solve real-world problems.\n\nHigh-level explanations for building a better understanding about important topics such as the underlying data format, the cache, and how datasets are generated.\n\nTechnical descriptions of how 🤗 Datasets classes and methods work.\n\n",
+    "pdfPath": "hf-docs-datasets-datasets-20260502.pdf",
+    "sourceType": "upload",
+    "createdAt": "2026-05-02T22:02:11.303289",
+    "updatedAt": "2026-05-02T22:02:11.303289"
+  },
+  {
+    "docId": "hf-docs-diffusers-diffusers-20260502",
+    "title": "[DIFFUSERS] Diffusers",
+    "course": "人工智能课程",
+    "module": "10_生成式AI与多模态",
+    "summary": "Diffusers documentation Diffusers and get access to the augmented documentation experience to get started Diffusers is a library of state-of-the-art pretrained diffusion models for generating videos, ...",
+    "keywords": [
+      "Diffusers",
+      "AI",
+      "Diffusion",
+      "inference"
+    ],
+    "content": "来源：https://huggingface.co/docs/diffusers/index\n分类：10_生成式AI与多模态\n\nDiffusers documentation\n\nDiffusers\n\nand get access to the augmented documentation experience\n\nto get started\n\n\n\n\n\nDiffusers is a library of state-of-the-art pretrained diffusion models for generating videos, images, and audio.\n\nThe library revolves around the DiffusionPipeline, an API designed for:\n\neasy inference with only a few lines of code\n\nflexibility to mix-and-match pipeline components (models, schedulers)\n\nloading and using adapters like LoRA\n\nDiffusers also comes with optimizations - such as offloading and quantization - to ensure even the largest models are accessible on memory-constrained devices. If memory is not an issue, Diffusers supports torch.compile to boost inference speed.\n\nGet started right away with a Diffusers model on the Hub today!\n\nLearn\n\nIf you’re a beginner, we recommend starting with the Hugging Face Diffusion Models Course. You’ll learn the theory behind diffusion models, and learn how to use the Diffusers library to generate images, fine-tune your own models, and more.\n\n",
+    "pdfPath": "hf-docs-diffusers-diffusers-20260502.pdf",
+    "sourceType": "upload",
+    "createdAt": "2026-05-02T22:02:16.406545",
+    "updatedAt": "2026-05-02T22:02:16.406545"
+  },
+  {
+    "docId": "hf-docs-evaluate-evaluate-20260502",
+    "title": "[EVALUATE] Evaluate",
+    "course": "人工智能课程",
+    "module": "11_数据处理与工程",
+    "summary": "Evaluate documentation Evaluate on the Hub and get access to the augmented documentation experience to get started You can evaluate AI models on the Hub in multiple ways and this page will guide you t...",
+    "keywords": [
+      "reinforcement learning",
+      "dataset",
+      "LLM",
+      "NLP",
+      "AI",
+      "machine learning",
+      "Evaluate"
+    ],
+    "content": "来源：https://huggingface.co/docs/evaluate/index\n分类：11_数据处理与工程\n\nEvaluate documentation\n\nEvaluate on the Hub\n\nand get access to the augmented documentation experience\n\nto get started\n\n\n\n\n\nYou can evaluate AI models on the Hub in multiple ways and this page will guide you through the different options:\n\nCommunity Leaderboards bring together the best models for a given task or domain and make them accessible to everyone by ranking them.\n\nModel Cards provide a comprehensive overview of a model’s capabilities from the author’s perspective.\n\nLibraries and Packages give you the tools to evaluate your models on the Hub.\n\nCommunity Leaderboards\n\nCommunity leaderboards show how a model performs on a given task or domain. For example, there are leaderboards for question answering, reasoning, classification, vision, and audio. If you’re tackling a new task, you can use a leaderboard to see how a model performs on it.\n\nHere are some examples of community leaderboards:\n\nThere are many more leaderboards on the Hub. Check out all the leaderboards via this search or use this dedicated Space to find a leaderboard for your task.\n\nModel Cards\n\nModel cards provide an overview of a model’s capabilities evaluated by the community or the model’s author. They are a great way to understand a model’s capabilities and limitations.\n\n\n\nUnlike leaderboards, model card evaluation scores are often created by the author, rather than by the community.\n\nFor information on reporting results, see details on the Model Card Evaluation Results metadata.\n\nLibraries and packages\n\nThere are a number of open-source libraries and packages that you can use to evaluate your models on the Hub. These are useful if you want to evaluate a custom model or performance on a custom evaluation task.\n\nLightEval\n\nLightEval is a library for evaluating LLMs. It is designed to be comprehensive and customizable. Visit the LightEval repository for more information.\n\nFor more recent evaluation approaches that are popular on the Hugging Face Hub that are currently more actively maintained, check out LightEval.\n\n🤗 Evaluate\n\nA library for easily evaluating machine learning models and datasets.\n\nWith a single line of code, you get access to dozens of evaluation methods for different domains (NLP, Computer Vision, Reinforcement Learning, and more!). Be it on your local machine or in a distributed training setup, you can evaluate your models in a consistent and reproducible way!\n\nVisit the 🤗 Evaluate organization for a full list of available metrics. Each metric has a dedicated Space with an interactive demo for how to use the metric, and a documentation card detailing the metrics limitations and usage.\n\nLearn the basics and become familiar with loading, computing, and saving with 🤗 Evaluate. Start here if you are using 🤗 Evaluate for the first time!\n\nPractical guides to help you achieve a specific goal. Take a look at these guides to learn how to use 🤗 Evaluate to solve real-world problems.\n\nHigh-level explanations for building a better understanding of important topics such as considerations going into evaluating a model or dataset and the difference between metrics, measurements, and comparisons.\n\nTechnical descriptions of how 🤗 Evaluate classes and methods work.\n\n",
+    "pdfPath": "hf-docs-evaluate-evaluate-20260502.pdf",
+    "sourceType": "upload",
+    "createdAt": "2026-05-02T22:02:23.557250",
+    "updatedAt": "2026-05-02T22:02:23.557250"
+  },
+  {
+    "docId": "hf-docs-timm-timm-20260502",
+    "title": "[TIMM] timm",
+    "course": "人工智能课程",
+    "module": "12_模型部署与工程化",
+    "summary": "timm documentation timm and get access to the augmented documentation experience to get started timm is a library containing SOTA computer vision models, layers, utilities, optimizers, schedulers, dat...",
+    "keywords": [
+      "AI"
+    ],
+    "content": "来源：https://huggingface.co/docs/timm/index\n分类：12_模型部署与工程化\n\ntimm documentation\n\ntimm\n\nand get access to the augmented documentation experience\n\nto get started\n\n\n\ntimm is a library containing SOTA computer vision models, layers, utilities, optimizers, schedulers, data-loaders, augmentations, and training/evaluation scripts.\n\ntimm\n\nIt comes packaged with >700 pretrained models, and is designed to be flexible and easy to use.\n\nRead the quick start guide to get up and running with the timm library. You will learn how to load, discover, and use pretrained models included in the library.\n\ntimm\n\nLearn the basics and become familiar with timm. Start here if you are using timm for the first time!\n\nTechnical descriptions of how timm classes and methods work.\n\n",
+    "pdfPath": "hf-docs-timm-timm-20260502.pdf",
+    "sourceType": "upload",
+    "createdAt": "2026-05-02T22:02:38.255640",
+    "updatedAt": "2026-05-02T22:02:38.255640"
+  },
+  {
+    "docId": "hf-docs-accelerate-accelerate-20260502",
+    "title": "[ACCELERATE] Accelerate",
+    "course": "人工智能课程",
+    "module": "12_模型部署与工程化",
+    "summary": "Accelerate documentation Accelerate and get access to the augmented documentation experience to get started Accelerate is a library that enables the same PyTorch code to be run across any distributed ...",
+    "keywords": [
+      "AI",
+      "Accelerate",
+      "PyTorch",
+      "inference"
+    ],
+    "content": "来源：https://huggingface.co/docs/accelerate/index\n分类：12_模型部署与工程化\n\nAccelerate documentation\n\nAccelerate\n\nand get access to the augmented documentation experience\n\nto get started\n\n\n\nAccelerate is a library that enables the same PyTorch code to be run across any distributed configuration by adding just four lines of code! In short, training and inference at scale made simple, efficient and adaptable.\n\n+ from accelerate import Accelerator\n+ accelerator = Accelerator()\n\n+ model, optimizer, training_dataloader, scheduler = accelerator.prepare(\n+     model, optimizer, training_dataloader, scheduler\n+ )\n\n  for batch in training_dataloader:\n      optimizer.zero_grad()\n      inputs, targets = batch\n      inputs = inputs.to(device)\n      targets = targets.to(device)\n      outputs = model(inputs)\n      loss = loss_function(outputs, targets)\n+     accelerator.backward(loss)\n      optimizer.step()\n      scheduler.step()\n\nBuilt on torch_xla and torch.distributed, Accelerate takes care of the heavy lifting, so you don’t have to write any custom code to adapt to these platforms.\nConvert existing codebases to utilize DeepSpeed, perform fully sharded data parallelism, and have automatic support for mixed-precision training!\n\ntorch_xla\n\ntorch.distributed\n\nTo get a better idea of this process, make sure to check out the Tutorials!\n\nThis code can then be launched on any system through Accelerate’s CLI interface:\n\naccelerate launch {my_script.py}\n\nLearn the basics and become familiar with using Accelerate. Start here if you are using Accelerate for the first time!\n\nPractical guides to help you achieve a specific goal. Take a look at these guides to learn how to use Accelerate to solve real-world problems.\n\nHigh-level explanations for building a better understanding of important topics such as avoiding subtle nuances and pitfalls in distributed training and DeepSpeed.\n\nTechnical descriptions of how Accelerate classes and methods work.\n\n",
+    "pdfPath": "hf-docs-accelerate-accelerate-20260502.pdf",
+    "sourceType": "upload",
+    "createdAt": "2026-05-02T22:02:41.879769",
+    "updatedAt": "2026-05-02T22:02:41.879769"
+  },
+  {
+    "docId": "hf-docs-trl-trl-20260502",
+    "title": "[TRL] TRL",
+    "course": "人工智能课程",
+    "module": "09_模型微调与优化",
+    "summary": "TRL documentation TRL - Transformers Reinforcement Learning and get access to the augmented documentation experience to get started TRL is a full stack library where we provide a set of tools to train...",
+    "keywords": [
+      "reinforcement learning",
+      "dataset",
+      "LLM",
+      "Diffusion",
+      "AI",
+      "agent",
+      "transformer",
+      "fine-tuning"
+    ],
+    "content": "来源：https://huggingface.co/docs/trl/index\n分类：09_模型微调与优化\n\nTRL documentation\n\nTRL - Transformers Reinforcement Learning\n\nand get access to the augmented documentation experience\n\nto get started\n\n\n\nTRL is a full stack library where we provide a set of tools to train transformer language models with methods like Supervised Fine-Tuning (SFT), Group Relative Policy Optimization (GRPO), Direct Preference Optimization (DPO), Reward Modeling, and more.\nThe library is integrated with 🤗 transformers.\n\n🎉 What’s New\n\nTRL v1: We released TRL v1 — a major milestone that marks a real shift in what TRL is. Read the blog post to learn more.\n\nTaxonomy\n\nBelow is the current list of TRL trainers, organized by method type (⚡️ = vLLM support; 🧪 = experimental).\n\nOnline methods\n\nGRPOTrainer ⚡️\n\nGRPOTrainer\n\nRLOOTrainer ⚡️\n\nRLOOTrainer\n\nOnlineDPOTrainer 🧪 ⚡️\n\nOnlineDPOTrainer\n\nNashMDTrainer 🧪 ⚡️\n\nNashMDTrainer\n\nPPOTrainer 🧪\n\nPPOTrainer\n\nXPOTrainer 🧪 ⚡️\n\nXPOTrainer\n\nReward modeling\n\nRewardTrainer\n\nRewardTrainer\n\nPRMTrainer 🧪\n\nPRMTrainer\n\nOffline methods\n\nSFTTrainer\n\nSFTTrainer\n\nDPOTrainer\n\nDPOTrainer\n\nBCOTrainer 🧪\n\nBCOTrainer\n\nCPOTrainer 🧪\n\nCPOTrainer\n\nKTOTrainer 🧪\n\nKTOTrainer\n\nORPOTrainer 🧪\n\nORPOTrainer\n\nKnowledge distillation\n\nGKDTrainer 🧪\n\nGKDTrainer\n\nMiniLLMTrainer 🧪\n\nMiniLLMTrainer\n\nYou can also explore TRL-related models, datasets, and demos in the TRL Hugging Face organization.\n\nLearn\n\nLearn post-training with TRL and other libraries in 🤗 smol course.\n\nContents\n\nThe documentation is organized into the following sections:\n\nGetting Started: installation and quickstart guide.\n\nConceptual Guides: dataset formats, training FAQ, and understanding logs.\n\nHow-to Guides: reducing memory usage, speeding up training, distributing training, etc.\n\nIntegrations: DeepSpeed, Liger Kernel, PEFT, etc.\n\nExamples: example overview, community tutorials, etc.\n\nAPI: trainers, utils, etc.\n\nBlog posts\n\nPublished March 27, 2026\n\nTRL v1: Post-Training Library That Holds When the Field Invalidates Its Own Assumptions\n\nPublished October 23, 2025\n\nBuilding the Open Agent Ecosystem Together: Introducing OpenEnv\n\nPublished on August 7, 2025\n\nVision Language Model Alignment in TRL ⚡️\n\nPublished on June 3, 2025\n\nNO GPU left behind: Unlocking Efficiency with Co-located vLLM in TRL\n\nPublished on May 25, 2025\n\n🐯 Liger GRPO meets TRL\n\nPublished on January 28, 2025\n\nOpen-R1: a fully open reproduction of DeepSeek-R1\n\nPublished on July 10, 2024\n\nPreference Optimization for Vision Language Models with TRL\n\nPublished on June 12, 2024\n\nPutting RL back in RLHF\n\nPublished on September 29, 2023\n\nFinetune Stable Diffusion Models with DDPO via TRL\n\nPublished on August 8, 2023\n\nFine-tune Llama 2 with DPO\n\nPublished on April 5, 2023\n\nStackLLaMA: A hands-on guide to train LLaMA with RLHF\n\nPublished on March 9, 2023\n\nFine-tuning 20B LLMs with RLHF on a 24GB consumer GPU\n\nPublished on December 9, 2022\n\nIllustrating Reinforcement Learning from Human Feedback\n\nTalks\n\nTalk given on October 30, 2025\n\nFine tuning with TRL\n\n",
+    "pdfPath": "hf-docs-trl-trl-20260502.pdf",
+    "sourceType": "upload",
+    "createdAt": "2026-05-02T22:02:45.863243",
+    "updatedAt": "2026-05-02T22:02:45.863243"
+  },
+  {
+    "docId": "hf-docs-safetensors-safetensors-20260502",
+    "title": "[SAFETENSORS] Safetensors",
+    "course": "人工智能课程",
+    "module": "12_模型部署与工程化",
+    "summary": "Safetensors documentation Safetensors and get access to the augmented documentation experience to get started Safetensors is a new simple format for storing tensors safely (as opposed to pickle) and t...",
+    "keywords": [
+      "Diffusion",
+      "embedding",
+      "BERT",
+      "GPT",
+      "NLP",
+      "AI",
+      "HuggingFace",
+      "Safetensors",
+      "PyTorch",
+      "transformer"
+    ],
+    "content": "来源：https://huggingface.co/docs/safetensors/index\n分类：12_模型部署与工程化\n\nSafetensors documentation\n\nSafetensors\n\nand get access to the augmented documentation experience\n\nto get started\n\n\n\nSafetensors is a new simple format for storing tensors safely (as opposed to pickle) and that is still fast (zero-copy). Safetensors is really fast 🚀.\n\nInstallation\n\nwith pip:\n\npip install safetensors\n\nwith conda:\n\nconda install -c conda-forge safetensors\n\nUsage\n\nLoad tensors\n\nfrom safetensors import safe_open\n\ntensors = {}\nwith safe_open(\"model.safetensors\", framework=\"pt\", device=0) as f:\n    for k in f.keys():\n        tensors[k] = f.get_tensor(k)\n\nLoading only part of the tensors (interesting when running on multiple GPU)\n\nfrom safetensors import safe_open\n\ntensors = {}\nwith safe_open(\"model.safetensors\", framework=\"pt\", device=0) as f:\n    tensor_slice = f.get_slice(\"embedding\")\n    vocab_size, hidden_dim = tensor_slice.get_shape()\n    tensor = tensor_slice[:, :hidden_dim]\n\nSave tensors\n\nimport torch\nfrom safetensors.torch import save_file\n\ntensors = {\n    \"embedding\": torch.zeros((2, 2)),\n    \"attention\": torch.zeros((2, 3))\n}\nsave_file(tensors, \"model.safetensors\")\n\nFormat\n\nLet’s say you have safetensors file named model.safetensors, then model.safetensors will have the following internal format:\n\nmodel.safetensors\n\nmodel.safetensors\n\nFeatured Projects\n\nSafetensors is being used widely at leading AI enterprises, such as Hugging Face, EleutherAI, and StabilityAI. Here is a non-exhaustive list of projects that are using safetensors:\n\nhuggingface/transformers\n\nml-explore/mlx\n\nhuggingface/candle\n\nAUTOMATIC1111/stable-diffusion-webui\n\nLlama-cpp\n\nmicrosoft/TaskMatrix\n\nhpcaitech/ColossalAI\n\nhuggingface/pytorch-image-models\n\nCivitAI\n\nhuggingface/diffusers\n\ncoreylowman/dfdx\n\ninvoke-ai/InvokeAI\n\noobabooga/text-generation-webui\n\nSanster/lama-cleaner\n\nPaddlePaddle/PaddleNLP\n\nAIGC-Audio/AudioGPT\n\nbrycedrennan/imaginAIry\n\ncomfyanonymous/ComfyUI\n\nLianjiaTech/BELLE\n\nalvarobartt/safejax\n\nMaartenGr/BERTopic\n\nrachthree/safestructures\n\njustinchuby/onnx-safetensors\n\n",
+    "pdfPath": "hf-docs-safetensors-safetensors-20260502.pdf",
+    "sourceType": "upload",
+    "createdAt": "2026-05-02T22:03:08.807519",
+    "updatedAt": "2026-05-02T22:03:08.807519"
+  },
+  {
+    "docId": "hf-docs-bitsandbytes-bitsandbytes-20260502",
+    "title": "[BITSANDBYTES] Bitsandbytes",
+    "course": "人工智能课程",
+    "module": "12_模型部署与工程化",
+    "summary": "Bitsandbytes documentation bitsandbytes and get access to the augmented documentation experience to get started bitsandbytes enables accessible large language models via k-bit quantization for PyTorch",
+    "keywords": [
+      "LLM",
+      "AI",
+      "PyTorch",
+      "vector",
+      "Bitsandbytes",
+      "inference"
+    ],
+    "content": "来源：https://huggingface.co/docs/bitsandbytes/index\n分类：12_模型部署与工程化\n\nBitsandbytes documentation\n\nbitsandbytes\n\nand get access to the augmented documentation experience\n\nto get started\n\n\n\nbitsandbytes enables accessible large language models via k-bit quantization for PyTorch. bitsandbytes provides three main features for dramatically reducing memory consumption for inference and training:\n\n8-bit optimizers uses block-wise quantization to maintain 32-bit performance at a small fraction of the memory cost.\n\nLLM.int8() or 8-bit quantization enables large language model inference with only half the required memory and without any performance degradation. This method is based on vector-wise quantization to quantize most features to 8-bits and separately treating outliers with 16-bit matrix multiplication.\n\nQLoRA or 4-bit quantization enables large language model training with several memory-saving techniques that don’t compromise performance. This method quantizes a model to 4-bits and inserts a small set of trainable low-rank adaptation (LoRA) weights to allow training.\n\nbitsandbytes is MIT licensed.\n\n",
+    "pdfPath": "hf-docs-bitsandbytes-bitsandbytes-20260502.pdf",
+    "sourceType": "upload",
+    "createdAt": "2026-05-02T22:03:23.522819",
+    "updatedAt": "2026-05-02T22:03:23.522819"
+  },
+  {
+    "docId": "hf-docs-lighteval-lighteval-20260502",
+    "title": "[LIGHTEVAL] Lighteval",
+    "course": "人工智能课程",
+    "module": "11_数据处理与工程",
+    "summary": "Lighteval documentation Lighteval and get access to the augmented documentation experience to get started 🤗 Lighteval is your all-in-one toolkit for evaluating Large Language Models (LLMs) across mult...",
+    "keywords": [
+      "LLM",
+      "GPT",
+      "AI",
+      "HuggingFace",
+      "transformer",
+      "Lighteval",
+      "inference"
+    ],
+    "content": "来源：https://huggingface.co/docs/lighteval/index\n分类：11_数据处理与工程\n\nLighteval documentation\n\nLighteval\n\nand get access to the augmented documentation experience\n\nto get started\n\n\n\n🤗 Lighteval is your all-in-one toolkit for evaluating Large Language Models\n(LLMs) across multiple backends with ease. Dive deep into your model’s\nperformance by saving and exploring detailed, sample-by-sample results to debug\nand see how your models stack up.\n\nKey Features\n\n🚀 Multi-Backend Support\n\nEvaluate your models using the most popular and efficient inference backends:\n\neval: Use inspect-ai as backend to evaluate and inspect your models ! (prefered way)\n\neval\n\ntransformers: Evaluate models on CPU or one or more GPUs using 🤗\nAccelerate\n\ntransformers\n\nnanotron: Evaluate models in distributed settings using ⚡️\nNanotron\n\nnanotron\n\nvllm: Evaluate models on one or more GPUs using 🚀\nVLLM\n\nvllm\n\ncustom: Evaluate custom models (can be anything)\n\ncustom\n\nsglang: Evaluate models using SGLang as backend\n\nsglang\n\ninference-endpoint: Evaluate models using Hugging Face’s Inference Endpoints API\n\ninference-endpoint\n\ntgi: Evaluate models using 🔗 Text Generation Inference running locally\n\ntgi\n\nlitellm: Evaluate models on any compatible API using LiteLLM\n\nlitellm\n\ninference-providers: Evaluate models using HuggingFace’s inference providers as backend**: Distributed training and evaluation\n\ninference-providers\n\n📊 Comprehensive Evaluation\n\nExtensive Task Library: 1000s pre-built evaluation tasks\n\nCustom Task Creation: Build your own evaluation tasks\n\nFlexible Metrics: Support for custom metrics and scoring\n\nDetailed Analysis: Sample-by-sample results for deep insights\n\n🔧 Easy Customization\n\nCustomization at your fingertips: create new tasks,\nmetrics or model tailored to your needs, or browse all our existing tasks and metrics.\n\n☁️ Seamless Integration\n\nSeamlessly experiment, benchmark, and store your results on the Hugging Face Hub, S3, or locally.\n\nQuick Start\n\nInstallation\n\npip install lighteval\n\nBasic Usage\n\nlighteval eval \"hf-inference-providers/openai/gpt-oss-20b\" \\\n    gpqa:diamond \\\n    --bundle-dir gpt-oss-bundle \\\n    --repo-id OpenEvals/evals\n\nResulting Space:\n\n",
+    "pdfPath": "hf-docs-lighteval-lighteval-20260502.pdf",
+    "sourceType": "upload",
+    "createdAt": "2026-05-02T22:03:30.011167",
+    "updatedAt": "2026-05-02T22:03:30.011167"
+  },
+  {
+    "docId": "hf-docs-lerobot-lerobot-20260502",
+    "title": "[LEROBOT] LeRobot",
+    "course": "人工智能课程",
+    "module": "11_数据处理与工程",
+    "summary": "LeRobot documentation LeRobot and get access to the augmented documentation experience to get started State-of-the-art machine learning for real-world robotics 🤗 LeRobot aims to provide models, datase...",
+    "keywords": [
+      "reinforcement learning",
+      "dataset",
+      "LeRobot",
+      "AI",
+      "HuggingFace",
+      "machine learning",
+      "PyTorch"
+    ],
+    "content": "来源：https://huggingface.co/docs/lerobot/index\n分类：11_数据处理与工程\n\nLeRobot documentation\n\nLeRobot\n\nand get access to the augmented documentation experience\n\nto get started\n\n\n\nState-of-the-art machine learning for real-world robotics\n\n🤗 LeRobot aims to provide models, datasets, and tools for real-world robotics in PyTorch. The goal is to lower the barrier for entry to robotics so that everyone can contribute and benefit from sharing datasets and pretrained models.\n\n🤗 LeRobot contains state-of-the-art approaches that have been shown to transfer to the real-world with a focus on imitation learning and reinforcement learning.\n\n🤗 LeRobot already provides a set of pretrained models, datasets with human collected demonstrations, and simulated environments so that everyone can get started.\n\n🤗 LeRobot hosts pretrained models and datasets on the LeRobot HuggingFace page.\n\nJoin the LeRobot community on Discord\n\n",
+    "pdfPath": "hf-docs-lerobot-lerobot-20260502.pdf",
+    "sourceType": "upload",
+    "createdAt": "2026-05-02T22:03:52.313147",
+    "updatedAt": "2026-05-02T22:03:52.313147"
+  },
+  {
+    "docId": "hf-docs-autotrain-autotrain-20260502",
+    "title": "[AUTOTRAIN] AutoTrain",
+    "course": "人工智能课程",
+    "module": "09_模型微调与优化",
+    "summary": "AutoTrain documentation AutoTrain and get access to the augmented documentation experience to get started This project is no longer maintained",
+    "keywords": [
+      "AutoTrain",
+      "dataset",
+      "embedding",
+      "NLP",
+      "AI",
+      "machine learning",
+      "transformer",
+      "RAG",
+      "CV"
+    ],
+    "content": "来源：https://huggingface.co/docs/autotrain/index\n分类：09_模型微调与优化\n\nAutoTrain documentation\n\nAutoTrain\n\nand get access to the augmented documentation experience\n\nto get started\n\n\n\nThis project is no longer maintained. No new features will be added and bugs will not be fixed. We recommend using Axolotl, TRL, or transformers.Trainer.\n\n\n\n🤗 AutoTrain Advanced (or simply AutoTrain), developed by Hugging Face, is a robust no-code\nplatform designed to simplify the process of training state-of-the-art models across\nmultiple domains: Natural Language Processing (NLP), Computer Vision (CV),\nand even Tabular Data analysis. This tool leverages the powerful frameworks created by\nvarious teams at Hugging Face, making advanced machine learning and artificial intelligence accessible to a broader\naudience without requiring deep technical expertise.\n\nWho should use AutoTrain?\n\nAutoTrain is the perfect tool for anyone eager to dive into the world of machine learning\nwithout getting bogged down by the complexities of model training.\nWhether you’re a business professional, researcher, educator, or hobbyist,\nAutoTrain offers the simplicity of a no-code interface while still providing the\ncapabilities necessary to develop sophisticated models tailored to your unique datasets.\n\nAutoTrain is for anyone who wants to train a state-of-the-art model for a NLP, CV, Speech or even Tabular task,\nbut doesn’t want to spend time on the technical details of training a model.\n\nOur mission is to democratize machine learning technology, ensuring it is not only\naccessible to data scientists and ML engineers but also to those without a technical\nbackground. If you’re looking to harness the power of AI for your projects,\nAutoTrain is your answer.\n\nHow to use AutoTrain?\n\nWe offer several ways to use AutoTrain:\n\nNo code users can use AutoTrain Advanced by creating a new space with AutoTrain Docker image:\nClick here to create AutoTrain Space.\nRemember to keep your space private and ensure it is equipped with the necessary hardware resources (GPU) for optimal performance.\n\nNo code users can use AutoTrain Advanced by creating a new space with AutoTrain Docker image:\nClick here to create AutoTrain Space.\nRemember to keep your space private and ensure it is equipped with the necessary hardware resources (GPU) for optimal performance.\n\nAutoTrain Advanced\n\nIf you prefer a more hands-on approach, AutoTrain Advanced can also be run locally\nthrough its intuitive UI or accessed via the Python API provided in the autotrain-advanced\npackage. This flexibility allows developers to integrate AutoTrain capabilities directly\ninto their projects, customize workflows, and enhance their toolsets with advanced machine\nlearning functionalities.\n\nIf you prefer a more hands-on approach, AutoTrain Advanced can also be run locally\nthrough its intuitive UI or accessed via the Python API provided in the autotrain-advanced\npackage. This flexibility allows developers to integrate AutoTrain capabilities directly\ninto their projects, customize workflows, and enhance their toolsets with advanced machine\nlearning functionalities.\n\nBy bridging the gap between cutting-edge technology and practical usability,\nAutoTrain Advanced empowers users to achieve remarkable results in AI without the need\nfor extensive programming knowledge. Start your journey with AutoTrain today and unlock\nthe potential of machine learning for your projects!\n\nWalkthroughs\n\nTo get started with AutoTrain, check out our walkthroughs and tutorials:\n\nExtractive Question Answering with AutoTrain\n\nFinetuning PaliGemma with AutoTrain\n\nTraining an Object Detection Model with AutoTrain\n\nHow to Fine-Tune Custom Embedding Models Using AutoTrain\n\nTrain Custom Models on Hugging Face Spaces with AutoTrain SpaceRunner\n\nHow to Finetune phi-3 on MacBook Pro\n\nFinetune Mixtral 8x7B with AutoTrain\n\nEasily Train Models with H100 GPUs on NVIDIA DGX Cloud\n\n",
+    "pdfPath": "hf-docs-autotrain-autotrain-20260502.pdf",
+    "sourceType": "upload",
+    "createdAt": "2026-05-02T22:03:56.644245",
+    "updatedAt": "2026-05-02T22:03:56.644245"
+  }
+]
