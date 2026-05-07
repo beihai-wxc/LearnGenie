@@ -214,9 +214,21 @@ async function loadDocumentsFromStore() {
 }
 
 function computeSourceSignature(documents: KnowledgeDocument[]) {
-  return documents
-    .map((doc) => `${doc.docId}:${doc.updatedAt}:${doc.content.length}:${doc.pdfPath}:${doc.sourceType}`)
-    .join('|');
+  return JSON.stringify(
+    documents.map((doc) => ({
+      docId: doc.docId,
+      title: doc.title,
+      course: doc.course,
+      module: doc.module,
+      summary: doc.summary,
+      keywords: doc.keywords,
+      content: doc.content,
+      pdfPath: doc.pdfPath,
+      sourceType: doc.sourceType,
+      createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt,
+    })),
+  );
 }
 
 function buildChunkMap(chunks: KnowledgeChunk[]) {

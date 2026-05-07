@@ -224,4 +224,39 @@ describe('knowledge retriever bootstrap and indexing', () => {
     expect(secondIndexRaw).toBe(firstIndexRaw);
     expect(secondMetadataRaw).toBe(firstMetadataRaw);
   });
+
+  it('rebuilds the persisted index when retrieval fields change without changing content length', async () => {
+    await seedStore({
+      seeds: [seedDoc],
+      uploads: [],
+    });
+
+    await buildKnowledgeIndex({ force: true });
+    const firstIndexRaw = await fs.readFile(KNOWLEDGE_INDEX_FILE, 'utf8');
+
+    const updatedSeedDoc: KnowledgeDocument = {
+      ...seedDoc,
+      title: '人工智能基础总览',
+      summary: '介绍人工智能的核心能力，以及推理、学习、检索和感知之间的联系。',
+      keywords: ['人工智能', '机器学习', '知识表示', '检索', '感知'],
+      module: '基础导览',
+      course: '智能课程',
+      content: seedDoc.content.replace('知识地图', '认知地图'),
+    };
+
+    expect(updatedSeedDoc.content.length).toBe(seedDoc.content.length);
+
+    await seedStore({
+      seeds: [updatedSeedDoc],
+      uploads: [],
+    });
+    resetRetrieverCache();
+
+    const rebuilt = await buildKnowledgeIndex();
+    const secondIndexRaw = await fs.readFile(KNOWLEDGE_INDEX_FILE, 'utf8');
+
+    expect(rebuilt.documents[0]?.title).toBe('人工智能基础总览');
+    expect(rebuilt.documents[0]?.module).toBe('基础导览');
+    expect(secondIndexRaw).not.toBe(firstIndexRaw);
+  });
 });
