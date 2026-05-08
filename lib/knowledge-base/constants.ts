@@ -9,7 +9,7 @@ export const KNOWLEDGE_METADATA_FILE = path.join(KNOWLEDGE_INDEX_DIR, 'metadata.
 export const KNOWLEDGE_PDF_DIR = path.join(KNOWLEDGE_RAG_ROOT, 'pdfs');
 export const KNOWLEDGE_INDEX_VERSION = 1;
 
-export const KNOWLEDGE_SEARCH_MATCH_THRESHOLD = 0.16;
+export const KNOWLEDGE_SEARCH_MATCH_THRESHOLD = 0.1;
 export const KNOWLEDGE_SEARCH_TOP_K = 5;
 export const KNOWLEDGE_CHUNK_SIZE = 560;
 export const KNOWLEDGE_CHUNK_OVERLAP = 80;

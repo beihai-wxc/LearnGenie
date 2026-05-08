@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
 import { useEffect, useState, type KeyboardEvent, type ReactNode } from 'react';
@@ -49,6 +48,8 @@ interface KnowledgeResultPanelState {
   query: string;
   results: KnowledgeSearchResult[];
   fallbackSession: SessionDraft;
+  fallbackLabel: string;
+  fallbackHint?: string;
 }
 
 const initialFormState: FormState = {
@@ -89,8 +90,6 @@ export default function Page() {
     useMediaGenerationStore.getState().revokeObjectUrls();
     useMediaGenerationStore.setState({ tasks: {} });
   }, []);
-  /* eslint-enable react-hooks/set-state-in-effect */
-
   const updateForm = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (field === 'requirement' || field === 'pdfFile') {
@@ -280,6 +279,8 @@ export default function Page() {
             query: form.pdfFile.name,
             results: uploadMatchJson.results as KnowledgeSearchResult[],
             fallbackSession,
+            fallbackLabel: '直接基于上传文件生成课堂',
+            fallbackHint: '如果这些知识库资料不符合你的意图，你仍然可以直接使用刚上传的文件生成课堂。',
           });
           return;
         }
@@ -311,6 +312,8 @@ export default function Page() {
           query: baseRequirements.requirement,
           results: knowledgeJson.results as KnowledgeSearchResult[],
           fallbackSession,
+          fallbackLabel: '继续直接根据主题生成课程',
+          fallbackHint: '如果你不想使用知识库资料，也可以跳过选择，直接让系统根据当前主题生成课堂。',
         });
         return;
       }
@@ -390,6 +393,8 @@ export default function Page() {
                 title={knowledgePanel.title}
                 query={knowledgePanel.query}
                 results={knowledgePanel.results}
+                fallbackLabel={knowledgePanel.fallbackLabel}
+                fallbackHint={knowledgePanel.fallbackHint}
                 onBack={() => createGenerationSession(knowledgePanel.fallbackSession)}
               />
             ) : null}

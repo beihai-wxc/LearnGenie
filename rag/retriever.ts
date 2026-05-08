@@ -62,6 +62,9 @@ type SearchKnowledgeResult = {
   score: number;
   previewText: string;
   sourceType: KnowledgeDocument['sourceType'];
+  sourceLabel: NonNullable<KnowledgeDocument['sourceLabel']>;
+  difficulty?: KnowledgeDocument['difficulty'];
+  recommendedTeachingGoals?: string[];
   matchedBy: 'title' | 'keyword' | 'chunk';
   titleMatch: boolean;
   keywordMatches: string[];
@@ -85,9 +88,29 @@ function isKnowledgeDocument(value: unknown): value is KnowledgeDocument {
     typeof record.content === 'string' &&
     typeof record.pdfPath === 'string' &&
     (record.sourceType === 'seed' || record.sourceType === 'upload') &&
+    (record.sourceLabel == null ||
+      record.sourceLabel === '核心知识' ||
+      record.sourceLabel === '实战专题' ||
+      record.sourceLabel === '用户上传') &&
+    (record.difficulty == null ||
+      record.difficulty === 'beginner' ||
+      record.difficulty === 'intermediate' ||
+      record.difficulty === 'advanced') &&
+    (record.recommendedTeachingGoals == null || Array.isArray(record.recommendedTeachingGoals)) &&
+    (record.references == null || Array.isArray(record.references)) &&
     typeof record.createdAt === 'string' &&
     typeof record.updatedAt === 'string'
   );
+}
+
+function deriveSourceLabel(doc: KnowledgeDocument): NonNullable<KnowledgeDocument['sourceLabel']> {
+  if (doc.sourceType === 'upload') {
+    return '用户上传';
+  }
+  if (doc.sourceLabel) {
+    return doc.sourceLabel;
+  }
+  return doc.module.includes('实战') || doc.module.includes('工程') ? '实战专题' : '核心知识';
 }
 
 async function ensureDir(dirPath: string) {
@@ -98,6 +121,7 @@ async function ensureFile(filePath: string, defaultContent = EMPTY_FILE_CONTENT)
   try {
     await fs.access(filePath);
   } catch {
+    await fs.mkdir(path.dirname(filePath), { recursive: true });
     await fs.writeFile(filePath, defaultContent, 'utf8');
   }
 }
@@ -140,7 +164,17 @@ async function readDocumentFile(
   return parsed.map((doc) => ({
     ...doc,
     sourceType,
+    sourceLabel:
+      sourceType === 'upload'
+        ? '用户上传'
+        : doc.sourceLabel === '实战专题'
+          ? '实战专题'
+          : '核心知识',
     keywords: [...new Set(doc.keywords.map((keyword) => keyword.trim()).filter(Boolean))],
+    recommendedTeachingGoals: (doc.recommendedTeachingGoals ?? [])
+      .map((goal) => `${goal}`.trim())
+      .filter(Boolean),
+    references: (doc.references ?? []).map((reference) => `${reference}`.trim()).filter(Boolean),
   }));
 }
 
@@ -225,6 +259,10 @@ function computeSourceSignature(documents: KnowledgeDocument[]) {
       content: doc.content,
       pdfPath: doc.pdfPath,
       sourceType: doc.sourceType,
+      sourceLabel: doc.sourceLabel,
+      difficulty: doc.difficulty,
+      recommendedTeachingGoals: doc.recommendedTeachingGoals,
+      references: doc.references,
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,
     })),
@@ -359,6 +397,14 @@ function overlapScore(left: string[], right: string[]) {
   return matches / Math.max(left.length, rightSet.size);
 }
 
+function simplifyQuery(query: string) {
+  return normalizeText(query)
+    .replace(/[?.!,，。！？；：]/g, ' ')
+    .replace(/什么是|什么叫|请介绍|介绍一下|讲解一下|解释一下|请问|一下/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export async function ensureKnowledgeAssetsForTests() {
   await ensureKnowledgeAssets();
 }
@@ -389,6 +435,7 @@ export async function buildKnowledgeIndex(options: BuildKnowledgeIndexOptions = 
 export async function searchKnowledgeIndex(query: string, topK = 5): Promise<SearchKnowledgeResult[]> {
   const state = await ensureRetrieverState();
   const normalizedQuery = normalizeText(query);
+  const simplifiedQuery = simplifyQuery(query);
   const queryTokens = tokenizeText(query);
 
   if (!normalizedQuery || queryTokens.length === 0) {
@@ -397,17 +444,30 @@ export async function searchKnowledgeIndex(query: string, topK = 5): Promise<Sea
 
   return state.documents
     .map((doc) => {
-      const titleMatch = normalizeText(doc.title).includes(normalizedQuery);
+      const normalizedTitle = normalizeText(doc.title);
+      const titleMatch =
+        normalizedTitle.includes(normalizedQuery) ||
+        (!!simplifiedQuery &&
+          (normalizedTitle.includes(simplifiedQuery) || simplifiedQuery.includes(normalizedTitle)));
       const keywordMatches = doc.keywords.filter((keyword) => {
         const normalizedKeyword = normalizeText(keyword);
-        return normalizedKeyword.includes(normalizedQuery) || queryTokens.includes(normalizedKeyword);
+        return (
+          normalizedKeyword.includes(normalizedQuery) ||
+          queryTokens.includes(normalizedKeyword) ||
+          (!!simplifiedQuery &&
+            normalizedKeyword.length > 1 &&
+            (simplifiedQuery.includes(normalizedKeyword) ||
+              normalizedKeyword.includes(simplifiedQuery)))
+        );
       });
       const topChunks = (state.chunksByDocId.get(doc.docId) ?? [])
         .map((chunk) => ({
           chunkId: chunk.chunkId,
           section: chunk.section,
           text: chunk.text,
-          score: overlapScore(queryTokens, chunk.tokenSet),
+          score:
+            overlapScore(queryTokens, chunk.tokenSet) +
+            (simplifiedQuery && normalizeText(chunk.text).includes(simplifiedQuery) ? 0.24 : 0),
         }))
         .filter((chunk) => chunk.score > 0)
         .sort((a, b) => b.score - a.score)
@@ -418,7 +478,7 @@ export async function searchKnowledgeIndex(query: string, topK = 5): Promise<Sea
         ? keywordMatches.length / Math.max(doc.keywords.length, queryTokens.length, 1)
         : 0;
       const chunkScore = topChunks[0]?.score ?? 0;
-      const score = titleScore * 0.45 + keywordScore * 0.2 + chunkScore * 0.35;
+      const score = titleScore * 0.5 + keywordScore * 0.18 + chunkScore * 0.32;
 
       if (score <= 0) {
         return null;
@@ -438,6 +498,9 @@ export async function searchKnowledgeIndex(query: string, topK = 5): Promise<Sea
         score,
         previewText: topChunks[0]?.text ?? doc.summary,
         sourceType: doc.sourceType,
+        sourceLabel: deriveSourceLabel(doc),
+        difficulty: doc.difficulty,
+        recommendedTeachingGoals: doc.recommendedTeachingGoals,
         matchedBy,
         titleMatch,
         keywordMatches,

@@ -19,6 +19,10 @@ export interface KnowledgeDocument {
   content: string;
   pdfPath: string;
   sourceType: 'seed' | 'upload';
+  sourceLabel?: '核心知识' | '实战专题' | '用户上传';
+  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  recommendedTeachingGoals?: string[];
+  references?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -34,6 +38,9 @@ export interface KnowledgeSearchResult {
   previewText: string;
   pdfAvailable: boolean;
   sourceType: 'seed' | 'upload';
+  sourceLabel: '核心知识' | '实战专题' | '用户上传';
+  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  recommendedTeachingGoals?: string[];
   matchedBy: 'title' | 'keyword' | 'chunk';
   matchedChunks: Array<{
     chunkId: string;

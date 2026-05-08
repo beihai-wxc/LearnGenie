@@ -31,6 +31,7 @@ function buildReasons(result: {
   keywordMatches: string[];
   topChunks: Array<{ section?: string }>;
   module: string;
+  sourceLabel?: string;
 }): string[] {
   const reasons: string[] = [];
   if (result.titleMatch) {
@@ -44,6 +45,9 @@ function buildReasons(result: {
     reasons.push(`相关章节：${section}`);
   }
   reasons.push(`课程模块：${result.module}`);
+  if (result.sourceLabel) {
+    reasons.push(`资料类型：${result.sourceLabel}`);
+  }
   return reasons;
 }
 
@@ -67,6 +71,9 @@ function toSearchResult(
     })),
     pdfAvailable: true,
     sourceType: result.sourceType,
+    sourceLabel: result.sourceLabel,
+    difficulty: result.difficulty,
+    recommendedTeachingGoals: result.recommendedTeachingGoals,
     matchedBy: result.matchedBy,
   };
 }
@@ -77,6 +84,16 @@ async function ensureKnowledgeAssetsReady() {
 
 async function writeUploadedDocuments(documents: KnowledgeDocument[]) {
   await fs.writeFile(KNOWLEDGE_UPLOADS_FILE, JSON.stringify(documents, null, 2), 'utf8');
+}
+
+async function readUploadedDocuments(): Promise<KnowledgeDocument[]> {
+  try {
+    const raw = await fs.readFile(KNOWLEDGE_UPLOADS_FILE, 'utf8');
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as KnowledgeDocument[]) : [];
+  } catch {
+    return [];
+  }
 }
 
 export async function ensureKnowledgePdf(doc: KnowledgeDocument): Promise<string> {
@@ -160,11 +177,11 @@ export async function ingestUploadedKnowledge(
   input: UploadKnowledgeIngestInput,
 ): Promise<KnowledgeDocument> {
   await ensureKnowledgeAssetsReady();
-  const documents = await getKnowledgeDocuments();
+  const uploadedDocuments = await readUploadedDocuments();
   const normalizedTitle = normalizeText(input.title);
   const normalizedText = normalizeText(input.text).slice(0, 800);
 
-  const existing = documents.find(
+  const existing = uploadedDocuments.find(
     (doc) =>
       doc.sourceType === 'upload' &&
       normalizeText(doc.title) === normalizedTitle &&
@@ -188,11 +205,15 @@ export async function ingestUploadedKnowledge(
     content: input.text.trim(),
     pdfPath: `${docId}.pdf`,
     sourceType: 'upload',
+    sourceLabel: '用户上传',
+    difficulty: 'intermediate',
+    recommendedTeachingGoals: ['基于上传资料梳理知识点', '围绕用户资料生成结构化课堂'],
+    references: ['用户上传资料'],
     createdAt: now,
     updatedAt: now,
   };
 
-  const existingUploads = documents.filter((doc) => doc.sourceType === 'upload');
+  const existingUploads = uploadedDocuments.filter((doc) => doc.sourceType === 'upload');
   existingUploads.push(record);
   await writeUploadedDocuments(existingUploads);
   await ensureKnowledgePdf(record);

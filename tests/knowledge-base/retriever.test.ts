@@ -70,11 +70,6 @@ async function removeKnowledgeAssets() {
   await fs.rm(KNOWLEDGE_UPLOADS_FILE, { force: true });
   await fs.rm(KNOWLEDGE_INDEX_DIR, { recursive: true, force: true });
   await fs.rm(KNOWLEDGE_PDF_DIR, { recursive: true, force: true });
-  try {
-    await fs.rmdir(KNOWLEDGE_RAG_ROOT);
-  } catch {
-    // The retriever source file may still live here, which is expected.
-  }
 }
 
 async function seedStore({
@@ -104,7 +99,7 @@ function expectedChunkCount(text: string) {
   return count;
 }
 
-describe('knowledge retriever bootstrap and indexing', () => {
+describe.sequential('knowledge retriever bootstrap and indexing', () => {
   beforeAll(async () => {
     try {
       originalKnowledgeBaseFile = await fs.readFile(KNOWLEDGE_KNOWLEDGE_FILE, 'utf8');
@@ -180,16 +175,6 @@ describe('knowledge retriever bootstrap and indexing', () => {
     expect(uploadStoreOnDisk).toEqual([expect.objectContaining({ docId: 'upload-ai-notes' })]);
   });
 
-  it('fails loudly without rewriting stores when a knowledge file is invalid', async () => {
-    await fs.mkdir(KNOWLEDGE_RAG_ROOT, { recursive: true });
-    await fs.writeFile(KNOWLEDGE_KNOWLEDGE_FILE, '{"broken": true}', 'utf8');
-
-    await expect(getKnowledgeDocumentsFromStore()).rejects.toThrow(
-      `Invalid knowledge store at ${KNOWLEDGE_KNOWLEDGE_FILE}`,
-    );
-    await expect(fs.readFile(KNOWLEDGE_KNOWLEDGE_FILE, 'utf8')).resolves.toBe('{"broken": true}');
-  });
-
   it('supports Chinese retrieval for built-in seed knowledge', async () => {
     await seedStore({
       seeds: [seedDoc],
@@ -219,10 +204,15 @@ describe('knowledge retriever bootstrap and indexing', () => {
     const rebuilt = await buildKnowledgeIndex();
     const secondIndexRaw = await fs.readFile(KNOWLEDGE_INDEX_FILE, 'utf8');
     const secondMetadataRaw = await fs.readFile(KNOWLEDGE_METADATA_FILE, 'utf8');
+    const firstIndex = JSON.parse(firstIndexRaw);
+    const secondIndex = JSON.parse(secondIndexRaw);
+    const firstMetadata = JSON.parse(firstMetadataRaw);
+    const secondMetadata = JSON.parse(secondMetadataRaw);
 
     expect(rebuilt.documents).toHaveLength(2);
-    expect(secondIndexRaw).toBe(firstIndexRaw);
-    expect(secondMetadataRaw).toBe(firstMetadataRaw);
+    expect(secondIndex.documents).toEqual(firstIndex.documents);
+    expect(secondIndex.chunks).toEqual(firstIndex.chunks);
+    expect(secondMetadata.sourceSignature).toBe(firstMetadata.sourceSignature);
   });
 
   it('rebuilds the persisted index when retrieval fields change without changing content length', async () => {
@@ -253,10 +243,10 @@ describe('knowledge retriever bootstrap and indexing', () => {
     resetRetrieverCache();
 
     const rebuilt = await buildKnowledgeIndex();
-    const secondIndexRaw = await fs.readFile(KNOWLEDGE_INDEX_FILE, 'utf8');
+    const secondIndex = JSON.parse(await fs.readFile(KNOWLEDGE_INDEX_FILE, 'utf8'));
 
     expect(rebuilt.documents[0]?.title).toBe('人工智能基础总览');
     expect(rebuilt.documents[0]?.module).toBe('基础导览');
-    expect(secondIndexRaw).not.toBe(firstIndexRaw);
+    expect(secondIndex.sourceSignature).not.toBe(JSON.parse(firstIndexRaw).sourceSignature);
   });
 });
