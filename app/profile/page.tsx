@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { Brain, RefreshCw } from 'lucide-react';
-import * as echarts from 'echarts';
-import 'echarts-wordcloud';
+import type { ECharts, EChartsOption } from 'echarts';
+const echartsModule = () => import('echarts');
+const wordcloudModule = () => import('echarts-wordcloud');
 import { Sidebar } from '@/components/sidebar/sidebar';
 import { useUserProfileStore } from '@/lib/store/user-profile';
 import type { StudentProfileDimensions, DimensionKey } from '@/lib/types/student-profile';
@@ -166,11 +167,11 @@ export default function ProfilePage() {
   const barChartRef = useRef<HTMLDivElement>(null);
   const wordCloudChartRef = useRef<HTMLDivElement>(null);
 
-  const radarChartInstance = useRef<echarts.ECharts | null>(null);
-  const donutChartInstance = useRef<echarts.ECharts | null>(null);
-  const lineChartInstance = useRef<echarts.ECharts | null>(null);
-  const barChartInstance = useRef<echarts.ECharts | null>(null);
-  const wordCloudChartInstance = useRef<echarts.ECharts | null>(null);
+  const radarChartInstance = useRef<ECharts | null>(null);
+  const donutChartInstance = useRef<ECharts | null>(null);
+  const lineChartInstance = useRef<ECharts | null>(null);
+  const barChartInstance = useRef<ECharts | null>(null);
+  const wordCloudChartInstance = useRef<ECharts | null>(null);
 
   const [wordCloudRefresh, setWordCloudRefresh] = useState(0);
 
@@ -214,7 +215,7 @@ export default function ProfilePage() {
               ],
             },
           ],
-        } as echarts.EChartsOption;
+        } as EChartsOption;
       }
 
       if (type === 'donut') {
@@ -292,7 +293,7 @@ export default function ProfilePage() {
               })),
             },
           ],
-        } as echarts.EChartsOption;
+        } as EChartsOption;
       }
 
       if (type === 'line') {
@@ -350,7 +351,7 @@ export default function ProfilePage() {
                 },
               ]
             : [],
-        } as echarts.EChartsOption;
+        } as EChartsOption;
       }
 
       if (type === 'bar') {
@@ -371,10 +372,7 @@ export default function ProfilePage() {
               data: values.map((v, i) => ({
                 value: v,
                 itemStyle: {
-                  color: new (echarts as any).graphic.LinearGradient(0, 0, 1, 0, [
-                    { offset: 0, color: `${colors[i]}33` },
-                    { offset: 1, color: colors[i] },
-                  ]),
+                  color: `${colors[i]}33`,
                   borderRadius: 4,
                 },
               })),
@@ -382,13 +380,15 @@ export default function ProfilePage() {
               label: { show: true, position: 'right', color: '#64748b', fontSize: 11, formatter: '{c}%' },
             },
           ],
-        } as echarts.EChartsOption;
+        } as EChartsOption;
       }
 
-      return {} as echarts.EChartsOption;
+      return {} as EChartsOption;
     }, []);
 
-  const initCharts = useCallback(() => {
+  const initCharts = useCallback(async () => {
+    await wordcloudModule();
+    const echarts = await echartsModule();
     if (radarChartRef.current) {
       if (radarChartInstance.current) {
         radarChartInstance.current.dispose();
@@ -443,11 +443,11 @@ export default function ProfilePage() {
               },
             },
           ],
-        } as any as echarts.EChartsOption);
+        } as unknown as EChartsOption);
       } else {
         wordCloudChartInstance.current.setOption({
           backgroundColor: 'transparent',
-          tooltip: { show: true, formatter: (p: any) => `${p.name}: ${p.value}` },
+          tooltip: { show: true, formatter: (p: unknown) => { const item = p as { name: string; value: number }; return `${item.name}: ${item.value}`; } },
           series: [
             {
               type: 'wordCloud',
@@ -475,7 +475,7 @@ export default function ProfilePage() {
               data: wordCloudData.map((t) => ({ name: t.name, value: t.value })),
             },
           ],
-        } as any as echarts.EChartsOption);
+        } as unknown as EChartsOption);
       }
     }
   }, [learningProfile]);

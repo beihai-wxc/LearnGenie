@@ -24,7 +24,6 @@ import {
   saveBookshelfItem,
   deleteBookshelfItem,
   storeDocumentBlob,
-  getDocumentUrl,
   listCategories,
   addCategory,
   removeCategory,
@@ -155,49 +154,8 @@ export default function BookshelfPage() {
     }
   };
 
-  const handleOpenDocument = async (id: string) => {
-    const doc = documents.find((d) => d.id === id);
-    if (!doc?.blobKey) {
-      toast.error('文档数据不存在');
-      return;
-    }
-    try {
-      const url = await getDocumentUrl(doc.blobKey);
-      if (!url) {
-        toast.error('无法读取文档');
-        return;
-      }
-
-      // Record access history
-      try {
-        await saveAccessHistory({
-          type: 'document',
-          targetId: doc.id,
-          title: doc.title,
-          subtitle: doc.category,
-          url: `/bookshelf`,
-        });
-      } catch {
-        // ignore history errors
-      }
-
-      // For office docs and other non-browser-previewable files, trigger download
-      const downloadTypes = ['doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'zip', 'rar', '7z'];
-      const shouldDownload = downloadTypes.includes(doc.fileType || '');
-
-      if (shouldDownload) {
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = doc.fileName || doc.title;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      } else {
-        window.open(url, '_blank');
-      }
-    } catch {
-      toast.error('打开文档失败');
-    }
+  const handleOpenDocument = (id: string) => {
+    router.push(`/document-viewer/${id}`);
   };
 
   const handleAddCategory = async () => {
