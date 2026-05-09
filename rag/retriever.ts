@@ -7,13 +7,14 @@ import {
   KNOWLEDGE_INDEX_FILE,
   KNOWLEDGE_INDEX_VERSION,
   KNOWLEDGE_KNOWLEDGE_FILE,
+  KNOWLEDGE_MARKDOWN_SOURCE_DIR,
   KNOWLEDGE_METADATA_FILE,
   KNOWLEDGE_PDF_DIR,
   KNOWLEDGE_RAG_ROOT,
   KNOWLEDGE_UPLOADS_FILE,
 } from '@/lib/knowledge-base/constants';
 import { buildSimplePdf } from '@/lib/knowledge-base/pdf';
-import { normalizeText, tokenizeText } from '@/lib/knowledge-base/tokenize';
+import { extractTopKeywords, normalizeText, tokenizeText } from '@/lib/knowledge-base/tokenize';
 import type { KnowledgeChunk, KnowledgeDocument } from '@/lib/knowledge-base/types';
 
 interface KnowledgeIndexMetadata {
@@ -75,6 +76,18 @@ const EMPTY_FILE_CONTENT = '[]\n';
 
 let retrieverState: KnowledgeRetrieverState | null = null;
 
+type MarkdownKnowledgeSource = {
+  titleKey: string;
+  title: string;
+  content: string;
+  summary: string;
+  keywords: string[];
+};
+
+function createTitleKey(input: string) {
+  return normalizeText(input).replace(/[^a-z0-9\u4e00-\u9fff]+/g, '');
+}
+
 function isKnowledgeDocument(value: unknown): value is KnowledgeDocument {
   if (!value || typeof value !== 'object') return false;
   const record = value as Record<string, unknown>;
@@ -129,6 +142,87 @@ async function ensureFile(filePath: string, defaultContent = EMPTY_FILE_CONTENT)
 async function ensureGitkeep(dirPath: string) {
   await ensureDir(dirPath);
   await ensureFile(path.join(dirPath, '.gitkeep'), '');
+}
+
+function markdownToPlainText(markdown: string) {
+  return markdown
+    .replace(/\r/g, '')
+    .replace(/^```[^\n]*$/gm, '')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/^>\s?/gm, '')
+    .replace(/^#{1,6}\s*/gm, '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/__([^_]+)__/g, '$1')
+    .replace(/_([^_]+)_/g, '$1')
+    .replace(/^\|?\s*[-:]+\s*(\|\s*[-:]+\s*)+\|?$/gm, '')
+    .replace(/\|/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function extractMarkdownTitle(markdown: string, fallback: string) {
+  const headingMatch = markdown.match(/^#\s+(.+)$/m);
+  if (headingMatch?.[1]) {
+    return headingMatch[1].trim();
+  }
+  return fallback;
+}
+
+function extractMarkdownSummary(title: string, content: string) {
+  const paragraphs = content
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+  const firstBodyParagraph =
+    paragraphs.find((paragraph) => paragraph !== title && !paragraph.startsWith('目录')) ?? content;
+  return firstBodyParagraph.replace(/\s+/g, ' ').slice(0, 180);
+}
+
+async function listMarkdownFiles(rootDir: string): Promise<string[]> {
+  const entries = await fs.readdir(rootDir, { withFileTypes: true });
+  const files: string[] = [];
+  for (const entry of entries) {
+    const fullPath = path.join(rootDir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...(await listMarkdownFiles(fullPath)));
+      continue;
+    }
+    if (entry.isFile() && entry.name.toLowerCase().endsWith('.md')) {
+      files.push(fullPath);
+    }
+  }
+  return files;
+}
+
+async function readMarkdownKnowledgeSources() {
+  try {
+    await fs.access(KNOWLEDGE_MARKDOWN_SOURCE_DIR);
+  } catch {
+    return new Map<string, MarkdownKnowledgeSource>();
+  }
+
+  const markdownFiles = await listMarkdownFiles(KNOWLEDGE_MARKDOWN_SOURCE_DIR);
+  const sources = new Map<string, MarkdownKnowledgeSource>();
+
+  for (const filePath of markdownFiles) {
+    const rawMarkdown = await fs.readFile(filePath, 'utf8');
+    const title = extractMarkdownTitle(rawMarkdown, path.basename(filePath, '.md'));
+    const content = markdownToPlainText(rawMarkdown);
+    if (!content) continue;
+    const titleKey = createTitleKey(title);
+    sources.set(titleKey, {
+      titleKey,
+      title,
+      content,
+      summary: extractMarkdownSummary(title, content),
+      keywords: extractTopKeywords(content, 18),
+    });
+  }
+
+  return sources;
 }
 
 async function readDocumentFile(
@@ -222,14 +316,19 @@ function chunkDocument(doc: KnowledgeDocument): KnowledgeChunk[] {
   return chunks;
 }
 
-async function ensurePdfForDocument(doc: KnowledgeDocument) {
+async function ensurePdfForDocument(doc: KnowledgeDocument, forceRewrite = false) {
   const pdfPath = path.join(KNOWLEDGE_PDF_DIR, doc.pdfPath);
-  try {
-    await fs.access(pdfPath);
-  } catch {
-    const pdfBuffer = buildSimplePdf(doc.title, `${doc.summary}\n\n${doc.content}`);
-    await fs.writeFile(pdfPath, pdfBuffer);
+  if (!forceRewrite) {
+    try {
+      await fs.access(pdfPath);
+      return;
+    } catch {
+      // Fall through and generate the file.
+    }
   }
+  const pdfBuffer = buildSimplePdf(doc.title, `${doc.summary}\n\n${doc.content}`);
+  await fs.mkdir(path.dirname(pdfPath), { recursive: true });
+  await fs.writeFile(pdfPath, pdfBuffer);
 }
 
 async function ensureKnowledgeAssets() {
@@ -244,7 +343,22 @@ async function loadDocumentsFromStore() {
   await ensureKnowledgeAssets();
   const seedDocuments = await readDocumentFile(KNOWLEDGE_KNOWLEDGE_FILE, 'seed');
   const uploadedDocuments = await readDocumentFile(KNOWLEDGE_UPLOADS_FILE, 'upload');
-  return [...seedDocuments, ...uploadedDocuments];
+  const markdownSources = await readMarkdownKnowledgeSources();
+
+  const mergedSeedDocuments = seedDocuments.map((doc) => {
+    const markdownSource = markdownSources.get(createTitleKey(doc.title));
+    if (!markdownSource) {
+      return doc;
+    }
+    return {
+      ...doc,
+      content: markdownSource.content,
+      summary: markdownSource.summary || doc.summary,
+      keywords: [...new Set([...doc.keywords, ...markdownSource.keywords])],
+    };
+  });
+
+  return [...mergedSeedDocuments, ...uploadedDocuments];
 }
 
 function computeSourceSignature(documents: KnowledgeDocument[]) {
@@ -369,7 +483,7 @@ async function ensureRetrieverState(options: BuildKnowledgeIndexOptions = {}) {
 
   if (options.ensurePdfFiles) {
     for (const document of documents) {
-      await ensurePdfForDocument(document);
+      await ensurePdfForDocument(document, options.force);
     }
   }
 

@@ -78,8 +78,8 @@ function toSearchResult(
   };
 }
 
-async function ensureKnowledgeAssetsReady() {
-  await buildKnowledgeIndex({ ensurePdfFiles: true });
+async function ensureKnowledgeIndexReady() {
+  await buildKnowledgeIndex({ ensurePdfFiles: false });
 }
 
 async function writeUploadedDocuments(documents: KnowledgeDocument[]) {
@@ -110,12 +110,12 @@ export async function ensureKnowledgePdf(doc: KnowledgeDocument): Promise<string
 }
 
 export async function getKnowledgeDocuments(): Promise<KnowledgeDocument[]> {
-  await ensureKnowledgeAssetsReady();
+  await ensureKnowledgeIndexReady();
   return getKnowledgeDocumentsFromStore();
 }
 
 export async function getKnowledgeDocumentById(docId: string): Promise<KnowledgeDocument | null> {
-  await ensureKnowledgeAssetsReady();
+  await ensureKnowledgeIndexReady();
   const documentMap = await getKnowledgeDocumentMap();
   const document = documentMap.get(docId) ?? null;
   if (document) {
@@ -128,7 +128,7 @@ export async function searchKnowledgeBase(
   query: string,
   topK = KNOWLEDGE_SEARCH_TOP_K,
 ): Promise<KnowledgeSearchResponse> {
-  await ensureKnowledgeAssetsReady();
+  await ensureKnowledgeIndexReady();
   const results = await searchKnowledgeIndex(query, topK);
   const formatted = results.map(toSearchResult);
   const bestMatch = formatted[0] ?? null;
@@ -176,7 +176,7 @@ function createUploadDocId(title: string) {
 export async function ingestUploadedKnowledge(
   input: UploadKnowledgeIngestInput,
 ): Promise<KnowledgeDocument> {
-  await ensureKnowledgeAssetsReady();
+  await ensureKnowledgeIndexReady();
   const uploadedDocuments = await readUploadedDocuments();
   const normalizedTitle = normalizeText(input.title);
   const normalizedText = normalizeText(input.text).slice(0, 800);
