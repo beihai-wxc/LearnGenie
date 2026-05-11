@@ -1,10 +1,10 @@
-# OpenMAIC 架构说明（比赛版）
+# LearnGenie 架构说明（比赛版）
 
 本文用于快速说明本项目的系统架构，便于开发协作、比赛答辩和技术评审。
 
 ## 1. 架构概览
 
-OpenMAIC 采用 Next.js 全栈一体化架构：
+LearnGenie 采用 Next.js 全栈一体化架构：
 
 - 前端（UI）和后端（API）在同一仓库内。
 - 通过 App Router 提供页面路由与 API Route。
