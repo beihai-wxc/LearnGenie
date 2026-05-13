@@ -89,16 +89,19 @@ export function HomeHero(props: HomeHeroProps) {
           </div>
 
           <div className="max-w-2xl space-y-3 px-4">
-            <p className="text-lg text-slate-600 dark:text-slate-300">
-              {t('home.heroDescription')}
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-slate-500 dark:text-slate-400">
-              <span className="inline-flex items-center gap-1.5">
-                <Sparkles className="size-4 text-sky-500" />
-                {t('home.heroStatPrompt')}
-              </span>
-              <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
-              <span>{t('home.heroStatClassrooms', { count: props.classroomCount })}</span>
+            <div className="relative overflow-hidden">
+              <motion.p
+                className="whitespace-nowrap text-lg text-slate-600 dark:text-slate-300"
+                initial={{ x: '100%' }}
+                animate={{ x: '-100%' }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 15,
+                  ease: 'linear',
+                }}
+              >
+                {t('home.heroDescription')}
+              </motion.p>
             </div>
           </div>
         </motion.div>
@@ -123,6 +126,20 @@ export function HomeHero(props: HomeHeroProps) {
             canSubmit={props.canSubmit}
             error={props.error}
           />
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25, duration: 0.7, ease: 'easeOut' }}
+            className="mt-6 flex flex-wrap items-center justify-center gap-3 text-sm text-slate-500 dark:text-slate-400"
+          >
+            <span className="inline-flex items-center gap-1.5">
+              <Sparkles className="size-4 text-sky-500" />
+              {t('home.heroStatPrompt')}
+            </span>
+            <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+            <span>{t('home.heroStatClassrooms', { count: props.classroomCount })}</span>
+          </motion.div>
         </motion.div>
       </div>
     </section>

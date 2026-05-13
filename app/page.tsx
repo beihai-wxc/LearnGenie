@@ -18,6 +18,7 @@ import type { SettingsSection } from '@/lib/types/settings';
 import type { PdfImage } from '@/lib/types/generation';
 import type { ParsedPdfContent } from '@/lib/types/pdf';
 import type { KnowledgeSearchResult } from '@/lib/knowledge-base/types';
+import { listStages } from '@/lib/utils/stage-storage';
 import { SettingsDialog } from '@/components/settings';
 import { HomeHero } from '@/components/home/home-hero';
 import { KnowledgeSearchResults } from '@/components/knowledge/knowledge-search-results';
@@ -67,6 +68,7 @@ export default function Page() {
   const [error, setError] = useState<string | null>(null);
   const [isKnowledgeSearching, setIsKnowledgeSearching] = useState(false);
   const [knowledgePanel, setKnowledgePanel] = useState<KnowledgeResultPanelState | null>(null);
+  const [classroomCount, setClassroomCount] = useState(0);
   const { cachedValue: cachedRequirement, updateCache: updateRequirementCache } =
     useDraftCache<string>({ key: 'requirementDraft' });
 
@@ -88,6 +90,7 @@ export default function Page() {
   useEffect(() => {
     useMediaGenerationStore.getState().revokeObjectUrls();
     useMediaGenerationStore.setState({ tasks: {} });
+    listStages().then((stages) => setClassroomCount(stages.length));
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -338,7 +341,7 @@ export default function Page() {
   return (
     <>
       <Sidebar />
-      <div className="ml-52 home-page min-h-[100dvh] overflow-x-hidden pb-10">
+      <div className="ml-52 home-page flex min-h-[100dvh] flex-col overflow-x-hidden pb-10">
         <div className="home-bg-mesh" />
         <div className="home-bg-glow home-bg-glow-left" />
         <div className="home-bg-glow home-bg-glow-right" />
@@ -365,7 +368,7 @@ export default function Page() {
           initialSection={settingsSection}
         />
 
-        <main className="relative z-10 px-4 md:px-8">
+        <main className="relative z-10 flex-1 px-4 md:px-8">
           <div className="mx-auto max-w-7xl">
             <HomeHero
               requirement={form.requirement}
@@ -383,7 +386,7 @@ export default function Page() {
               onInteractiveModeChange={(value) => updateForm('interactiveMode', value)}
               canSubmit={canGenerate && !isKnowledgeSearching}
               error={error}
-              classroomCount={0}
+              classroomCount={classroomCount}
             />
             {knowledgePanel ? (
               <KnowledgeSearchResults
