@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, FolderPlus, X, Clock, Trash2, ArrowRight } from 'lucide-react';
+import { Plus, Search, FolderPlus, X, Clock, Trash2, ArrowRight, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { nanoid } from 'nanoid';
 import { useI18n } from '@/lib/hooks/use-i18n';
@@ -12,11 +12,13 @@ import { BookshelfTabs } from '@/components/bookshelf/bookshelf-tabs';
 import { ClassroomCard, DocumentCard, CategoryCard } from '@/components/bookshelf/bookshelf-card';
 import { BookshelfUpload } from '@/components/bookshelf/bookshelf-upload';
 import { BookshelfEmpty } from '@/components/bookshelf/bookshelf-empty';
+import { WrongQuestionCard } from '@/components/bookshelf/wrong-question-card';
 import {
   listStages,
   getFirstSlideByStages,
   deleteStageData,
   renameStage,
+  getStagesByIds,
   type StageListItem,
 } from '@/lib/utils/stage-storage';
 import {
@@ -37,6 +39,11 @@ import {
   saveAccessHistory,
   type AccessHistoryRecord,
 } from '@/lib/utils/access-history';
+import {
+  listWrongQuestions,
+  deleteWrongQuestion,
+  type WrongQuestionRecord,
+} from '@/lib/utils/wrong-questions-storage';
 
 export default function BookshelfPage() {
   const { t } = useI18n();
@@ -53,6 +60,10 @@ export default function BookshelfPage() {
   const [showNewCategory, setShowNewCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [historyRecords, setHistoryRecords] = useState<AccessHistoryRecord[]>([]);
+  const [wrongQuestions, setWrongQuestions] = useState<WrongQuestionRecord[]>([]);
+  const [stageExistsMap, setStageExistsMap] = useState<Record<string, boolean>>({});
+  const [stageNamesMap, setStageNamesMap] = useState<Record<string, string>>({});
+  const [collapsedChapters, setCollapsedChapters] = useState<Set<number>>(new Set());
 
   // Load all data
   const loadData = useCallback(async () => {
@@ -84,6 +95,23 @@ export default function BookshelfPage() {
       await migrateStagesToAccessHistory();
       const history = await listAccessHistory(undefined, 200);
       setHistoryRecords(history);
+
+      // Load wrong questions and check stage existence
+      const wqs = await listWrongQuestions();
+      setWrongQuestions(wqs);
+      if (wqs.length > 0) {
+        const uniqueStageIds = [...new Set(wqs.map((wq) => wq.stageId))];
+        const existingStages = await getStagesByIds(uniqueStageIds);
+        const existsMap: Record<string, boolean> = {};
+        const namesMap: Record<string, string> = {};
+        for (const sid of uniqueStageIds) {
+          const s = existingStages.find((es: StageListItem) => es.id === sid);
+          existsMap[sid] = !!s;
+          namesMap[sid] = s?.name ?? '';
+        }
+        setStageExistsMap(existsMap);
+        setStageNamesMap(namesMap);
+      }
     } catch (err) {
       toast.error('加载数据失败');
     } finally {
@@ -196,6 +224,28 @@ export default function BookshelfPage() {
     router.push(url);
   };
 
+  const handleDeleteWrongQuestion = async (id: string) => {
+    try {
+      await deleteWrongQuestion(id);
+      setWrongQuestions((prev) => prev.filter((wq) => wq.id !== id));
+      toast.success('错题已删除');
+    } catch {
+      toast.error('删除失败');
+    }
+  };
+
+  const toggleChapterCollapse = (chapter: number) => {
+    setCollapsedChapters((prev) => {
+      const next = new Set(prev);
+      if (next.has(chapter)) {
+        next.delete(chapter);
+      } else {
+        next.add(chapter);
+      }
+      return next;
+    });
+  };
+
   function formatHistoryDate(timestamp: number): string {
     const date = new Date(timestamp);
     const now = new Date();
@@ -223,6 +273,25 @@ export default function BookshelfPage() {
     h.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (h.subtitle && h.subtitle.toLowerCase().includes(searchQuery.toLowerCase())),
   );
+
+  const filteredWrongQuestions = wrongQuestions.filter(
+    (wq) =>
+      wq.questionSnapshot.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (wq.stageName && wq.stageName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (wq.sceneTitle && wq.sceneTitle.toLowerCase().includes(searchQuery.toLowerCase())),
+  );
+
+  // Group wrong questions by chapter
+  const wrongQuestionsByChapter = new Map<number, WrongQuestionRecord[]>();
+  for (const wq of filteredWrongQuestions) {
+    const list = wrongQuestionsByChapter.get(wq.chapterNumber);
+    if (list) {
+      list.push(wq);
+    } else {
+      wrongQuestionsByChapter.set(wq.chapterNumber, [wq]);
+    }
+  }
+  const sortedChapters = [...wrongQuestionsByChapter.keys()].sort((a, b) => a - b);
 
   const hasAnyContent =
     filteredClassrooms.length > 0 ||
@@ -408,6 +477,68 @@ export default function BookshelfPage() {
                 </div>
               )}
 
+              {(activeTab === 'all' || activeTab === 'wrong-questions') && wrongQuestions.length > 0 && (
+                <div className="mb-8">
+                  <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-800 dark:text-slate-200">
+                    <span className="size-2 rounded-full bg-rose-500" />
+                    错题收藏 ({filteredWrongQuestions.length})
+                  </h2>
+                  {sortedChapters.map((chapter) => {
+                    const chapterWqs = wrongQuestionsByChapter.get(chapter)!;
+                    const firstWq = chapterWqs[0];
+                    const chapterTitle = firstWq.chapterTitle;
+                    const label = chapterTitle
+                      ? `第 ${chapter} 章 · ${chapterTitle}`
+                      : `第 ${chapter} 章`;
+                    return (
+                      <div key={chapter} className="mb-6">
+                        <button
+                          type="button"
+                          onClick={() => toggleChapterCollapse(chapter)}
+                          className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors w-full"
+                        >
+                          <ChevronDown
+                            className={cn(
+                              'w-4 h-4 transition-transform',
+                              collapsedChapters.has(chapter) && '-rotate-90',
+                            )}
+                          />
+                          {label}
+                          <span className="text-xs text-slate-400">
+                            ({chapterWqs.length} 题)
+                          </span>
+                        </button>
+                        {!collapsedChapters.has(chapter) && (
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {chapterWqs.map((wq) => (
+                              <WrongQuestionCard
+                                key={wq.id}
+                                record={wq}
+                                stageExists={stageExistsMap[wq.stageId] ?? true}
+                                stageName={stageNamesMap[wq.stageId] ?? wq.stageName}
+                                onDelete={handleDeleteWrongQuestion}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {activeTab === 'wrong-questions' && wrongQuestions.length === 0 && !isLoading && (
+                <div className="py-16 text-center">
+                  <p className="text-sm text-slate-400 dark:text-slate-500">
+                    暂无错题收藏
+                  </p>
+                  <p className="mt-1 text-xs text-slate-300 dark:text-slate-600">
+                    课堂测验中做错的题目会自动出现在这里
+                  </p>
+                </div>
+              )}
+
+              {/* Existing history section */}
               {(activeTab === 'all' || activeTab === 'history') && filteredHistory.length > 0 && (
                 <div className="mb-8">
                   <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-800 dark:text-slate-200">

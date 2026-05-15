@@ -60,7 +60,8 @@ function processSnippets(template: string): string {
  * Load a prompt by ID
  */
 export function loadPrompt(promptId: PromptId): LoadedPrompt | null {
-  const cached = promptCache.get(promptId);
+  // In development, skip cache so the AI always uses the latest prompt templates
+  const cached = process.env.NODE_ENV === 'production' ? promptCache.get(promptId) : undefined;
   if (cached) return cached;
 
   const promptDir = path.join(getPromptsDir(), 'templates', promptId);

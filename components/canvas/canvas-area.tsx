@@ -15,6 +15,7 @@ import { useI18n } from '@/lib/hooks/use-i18n';
 interface CanvasAreaProps extends CanvasToolbarProps {
   readonly currentScene: Scene | null;
   readonly mode: StageMode;
+  readonly stageName: string;
   readonly hideToolbar?: boolean;
   readonly isPendingScene?: boolean;
   readonly isGenerationFailed?: boolean;
@@ -26,6 +27,7 @@ export function CanvasArea({
   currentSceneIndex,
   scenesCount,
   mode,
+  stageName,
   engineState,
   isLiveSession,
   whiteboardOpen,
@@ -111,7 +113,7 @@ export function CanvasArea({
           {currentScene && !whiteboardOpen && (
             <div className="absolute inset-0">
               <SceneProvider>
-                <SceneRenderer scene={currentScene} mode={mode} />
+                <SceneRenderer scene={currentScene} mode={mode} stageName={stageName} />
               </SceneProvider>
             </div>
           )}

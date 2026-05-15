@@ -12,16 +12,23 @@ import {
   BookOpenText,
   Loader2,
   Sparkles,
+  Bookmark,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { getCurrentModelConfig } from '@/lib/utils/model-config';
 import { createLogger } from '@/lib/logger';
+import { toast } from 'sonner';
 
 const log = createLogger('QuizView');
 import type { QuizQuestion } from '@/lib/types/stage';
 import { useDraftCache } from '@/lib/hooks/use-draft-cache';
 import { SpeechButton } from '@/components/audio/speech-button';
+import {
+  saveWrongQuestion,
+  deleteWrongQuestionByKey,
+  getWrongQuestionByKey,
+} from '@/lib/utils/wrong-questions-storage';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -38,6 +45,11 @@ interface QuestionResult {
 interface QuizViewProps {
   readonly questions: QuizQuestion[];
   readonly sceneId: string;
+  readonly stageId: string;
+  readonly stageName: string;
+  readonly sceneTitle: string;
+  readonly chapterNumber: number;
+  readonly chapterTitle?: string;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -223,6 +235,8 @@ function SingleChoiceQuestion({
   onChange,
   disabled,
   result,
+  isCollected,
+  onToggleCollect,
 }: {
   question: QuizQuestion;
   index: number;
@@ -230,11 +244,13 @@ function SingleChoiceQuestion({
   onChange: (value: string) => void;
   disabled?: boolean;
   result?: QuestionResult;
+  isCollected?: boolean;
+  onToggleCollect?: () => void;
 }) {
   const isReview = !!result;
 
   return (
-    <QuestionCard question={question} index={index} result={result}>
+    <QuestionCard question={question} index={index} result={result} isCollected={isCollected} onToggleCollect={onToggleCollect}>
       <div className="grid gap-2">
         {question.options?.map((opt) => {
           const selected = value === opt.value;
@@ -316,6 +332,8 @@ function MultipleChoiceQuestion({
   onChange,
   disabled,
   result,
+  isCollected,
+  onToggleCollect,
 }: {
   question: QuizQuestion;
   index: number;
@@ -323,6 +341,8 @@ function MultipleChoiceQuestion({
   onChange: (value: string[]) => void;
   disabled?: boolean;
   result?: QuestionResult;
+  isCollected?: boolean;
+  onToggleCollect?: () => void;
 }) {
   const isReview = !!result;
   const selected = value ?? [];
@@ -339,7 +359,7 @@ function MultipleChoiceQuestion({
   const { t } = useI18n();
 
   return (
-    <QuestionCard question={question} index={index} result={result}>
+    <QuestionCard question={question} index={index} result={result} isCollected={isCollected} onToggleCollect={onToggleCollect}>
       {!isReview && (
         <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">
           {t('quiz.multipleChoiceHint')}
@@ -419,6 +439,8 @@ function ShortAnswerQuestion({
   onChange,
   disabled,
   result,
+  isCollected,
+  onToggleCollect,
 }: {
   question: QuizQuestion;
   index: number;
@@ -426,6 +448,8 @@ function ShortAnswerQuestion({
   onChange: (value: string) => void;
   disabled?: boolean;
   result?: QuestionResult;
+  isCollected?: boolean;
+  onToggleCollect?: () => void;
 }) {
   const isReview = !!result;
   const { t } = useI18n();
@@ -436,7 +460,7 @@ function ShortAnswerQuestion({
   }, [value]);
 
   return (
-    <QuestionCard question={question} index={index} result={result}>
+    <QuestionCard question={question} index={index} result={result} isCollected={isCollected} onToggleCollect={onToggleCollect}>
       {!isReview ? (
         <div className="relative">
           <textarea
@@ -496,11 +520,15 @@ function QuestionCard({
   question,
   index,
   result,
+  isCollected,
+  onToggleCollect,
   children,
 }: {
   question: QuizQuestion;
   index: number;
   result?: QuestionResult;
+  isCollected?: boolean;
+  onToggleCollect?: () => void;
   children: React.ReactNode;
 }) {
   const { t } = useI18n();
@@ -566,12 +594,31 @@ function QuestionCard({
             </p>
           </div>
         </div>
-        {isReview && (
-          <div className="shrink-0 ml-2">
-            {result.status === 'correct' && <CheckCircle2 className="w-6 h-6 text-emerald-500" />}
-            {result.status === 'incorrect' && <XCircle className="w-6 h-6 text-red-400" />}
-          </div>
-        )}
+        <div className="flex items-center gap-1 shrink-0 ml-2">
+          {isReview && onToggleCollect && (
+            <button
+              type="button"
+              onClick={onToggleCollect}
+              className={cn(
+                'w-7 h-7 rounded-lg flex items-center justify-center transition-colors',
+                isCollected
+                  ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50'
+                  : 'text-gray-300 dark:text-gray-600 hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20',
+              )}
+              title={isCollected ? t('quiz.uncollectQuestion') : t('quiz.collectQuestion')}
+            >
+              <Bookmark
+                className={cn('w-4 h-4', isCollected && 'fill-amber-500')}
+              />
+            </button>
+          )}
+          {isReview && (
+            <>
+              {result.status === 'correct' && <CheckCircle2 className="w-6 h-6 text-emerald-500" />}
+              {result.status === 'incorrect' && <XCircle className="w-6 h-6 text-red-400" />}
+            </>
+          )}
+        </div>
       </div>
 
       {/* Body */}
@@ -684,11 +731,21 @@ function ScoreBanner({
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 
-export function QuizView({ questions, sceneId }: QuizViewProps) {
+export function QuizView({
+  questions,
+  sceneId,
+  stageId,
+  stageName,
+  sceneTitle,
+  chapterNumber,
+  chapterTitle,
+}: QuizViewProps) {
   const { t, locale } = useI18n();
   const [phase, setPhase] = useState<Phase>('not_started');
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [results, setResults] = useState<QuestionResult[]>([]);
+  const [collectedSet, setCollectedSet] = useState<Set<string>>(new Set());
+  const autoCollectDoneRef = useRef(false);
 
   // Draft cache for quiz answers, keyed by sceneId to isolate across classrooms
   const {
@@ -775,10 +832,136 @@ export function QuizView({ questions, sceneId }: QuizViewProps) {
     };
   }, [phase, questions, answers, locale]);
 
+  // Auto-collect wrong questions + load existing collections on entering reviewing phase
+  useEffect(() => {
+    if (phase !== 'reviewing' || results.length === 0) return;
+    if (autoCollectDoneRef.current) return;
+    autoCollectDoneRef.current = true;
+
+    (async () => {
+      const originUrl = `/classroom/${stageId}`;
+
+      // Load existing collection state
+      const newCollectedSet = new Set<string>();
+      for (const q of questions) {
+        const existing = await getWrongQuestionByKey(stageId, sceneId, q.id);
+        const result = results.find((r) => r.questionId === q.id);
+        const isWrong = result && result.status === 'incorrect';
+
+        if (existing) {
+          newCollectedSet.add(q.id);
+          // Update wrongCount when the question is answered incorrectly again
+          if (isWrong) {
+            try {
+              await saveWrongQuestion({
+                stageId,
+                stageName,
+                sceneId,
+                sceneTitle,
+                chapterNumber,
+                chapterTitle,
+                questionId: q.id,
+                questionSnapshot: q,
+                lastUserAnswer: answers[q.id] ?? '',
+                lastResultStatus: 'incorrect',
+                lastEarnedPoints: result.earned,
+                collectedReason: existing.collectedReason,
+                originUrl,
+              });
+            } catch (err) {
+              log.error('Failed to update wrong question:', err);
+            }
+          }
+        } else if (isWrong) {
+          // Auto-collect incorrect answers
+          try {
+            await saveWrongQuestion({
+              stageId,
+              stageName,
+              sceneId,
+              sceneTitle,
+              chapterNumber,
+              chapterTitle,
+              questionId: q.id,
+              questionSnapshot: q,
+              lastUserAnswer: answers[q.id] ?? '',
+              lastResultStatus: 'incorrect',
+              lastEarnedPoints: result.earned,
+              collectedReason: 'auto',
+              originUrl,
+            });
+            newCollectedSet.add(q.id);
+          } catch (err) {
+            log.error('Failed to auto-collect wrong question:', err);
+          }
+        }
+      }
+      setCollectedSet(newCollectedSet);
+    })();
+  }, [phase, results, questions, answers, stageId, stageName, sceneId, sceneTitle, chapterNumber, chapterTitle]);
+
+  // Manual collect/uncollect handler
+  const handleToggleCollect = useCallback(
+    async (questionId: string, question: QuizQuestion, result: QuestionResult | undefined) => {
+      const isCollected = collectedSet.has(questionId);
+      const originUrl = `/classroom/${stageId}`;
+
+      // Optimistic update
+      setCollectedSet((prev) => {
+        const next = new Set(prev);
+        if (isCollected) {
+          next.delete(questionId);
+        } else {
+          next.add(questionId);
+        }
+        return next;
+      });
+
+      try {
+        if (isCollected) {
+          await deleteWrongQuestionByKey(stageId, sceneId, questionId);
+          toast.success(t('quiz.uncollectSuccess'));
+        } else {
+          await saveWrongQuestion({
+            stageId,
+            stageName,
+            sceneId,
+            sceneTitle,
+            chapterNumber,
+            chapterTitle,
+            questionId,
+            questionSnapshot: question,
+            lastUserAnswer: answers[questionId] ?? '',
+            lastResultStatus: result?.status ?? 'correct',
+            lastEarnedPoints: result?.earned ?? 0,
+            collectedReason: 'manual',
+            originUrl,
+          });
+          toast.success(t('quiz.collectSuccess'));
+        }
+      } catch {
+        // Revert on failure
+        setCollectedSet((prev) => {
+          const next = new Set(prev);
+          if (isCollected) {
+            next.add(questionId);
+          } else {
+            next.delete(questionId);
+          }
+          return next;
+        });
+        toast.error(t('quiz.collectError'));
+      }
+    },
+    [collectedSet, stageId, stageName, sceneId, sceneTitle, chapterNumber, chapterTitle, answers, t],
+  );
+
   const handleRetry = useCallback(() => {
     setPhase('not_started');
     setAnswers({});
     setResults([]);
+    setCollectedSet(new Set());
+    autoCollectDoneRef.current = false;
     clearAnswersCache();
   }, [clearAnswersCache]);
 
@@ -957,6 +1140,8 @@ export function QuizView({ questions, sceneId }: QuizViewProps) {
 
               {questions.map((q, i) => {
                 const r = resultMap[q.id];
+                const isQCollected = collectedSet.has(q.id);
+                const handleQToggle = () => handleToggleCollect(q.id, q, r);
                 if (q.type === 'single') {
                   return (
                     <SingleChoiceQuestion
@@ -967,6 +1152,8 @@ export function QuizView({ questions, sceneId }: QuizViewProps) {
                       onChange={() => {}}
                       disabled
                       result={r}
+                      isCollected={isQCollected}
+                      onToggleCollect={handleQToggle}
                     />
                   );
                 }
@@ -980,6 +1167,8 @@ export function QuizView({ questions, sceneId }: QuizViewProps) {
                       onChange={() => {}}
                       disabled
                       result={r}
+                      isCollected={isQCollected}
+                      onToggleCollect={handleQToggle}
                     />
                   );
                 }
@@ -992,6 +1181,8 @@ export function QuizView({ questions, sceneId }: QuizViewProps) {
                     onChange={() => {}}
                     disabled
                     result={r}
+                    isCollected={isQCollected}
+                    onToggleCollect={handleQToggle}
                   />
                 );
               })}

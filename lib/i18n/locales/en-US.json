@@ -202,7 +202,12 @@
     "aiGrading": "AI is grading...",
     "aiGradingWait": "Please wait, analyzing your answers",
     "quizReport": "Quiz Report",
-    "retry": "Retry"
+    "retry": "Retry",
+    "collectQuestion": "Collect",
+    "uncollectQuestion": "Uncollect",
+    "collectSuccess": "Collected",
+    "uncollectSuccess": "Uncollected",
+    "collectError": "Operation failed, please retry"
   },
   "roundtable": {
     "teacher": "TEACHER",

@@ -202,7 +202,12 @@
     "aiGrading": "AI 正在批改中...",
     "aiGradingWait": "请稍候，正在分析你的答案",
     "quizReport": "答题报告",
-    "retry": "重新答题"
+    "retry": "重新答题",
+    "collectQuestion": "收藏此题",
+    "uncollectQuestion": "取消收藏",
+    "collectSuccess": "已收藏",
+    "uncollectSuccess": "已取消收藏",
+    "collectError": "操作失败，请重试"
   },
   "roundtable": {
     "teacher": "教师",

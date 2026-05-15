@@ -59,7 +59,9 @@ Then output a JSON object with `languageDirective` and `outlines`. Each scene in
       "title": "Scene Title",
       "description": "Teaching purpose description",
       "keyPoints": ["Point 1", "Point 2", "Point 3"],
-      "order": 1
+      "order": 1,
+      "chapterNumber": 1,
+      "chapterTitle": "章节标题"
     }
   ]
 }
@@ -67,7 +69,8 @@ Then output a JSON object with `languageDirective` and `outlines`. Each scene in
 
 ### Special Notes
 
-1. **quiz scenes must include quizConfig**:
+1. **Chapter organization**: Group related scenes into logical chapters. Each scene MUST include `chapterNumber` (1-based) and `chapterTitle` (concise title). All scenes within the same chapter share the same number and title. A typical course has 2-6 chapters with 2-8 scenes each.
+2. **quiz scenes must include quizConfig**:
    ```json
    "quizConfig": {
      "questionCount": 2,
@@ -75,7 +78,7 @@ Then output a JSON object with `languageDirective` and `outlines`. Each scene in
      "questionTypes": ["single", "multiple"]
    }
    ```
-2. **If images are available**, add `suggestedImageIds` to relevant slide scenes
+3. **If images are available**, add `suggestedImageIds` to relevant slide scenes
 3. **Interactive scenes**: If a concept benefits from hands-on simulation/visualization, use `"type": "interactive"` with `widgetType` and `widgetOutline` fields. Limit to 1-2 per course.
    - Select widgetType based on concept: simulation (physics/chem), diagram (processes), code (programming), game (practice), visualization3d (3D models)
    - Provide appropriate widgetOutline for the widget type

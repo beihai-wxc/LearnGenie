@@ -91,6 +91,8 @@ export interface SceneOutline {
   teachingObjective?: string;
   estimatedDuration?: number; // seconds
   order: number;
+  chapterNumber?: number; // Chapter number (1-based), assigned by AI during outline generation
+  chapterTitle?: string; // Chapter title, shared by scenes in the same chapter
   languageNote?: string; // LLM-inferred language note for this scene
   // Suggested image IDs (from PDF-extracted images)
   suggestedImageIds?: string[]; // e.g., ["img_1", "img_3"]
