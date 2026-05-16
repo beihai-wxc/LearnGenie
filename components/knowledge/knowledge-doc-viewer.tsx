@@ -46,6 +46,8 @@ export function KnowledgeDocViewer({
         sessionId: nanoid(),
         requirements,
         pdfText: fullText,
+        knowledgeContextSources: [title],
+        knowledgeSafetyNote: '当前课堂将直接基于所选知识库文档生成，并以该文档内容为主要依据。',
         pdfImages: [],
         imageStorageIds: [],
         sceneOutlines: null,

@@ -16,7 +16,11 @@ import type { UserRequirements } from '@/lib/types/generation';
 import type { SettingsSection } from '@/lib/types/settings';
 import type { PdfImage } from '@/lib/types/generation';
 import type { ParsedPdfContent } from '@/lib/types/pdf';
-import type { KnowledgeSearchResult } from '@/lib/knowledge-base/types';
+import type {
+  KnowledgeLearningPath,
+  KnowledgeSearchResult,
+} from '@/lib/knowledge-base/types';
+import type { AgentWorkflowSnapshot } from '@/lib/agents/types';
 import { SettingsDialog } from '@/components/settings';
 import { HomeHero } from '@/components/home/home-hero';
 import { KnowledgeSearchResults } from '@/components/knowledge/knowledge-search-results';
@@ -35,6 +39,10 @@ interface FormState {
 interface SessionDraft {
   requirements: UserRequirements;
   pdfText?: string;
+  knowledgeContext?: string;
+  knowledgeContextSources?: string[];
+  knowledgeSafetyNote?: string;
+  agentWorkflow?: AgentWorkflowSnapshot;
   pdfImages?: PdfImage[];
   imageStorageIds?: string[];
   knowledgeIngest?: {
@@ -47,6 +55,10 @@ interface KnowledgeResultPanelState {
   title: string;
   query: string;
   results: KnowledgeSearchResult[];
+  autoContextSources?: string[];
+  recommendedPath?: KnowledgeLearningPath | null;
+  safetyNote?: string;
+  agentWorkflow?: AgentWorkflowSnapshot | null;
   fallbackSession: SessionDraft;
   fallbackLabel: string;
   fallbackHint?: string;
@@ -134,6 +146,10 @@ export default function Page() {
       sessionId: nanoid(),
       requirements: draft.requirements,
       pdfText: draft.pdfText || '',
+      knowledgeContext: draft.knowledgeContext,
+      knowledgeContextSources: draft.knowledgeContextSources || [],
+      knowledgeSafetyNote: draft.knowledgeSafetyNote,
+      agentWorkflow: draft.agentWorkflow,
       pdfImages: draft.pdfImages || [],
       imageStorageIds: draft.imageStorageIds || [],
       sceneOutlines: null,
@@ -238,6 +254,12 @@ export default function Page() {
 
     try {
       const userProfile = useUserProfileStore.getState();
+      const updateLearningProfile = userProfile.setLearningProfile;
+      const profileContext = {
+        nickname: userProfile.nickname || undefined,
+        bio: userProfile.bio || undefined,
+        learningProfile: userProfile.learningProfile,
+      };
       const baseRequirements: UserRequirements = {
         requirement: form.requirement.trim(),
         userNickname: userProfile.nickname || undefined,
@@ -247,12 +269,31 @@ export default function Page() {
 
       if (form.pdfFile) {
         const parsedPdf = await parsePdfForKnowledge(form.pdfFile);
+        const workflowResponse = await fetch('/api/agent/session-plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: parsedPdf.text.slice(0, 2200),
+            mode: 'upload',
+            nickname: profileContext.nickname,
+            bio: profileContext.bio,
+            existingProfile: profileContext.learningProfile,
+          }),
+        });
+        const workflowJson = await workflowResponse.json();
+        if (!workflowResponse.ok || !workflowJson.success || !workflowJson.workflow) {
+          throw new Error(workflowJson.error || 'Agent session planning failed');
+        }
+        if (workflowJson.workflow.profile?.data?.dimensions) {
+          updateLearningProfile(workflowJson.workflow.profile.data.dimensions);
+        }
         const uploadMatchResponse = await fetch('/api/knowledge/match-upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             text: parsedPdf.text,
             title: form.pdfFile.name.replace(/\.pdf$/i, ''),
+            profileContext,
           }),
         });
         const uploadMatchJson = await uploadMatchResponse.json();
@@ -265,6 +306,10 @@ export default function Page() {
         const fallbackSession: SessionDraft = {
           requirements: { ...baseRequirements, requirement: finalRequirement },
           pdfText: parsedPdf.text,
+          knowledgeContext: uploadMatchJson.autoContext?.contextText,
+          knowledgeContextSources: uploadMatchJson.autoContext?.sourceTitles,
+          knowledgeSafetyNote: uploadMatchJson.safetyNote,
+          agentWorkflow: workflowJson.workflow as AgentWorkflowSnapshot,
           pdfImages: parsedPdf.pdfImages,
           imageStorageIds: parsedPdf.imageStorageIds,
           knowledgeIngest: {
@@ -278,9 +323,14 @@ export default function Page() {
             title: '发现相似的人工智能课程资料',
             query: form.pdfFile.name,
             results: uploadMatchJson.results as KnowledgeSearchResult[],
+            autoContextSources: uploadMatchJson.autoContext?.sourceTitles,
+            recommendedPath: uploadMatchJson.recommendedPath,
+            safetyNote: uploadMatchJson.safetyNote,
+            agentWorkflow: workflowJson.workflow as AgentWorkflowSnapshot,
             fallbackSession,
             fallbackLabel: '直接基于上传文件生成课堂',
-            fallbackHint: '如果这些知识库资料不符合你的意图，你仍然可以直接使用刚上传的文件生成课堂。',
+            fallbackHint:
+              '如果这些知识库资料不符合你的意图，你仍然可以直接使用刚上传的文件生成课堂。直接继续时，系统也会自动参考最相关的知识片段。',
           });
           return;
         }
@@ -289,12 +339,32 @@ export default function Page() {
         return;
       }
 
+      const workflowResponse = await fetch('/api/agent/session-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: baseRequirements.requirement,
+          mode: 'topic',
+          nickname: profileContext.nickname,
+          bio: profileContext.bio,
+          existingProfile: profileContext.learningProfile,
+        }),
+      });
+      const workflowJson = await workflowResponse.json();
+      if (!workflowResponse.ok || !workflowJson.success || !workflowJson.workflow) {
+        throw new Error(workflowJson.error || 'Agent session planning failed');
+      }
+      if (workflowJson.workflow.profile?.data?.dimensions) {
+        updateLearningProfile(workflowJson.workflow.profile.data.dimensions);
+      }
+
       const knowledgeResponse = await fetch('/api/knowledge/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           query: baseRequirements.requirement,
           intent: 'learn',
+          profileContext,
         }),
       });
       const knowledgeJson = await knowledgeResponse.json();
@@ -304,6 +374,10 @@ export default function Page() {
 
       const fallbackSession: SessionDraft = {
         requirements: baseRequirements,
+        knowledgeContext: knowledgeJson.autoContext?.contextText,
+        knowledgeContextSources: knowledgeJson.autoContext?.sourceTitles,
+        knowledgeSafetyNote: knowledgeJson.safetyNote,
+        agentWorkflow: workflowJson.workflow as AgentWorkflowSnapshot,
       };
 
       if (knowledgeJson.matched && knowledgeJson.results?.length > 0) {
@@ -311,9 +385,14 @@ export default function Page() {
           title: '发现相关的人工智能课程知识',
           query: baseRequirements.requirement,
           results: knowledgeJson.results as KnowledgeSearchResult[],
+          autoContextSources: knowledgeJson.autoContext?.sourceTitles,
+          recommendedPath: knowledgeJson.recommendedPath,
+          safetyNote: knowledgeJson.safetyNote,
+          agentWorkflow: workflowJson.workflow as AgentWorkflowSnapshot,
           fallbackSession,
           fallbackLabel: '继续直接根据主题生成课程',
-          fallbackHint: '如果你不想使用知识库资料，也可以跳过选择，直接让系统根据当前主题生成课堂。',
+          fallbackHint:
+            '如果你不想手动选择资料，也可以直接继续生成。系统会自动带入最相关的知识片段，再基于你的主题生成课堂。',
         });
         return;
       }
@@ -393,6 +472,10 @@ export default function Page() {
                 title={knowledgePanel.title}
                 query={knowledgePanel.query}
                 results={knowledgePanel.results}
+                autoContextSources={knowledgePanel.autoContextSources}
+                recommendedPath={knowledgePanel.recommendedPath}
+                safetyNote={knowledgePanel.safetyNote}
+                agentWorkflow={knowledgePanel.agentWorkflow}
                 fallbackLabel={knowledgePanel.fallbackLabel}
                 fallbackHint={knowledgePanel.fallbackHint}
                 onBack={() => createGenerationSession(knowledgePanel.fallbackSession)}

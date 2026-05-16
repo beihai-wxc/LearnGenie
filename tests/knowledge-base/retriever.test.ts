@@ -4,6 +4,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import {
   KNOWLEDGE_CHUNK_OVERLAP,
   KNOWLEDGE_CHUNK_SIZE,
+  KNOWLEDGE_COURSE_STRUCTURE_FILE,
   KNOWLEDGE_INDEX_DIR,
   KNOWLEDGE_INDEX_FILE,
   KNOWLEDGE_KNOWLEDGE_FILE,
@@ -12,7 +13,7 @@ import {
   KNOWLEDGE_RAG_ROOT,
   KNOWLEDGE_UPLOADS_FILE,
 } from '@/lib/knowledge-base/constants';
-import type { KnowledgeDocument } from '@/lib/knowledge-base/types';
+import type { KnowledgeCourseStructure, KnowledgeDocument } from '@/lib/knowledge-base/types';
 import {
   buildKnowledgeIndex,
   ensureKnowledgeAssetsForTests,
@@ -57,7 +58,52 @@ const uploadDoc: KnowledgeDocument = {
   updatedAt: '2026-01-02T00:00:00.000Z',
 };
 
+const conceptSeedDoc: KnowledgeDocument = {
+  docId: 'core-deep-learning-foundations',
+  title: '深度学习与神经网络基础',
+  course: '人工智能课程',
+  module: '核心知识',
+  summary: '介绍前向传播、反向传播和主流网络结构。',
+  keywords: ['深度学习', '神经网络', '反向传播'],
+  content:
+    '神经网络通过多层结构学习表示。前向传播负责生成输出，反向传播负责根据误差更新参数。',
+  pdfPath: 'core-deep-learning-foundations.pdf',
+  sourceType: 'seed',
+  sourceLabel: '核心知识',
+  difficulty: 'beginner',
+  recommendedTeachingGoals: ['理解神经网络训练机制'],
+  references: ['内部结构化教学整理'],
+  createdAt: '2026-01-03T00:00:00.000Z',
+  updatedAt: '2026-01-03T00:00:00.000Z',
+};
+
 let originalKnowledgeBaseFile: string | null = null;
+let originalCourseStructureFile: string | null = null;
+
+function buildTestCourseStructure(seeds: KnowledgeDocument[]): KnowledgeCourseStructure {
+  return {
+    courseId: 'test-course',
+    title: 'Test Course',
+    description: 'Test-only course structure',
+    chapters: seeds.map((doc, index) => ({
+      chapterId: doc.chapterId || `chapter-${index + 1}`,
+      title: doc.chapterTitle || doc.title,
+      summary: doc.summary,
+      order: index + 1,
+      learningStage: doc.learningStage || 'foundation',
+      docIds: [doc.docId],
+    })),
+    documentBindings: seeds.map((doc, index) => ({
+      docId: doc.docId,
+      chapterId: doc.chapterId || `chapter-${index + 1}`,
+      chapterTitle: doc.chapterTitle || doc.title,
+      learningStage: doc.learningStage || 'foundation',
+      prerequisites: doc.prerequisites ?? [],
+      resourceTypes: doc.resourceTypes ?? ['lecture', 'reading'],
+      estimatedStudyTimeMinutes: doc.estimatedStudyTimeMinutes ?? 30,
+    })),
+  };
+}
 
 async function restoreOriginalKnowledgeBaseFile() {
   if (originalKnowledgeBaseFile === null) return;
@@ -65,11 +111,18 @@ async function restoreOriginalKnowledgeBaseFile() {
   await fs.writeFile(KNOWLEDGE_KNOWLEDGE_FILE, originalKnowledgeBaseFile, 'utf8');
 }
 
+async function restoreOriginalCourseStructureFile() {
+  if (originalCourseStructureFile === null) return;
+  await fs.mkdir(KNOWLEDGE_RAG_ROOT, { recursive: true });
+  await fs.writeFile(KNOWLEDGE_COURSE_STRUCTURE_FILE, originalCourseStructureFile, 'utf8');
+}
+
 async function removeKnowledgeAssets() {
   await fs.rm(KNOWLEDGE_KNOWLEDGE_FILE, { force: true });
   await fs.rm(KNOWLEDGE_UPLOADS_FILE, { force: true });
   await fs.rm(KNOWLEDGE_INDEX_DIR, { recursive: true, force: true });
   await fs.rm(KNOWLEDGE_PDF_DIR, { recursive: true, force: true });
+  await fs.rm(KNOWLEDGE_COURSE_STRUCTURE_FILE, { force: true });
 }
 
 async function seedStore({
@@ -82,6 +135,11 @@ async function seedStore({
   await fs.mkdir(KNOWLEDGE_RAG_ROOT, { recursive: true });
   await fs.writeFile(KNOWLEDGE_KNOWLEDGE_FILE, JSON.stringify(seeds, null, 2), 'utf8');
   await fs.writeFile(KNOWLEDGE_UPLOADS_FILE, JSON.stringify(uploads, null, 2), 'utf8');
+  await fs.writeFile(
+    KNOWLEDGE_COURSE_STRUCTURE_FILE,
+    JSON.stringify(buildTestCourseStructure(seeds), null, 2),
+    'utf8',
+  );
 }
 
 function expectedChunkCount(text: string) {
@@ -106,6 +164,11 @@ describe.sequential('knowledge retriever bootstrap and indexing', () => {
     } catch {
       originalKnowledgeBaseFile = null;
     }
+    try {
+      originalCourseStructureFile = await fs.readFile(KNOWLEDGE_COURSE_STRUCTURE_FILE, 'utf8');
+    } catch {
+      originalCourseStructureFile = null;
+    }
   });
 
   beforeEach(async () => {
@@ -117,6 +180,7 @@ describe.sequential('knowledge retriever bootstrap and indexing', () => {
     resetRetrieverCache();
     await removeKnowledgeAssets();
     await restoreOriginalKnowledgeBaseFile();
+    await restoreOriginalCourseStructureFile();
   });
 
   it('recreates missing rag assets for local tests', async () => {
@@ -150,6 +214,8 @@ describe.sequential('knowledge retriever bootstrap and indexing', () => {
 
     expect(index.documents).toHaveLength(2);
     expect(index.documents[0]?.docId).toBe('core-ai-overview');
+    expect(index.documents[0]?.resourceTypes).toContain('lecture');
+    expect(index.documents[0]?.estimatedStudyTimeMinutes).toBeGreaterThan(0);
     expect(index.chunks.length).toBe(
       expectedChunkCount(seedDoc.content) + expectedChunkCount(uploadDoc.content),
     );
@@ -187,6 +253,20 @@ describe.sequential('knowledge retriever bootstrap and indexing', () => {
     expect(results[0]?.docId).toBe('core-ai-overview');
     expect(results[0]?.sourceType).toBe('seed');
     expect(results[0]?.previewText).toContain('知识表示');
+  });
+
+  it('boosts concept-style queries through concept glossary terms', async () => {
+    await seedStore({
+      seeds: [conceptSeedDoc],
+      uploads: [],
+    });
+
+    await buildKnowledgeIndex({ force: true });
+    const results = await searchKnowledgeIndex('什么是激活函数', 3);
+
+    expect(results[0]?.docId).toBe('core-deep-learning-foundations');
+    expect(results[0]?.matchedBy).toBe('concept');
+    expect(results[0]?.conceptMatches).toContain('激活函数');
   });
 
   it('reuses a valid persisted index after cache reset without rewriting it', async () => {

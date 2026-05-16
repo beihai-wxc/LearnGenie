@@ -4,6 +4,10 @@ export const KNOWLEDGE_RAG_ROOT = path.join(process.cwd(), 'rag');
 export const KNOWLEDGE_KNOWLEDGE_FILE = path.join(KNOWLEDGE_RAG_ROOT, 'knowledge_base.json');
 export const KNOWLEDGE_UPLOADS_FILE = path.join(KNOWLEDGE_RAG_ROOT, 'uploaded-docs.json');
 export const KNOWLEDGE_MARKDOWN_SOURCE_DIR = path.join(KNOWLEDGE_RAG_ROOT, '知识库知识');
+export const KNOWLEDGE_COURSE_STRUCTURE_FILE = path.join(
+  KNOWLEDGE_RAG_ROOT,
+  'course-structure.json',
+);
 export const KNOWLEDGE_INDEX_DIR = path.join(KNOWLEDGE_RAG_ROOT, 'index');
 export const KNOWLEDGE_INDEX_FILE = path.join(KNOWLEDGE_INDEX_DIR, 'index.json');
 export const KNOWLEDGE_METADATA_FILE = path.join(KNOWLEDGE_INDEX_DIR, 'metadata.json');

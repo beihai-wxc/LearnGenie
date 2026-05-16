@@ -2,12 +2,13 @@ import fs from 'node:fs/promises';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { NextRequest } from 'next/server';
 import {
+  KNOWLEDGE_COURSE_STRUCTURE_FILE,
   KNOWLEDGE_KNOWLEDGE_FILE,
   KNOWLEDGE_RAG_ROOT,
   KNOWLEDGE_UPLOADS_FILE,
 } from '@/lib/knowledge-base/constants';
 import { resetKnowledgeCache } from '@/lib/knowledge-base/service';
-import type { KnowledgeDocument } from '@/lib/knowledge-base/types';
+import type { KnowledgeCourseStructure, KnowledgeDocument } from '@/lib/knowledge-base/types';
 
 const seededDocs: KnowledgeDocument[] = [
   {
@@ -22,6 +23,11 @@ const seededDocs: KnowledgeDocument[] = [
     sourceType: 'seed',
     sourceLabel: '核心知识',
     difficulty: 'intermediate',
+    chapterId: 'chapter-agent',
+    chapterTitle: 'Agent 章节',
+    learningStage: 'core',
+    resourceTypes: ['lecture', 'project', 'reading', 'mindmap'],
+    estimatedStudyTimeMinutes: 45,
     recommendedTeachingGoals: ['理解 Agent 系统组成'],
     references: ['内部结构化教学整理'],
     createdAt: '2026-05-08T00:00:00.000Z',
@@ -29,13 +35,42 @@ const seededDocs: KnowledgeDocument[] = [
   },
 ];
 
+const courseStructure: KnowledgeCourseStructure = {
+  courseId: 'route-test-course',
+  title: 'Route Test Course',
+  description: 'Used for route tests',
+  chapters: [
+    {
+      chapterId: 'chapter-agent',
+      title: 'Agent 章节',
+      summary: 'Agent 相关章节',
+      order: 1,
+      learningStage: 'core',
+      docIds: ['capability-agent-systems'],
+    },
+  ],
+  documentBindings: [
+    {
+      docId: 'capability-agent-systems',
+      chapterId: 'chapter-agent',
+      chapterTitle: 'Agent 章节',
+      learningStage: 'core',
+      prerequisites: [],
+      resourceTypes: ['lecture', 'project', 'reading', 'mindmap'],
+      estimatedStudyTimeMinutes: 45,
+    },
+  ],
+};
+
 let originalKnowledgeBaseFile: string | null = null;
 let originalUploadsFile: string | null = null;
+let originalCourseStructureFile: string | null = null;
 
 async function writeStores(seeds: KnowledgeDocument[], uploads: KnowledgeDocument[] = []) {
   await fs.mkdir(KNOWLEDGE_RAG_ROOT, { recursive: true });
   await fs.writeFile(KNOWLEDGE_KNOWLEDGE_FILE, JSON.stringify(seeds, null, 2), 'utf8');
   await fs.writeFile(KNOWLEDGE_UPLOADS_FILE, JSON.stringify(uploads, null, 2), 'utf8');
+  await fs.writeFile(KNOWLEDGE_COURSE_STRUCTURE_FILE, JSON.stringify(courseStructure, null, 2), 'utf8');
 }
 
 async function restoreStores() {
@@ -51,6 +86,12 @@ async function restoreStores() {
   } else {
     await fs.rm(KNOWLEDGE_UPLOADS_FILE, { force: true });
   }
+  if (originalCourseStructureFile !== null) {
+    await fs.mkdir(KNOWLEDGE_RAG_ROOT, { recursive: true });
+    await fs.writeFile(KNOWLEDGE_COURSE_STRUCTURE_FILE, originalCourseStructureFile, 'utf8');
+  } else {
+    await fs.rm(KNOWLEDGE_COURSE_STRUCTURE_FILE, { force: true });
+  }
 }
 
 describe.sequential('knowledge api routes', () => {
@@ -65,6 +106,11 @@ describe.sequential('knowledge api routes', () => {
       originalUploadsFile = await fs.readFile(KNOWLEDGE_UPLOADS_FILE, 'utf8');
     } catch {
       originalUploadsFile = null;
+    }
+    try {
+      originalCourseStructureFile = await fs.readFile(KNOWLEDGE_COURSE_STRUCTURE_FILE, 'utf8');
+    } catch {
+      originalCourseStructureFile = null;
     }
   });
 
@@ -110,6 +156,8 @@ describe.sequential('knowledge api routes', () => {
     expect(json.success).toBe(true);
     expect(json.document.sourceLabel).toBe('核心知识');
     expect(json.document.recommendedTeachingGoals).toContain('理解 Agent 系统组成');
+    expect(json.document.learningStage).toBe('core');
+    expect(json.document.chapterTitle).toBeTruthy();
     expect(json.document.recommendedRequirement).toContain('Agent');
   });
 

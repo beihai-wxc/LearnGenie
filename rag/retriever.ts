@@ -3,6 +3,7 @@ import path from 'node:path';
 import {
   KNOWLEDGE_CHUNK_OVERLAP,
   KNOWLEDGE_CHUNK_SIZE,
+  KNOWLEDGE_COURSE_STRUCTURE_FILE,
   KNOWLEDGE_INDEX_DIR,
   KNOWLEDGE_INDEX_FILE,
   KNOWLEDGE_INDEX_VERSION,
@@ -13,9 +14,15 @@ import {
   KNOWLEDGE_RAG_ROOT,
   KNOWLEDGE_UPLOADS_FILE,
 } from '@/lib/knowledge-base/constants';
+import { getConceptTermsForDoc } from '@/lib/knowledge-base/concept-terms';
 import { buildSimplePdf } from '@/lib/knowledge-base/pdf';
 import { extractTopKeywords, normalizeText, tokenizeText } from '@/lib/knowledge-base/tokenize';
-import type { KnowledgeChunk, KnowledgeDocument } from '@/lib/knowledge-base/types';
+import type {
+  KnowledgeChunk,
+  KnowledgeCourseDocumentBinding,
+  KnowledgeCourseStructure,
+  KnowledgeDocument,
+} from '@/lib/knowledge-base/types';
 
 interface KnowledgeIndexMetadata {
   version: number;
@@ -59,15 +66,21 @@ type SearchKnowledgeResult = {
   docId: string;
   title: string;
   module: string;
+  chapterId?: string;
+  chapterTitle?: string;
+  learningStage?: KnowledgeDocument['learningStage'];
   summary: string;
   score: number;
   previewText: string;
   sourceType: KnowledgeDocument['sourceType'];
   sourceLabel: NonNullable<KnowledgeDocument['sourceLabel']>;
   difficulty?: KnowledgeDocument['difficulty'];
+  resourceTypes?: NonNullable<KnowledgeDocument['resourceTypes']>;
+  estimatedStudyTimeMinutes?: number;
   recommendedTeachingGoals?: string[];
-  matchedBy: 'title' | 'keyword' | 'chunk';
+  matchedBy: 'title' | 'concept' | 'keyword' | 'chunk';
   titleMatch: boolean;
+  conceptMatches: string[];
   keywordMatches: string[];
   topChunks: SearchChunkMatch[];
 };
@@ -98,6 +111,17 @@ function isKnowledgeDocument(value: unknown): value is KnowledgeDocument {
     typeof record.module === 'string' &&
     typeof record.summary === 'string' &&
     Array.isArray(record.keywords) &&
+    (record.chapterId == null || typeof record.chapterId === 'string') &&
+    (record.chapterTitle == null || typeof record.chapterTitle === 'string') &&
+    (record.learningStage == null ||
+      record.learningStage === 'foundation' ||
+      record.learningStage === 'core' ||
+      record.learningStage === 'practice') &&
+    (record.prerequisites == null || Array.isArray(record.prerequisites)) &&
+    (record.resourceTypes == null || Array.isArray(record.resourceTypes)) &&
+    (record.estimatedStudyTimeMinutes == null ||
+      typeof record.estimatedStudyTimeMinutes === 'number') &&
+    (record.conceptTerms == null || Array.isArray(record.conceptTerms)) &&
     typeof record.content === 'string' &&
     typeof record.pdfPath === 'string' &&
     (record.sourceType === 'seed' || record.sourceType === 'upload') &&
@@ -265,6 +289,24 @@ async function readDocumentFile(
           ? '实战专题'
           : '核心知识',
     keywords: [...new Set(doc.keywords.map((keyword) => keyword.trim()).filter(Boolean))],
+    conceptTerms: [
+      ...new Set([
+        ...((doc.conceptTerms ?? []).map((term) => `${term}`.trim()).filter(Boolean) as string[]),
+        ...getConceptTermsForDoc(doc.docId),
+      ]),
+    ],
+    chapterId: typeof doc.chapterId === 'string' ? doc.chapterId : undefined,
+    chapterTitle: typeof doc.chapterTitle === 'string' ? doc.chapterTitle : undefined,
+    learningStage:
+      doc.learningStage === 'foundation' ||
+      doc.learningStage === 'core' ||
+      doc.learningStage === 'practice'
+        ? doc.learningStage
+        : undefined,
+    prerequisites: (doc.prerequisites ?? []).map((value) => `${value}`.trim()).filter(Boolean),
+    resourceTypes: (doc.resourceTypes ?? []).filter(Boolean),
+    estimatedStudyTimeMinutes:
+      typeof doc.estimatedStudyTimeMinutes === 'number' ? doc.estimatedStudyTimeMinutes : undefined,
     recommendedTeachingGoals: (doc.recommendedTeachingGoals ?? [])
       .map((goal) => `${goal}`.trim())
       .filter(Boolean),
@@ -303,7 +345,11 @@ function chunkDocument(doc: KnowledgeDocument): KnowledgeChunk[] {
         section,
         keywords: doc.keywords,
         tokenSet: [
-          ...new Set(tokenizeText(`${doc.title}\n${doc.summary}\n${doc.keywords.join(' ')}\n${text}`)),
+          ...new Set(
+            tokenizeText(
+              `${doc.title}\n${doc.summary}\n${doc.keywords.join(' ')}\n${(doc.conceptTerms ?? []).join(' ')}\n${text}`,
+            ),
+          ),
         ],
       });
       index += 1;
@@ -339,26 +385,90 @@ async function ensureKnowledgeAssets() {
   await ensureFile(KNOWLEDGE_UPLOADS_FILE);
 }
 
+function isCourseBinding(value: unknown): value is KnowledgeCourseDocumentBinding {
+  if (!value || typeof value !== 'object') return false;
+  const record = value as Record<string, unknown>;
+  return (
+    typeof record.docId === 'string' &&
+    typeof record.chapterId === 'string' &&
+    typeof record.chapterTitle === 'string' &&
+    (record.learningStage === 'foundation' ||
+      record.learningStage === 'core' ||
+      record.learningStage === 'practice') &&
+    Array.isArray(record.resourceTypes) &&
+    typeof record.estimatedStudyTimeMinutes === 'number'
+  );
+}
+
+async function readCourseStructure(): Promise<KnowledgeCourseStructure | null> {
+  try {
+    const raw = await fs.readFile(KNOWLEDGE_COURSE_STRUCTURE_FILE, 'utf8');
+    const parsed = JSON.parse(raw) as KnowledgeCourseStructure;
+    if (
+      typeof parsed.courseId !== 'string' ||
+      typeof parsed.title !== 'string' ||
+      !Array.isArray(parsed.chapters) ||
+      !Array.isArray(parsed.documentBindings) ||
+      parsed.documentBindings.some((binding) => !isCourseBinding(binding))
+    ) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function applyCourseBinding(doc: KnowledgeDocument, binding?: KnowledgeCourseDocumentBinding) {
+  if (!binding || doc.sourceType !== 'seed') {
+    return doc;
+  }
+
+  return {
+    ...doc,
+    chapterId: binding.chapterId,
+    chapterTitle: binding.chapterTitle,
+    learningStage: binding.learningStage,
+    prerequisites: binding.prerequisites ?? [],
+    resourceTypes: binding.resourceTypes,
+    estimatedStudyTimeMinutes: binding.estimatedStudyTimeMinutes,
+  };
+}
+
 async function loadDocumentsFromStore() {
   await ensureKnowledgeAssets();
   const seedDocuments = await readDocumentFile(KNOWLEDGE_KNOWLEDGE_FILE, 'seed');
   const uploadedDocuments = await readDocumentFile(KNOWLEDGE_UPLOADS_FILE, 'upload');
   const markdownSources = await readMarkdownKnowledgeSources();
+  const courseStructure = await readCourseStructure();
+  const bindingMap = new Map(
+    (courseStructure?.documentBindings ?? []).map((binding) => [binding.docId, binding]),
+  );
 
   const mergedSeedDocuments = seedDocuments.map((doc) => {
     const markdownSource = markdownSources.get(createTitleKey(doc.title));
-    if (!markdownSource) {
-      return doc;
-    }
-    return {
-      ...doc,
-      content: markdownSource.content,
-      summary: markdownSource.summary || doc.summary,
-      keywords: [...new Set([...doc.keywords, ...markdownSource.keywords])],
-    };
+    const docWithMarkdown = markdownSource
+      ? {
+          ...doc,
+          content: markdownSource.content,
+          summary: markdownSource.summary || doc.summary,
+          keywords: [...new Set([...doc.keywords, ...markdownSource.keywords])],
+          conceptTerms: [...new Set(doc.conceptTerms ?? [])],
+        }
+      : doc;
+
+    return applyCourseBinding(
+      docWithMarkdown,
+      bindingMap.get(doc.docId),
+    );
   });
 
-  return [...mergedSeedDocuments, ...uploadedDocuments];
+  const normalizedUploads = uploadedDocuments.map((doc) => ({
+    ...doc,
+    resourceTypes: doc.resourceTypes ?? ['lecture', 'reading'],
+  }));
+
+  return [...mergedSeedDocuments, ...normalizedUploads];
 }
 
 function computeSourceSignature(documents: KnowledgeDocument[]) {
@@ -370,6 +480,13 @@ function computeSourceSignature(documents: KnowledgeDocument[]) {
       module: doc.module,
       summary: doc.summary,
       keywords: doc.keywords,
+      conceptTerms: doc.conceptTerms,
+      chapterId: doc.chapterId,
+      chapterTitle: doc.chapterTitle,
+      learningStage: doc.learningStage,
+      prerequisites: doc.prerequisites,
+      resourceTypes: doc.resourceTypes,
+      estimatedStudyTimeMinutes: doc.estimatedStudyTimeMinutes,
       content: doc.content,
       pdfPath: doc.pdfPath,
       sourceType: doc.sourceType,
@@ -511,6 +628,18 @@ function overlapScore(left: string[], right: string[]) {
   return matches / Math.max(left.length, rightSet.size);
 }
 
+function collectConceptMatches(doc: KnowledgeDocument, normalizedQuery: string, queryTokens: string[]) {
+  return (doc.conceptTerms ?? []).filter((term) => {
+    const normalizedTerm = normalizeText(term);
+    return (
+      !!normalizedTerm &&
+      (normalizedQuery.includes(normalizedTerm) ||
+        normalizedTerm.includes(normalizedQuery) ||
+        queryTokens.includes(normalizedTerm))
+    );
+  });
+}
+
 function simplifyQuery(query: string) {
   return normalizeText(query)
     .replace(/[?.!,，。！？；：]/g, ' ')
@@ -571,9 +700,10 @@ export async function searchKnowledgeIndex(query: string, topK = 5): Promise<Sea
           (!!simplifiedQuery &&
             normalizedKeyword.length > 1 &&
             (simplifiedQuery.includes(normalizedKeyword) ||
-              normalizedKeyword.includes(simplifiedQuery)))
+            normalizedKeyword.includes(simplifiedQuery)))
         );
       });
+      const conceptMatches = collectConceptMatches(doc, normalizedQuery, queryTokens);
       const topChunks = (state.chunksByDocId.get(doc.docId) ?? [])
         .map((chunk) => ({
           chunkId: chunk.chunkId,
@@ -588,11 +718,15 @@ export async function searchKnowledgeIndex(query: string, topK = 5): Promise<Sea
         .slice(0, 3);
 
       const titleScore = titleMatch ? 1 : overlapScore(queryTokens, tokenizeText(doc.title));
+      const conceptScore = conceptMatches.length
+        ? Math.min(1, conceptMatches.length / Math.max((doc.conceptTerms ?? []).length / 3, 1))
+        : 0;
       const keywordScore = keywordMatches.length
         ? keywordMatches.length / Math.max(doc.keywords.length, queryTokens.length, 1)
         : 0;
       const chunkScore = topChunks[0]?.score ?? 0;
-      const score = titleScore * 0.5 + keywordScore * 0.18 + chunkScore * 0.32;
+      const score =
+        titleScore * 0.36 + conceptScore * 0.28 + keywordScore * 0.12 + chunkScore * 0.24;
 
       if (score <= 0) {
         return null;
@@ -600,6 +734,8 @@ export async function searchKnowledgeIndex(query: string, topK = 5): Promise<Sea
 
       const matchedBy: SearchKnowledgeResult['matchedBy'] = titleMatch
         ? 'title'
+        : conceptMatches.length > 0
+          ? 'concept'
         : keywordMatches.length > 0
           ? 'keyword'
           : 'chunk';
@@ -608,15 +744,21 @@ export async function searchKnowledgeIndex(query: string, topK = 5): Promise<Sea
         docId: doc.docId,
         title: doc.title,
         module: doc.module,
+        chapterId: doc.chapterId,
+        chapterTitle: doc.chapterTitle,
+        learningStage: doc.learningStage,
         summary: doc.summary,
         score,
         previewText: topChunks[0]?.text ?? doc.summary,
         sourceType: doc.sourceType,
         sourceLabel: deriveSourceLabel(doc),
         difficulty: doc.difficulty,
+        resourceTypes: doc.resourceTypes,
+        estimatedStudyTimeMinutes: doc.estimatedStudyTimeMinutes,
         recommendedTeachingGoals: doc.recommendedTeachingGoals,
         matchedBy,
         titleMatch,
+        conceptMatches,
         keywordMatches,
         topChunks,
       };
