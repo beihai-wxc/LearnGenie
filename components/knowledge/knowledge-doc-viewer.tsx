@@ -15,6 +15,9 @@ interface KnowledgeDocViewerProps {
   fullText: string;
   pdfUrl: string;
   recommendedRequirement: string;
+  sourceLabel?: string;
+  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  recommendedTeachingGoals?: string[];
 }
 
 export function KnowledgeDocViewer({
@@ -25,6 +28,9 @@ export function KnowledgeDocViewer({
   fullText,
   pdfUrl,
   recommendedRequirement,
+  sourceLabel,
+  difficulty,
+  recommendedTeachingGoals,
 }: KnowledgeDocViewerProps) {
   const router = useRouter();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -40,6 +46,8 @@ export function KnowledgeDocViewer({
         sessionId: nanoid(),
         requirements,
         pdfText: fullText,
+        knowledgeContextSources: [title],
+        knowledgeSafetyNote: '当前课堂将直接基于所选知识库文档生成，并以该文档内容为主要依据。',
         pdfImages: [],
         imageStorageIds: [],
         sceneOutlines: null,
@@ -80,6 +88,22 @@ export function KnowledgeDocViewer({
             </div>
             <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">{title}</h1>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{module}</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {sourceLabel ? (
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                  {sourceLabel}
+                </span>
+              ) : null}
+              {difficulty ? (
+                <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+                  {difficulty === 'beginner'
+                    ? '入门难度'
+                    : difficulty === 'intermediate'
+                      ? '进阶难度'
+                      : '高级难度'}
+                </span>
+              ) : null}
+            </div>
             <p className="mt-5 text-sm leading-7 text-slate-700 dark:text-slate-300">{summary}</p>
 
             <div className="mt-6">
@@ -95,6 +119,17 @@ export function KnowledgeDocViewer({
                 ))}
               </div>
             </div>
+
+            {recommendedTeachingGoals?.length ? (
+              <div className="mt-6">
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">推荐课堂目标</h2>
+                <div className="mt-3 space-y-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                  {recommendedTeachingGoals.map((goal) => (
+                    <div key={goal}>- {goal}</div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </aside>
 
           <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">

@@ -32,6 +32,11 @@ import { StepVisualizer } from './components/visualizers';
 
 const log = createLogger('GenerationPreview');
 
+function mergeKnowledgeContextWithPdfText(knowledgeContext?: string, pdfText?: string) {
+  const parts = [knowledgeContext?.trim(), pdfText?.trim()].filter(Boolean);
+  return parts.length > 0 ? parts.join('\n\n---\n\n') : '';
+}
+
 function GenerationPreviewContent() {
   const router = useRouter();
   const { t } = useI18n();
@@ -302,12 +307,16 @@ function GenerationPreviewContent() {
         const wsSettings = useSettingsStore.getState();
         const wsApiKey =
           wsSettings.webSearchProvidersConfig?.[wsSettings.webSearchProviderId]?.apiKey;
+        const combinedPdfText = mergeKnowledgeContextWithPdfText(
+          currentSession.knowledgeContext,
+          currentSession.pdfText,
+        );
         const res = await fetch('/api/web-search', {
           method: 'POST',
           headers: getApiHeaders(),
           body: JSON.stringify({
             query: currentSession.requirements.requirement,
-            pdfText: currentSession.pdfText || undefined,
+            pdfText: combinedPdfText || undefined,
             apiKey: wsApiKey || undefined,
           }),
           signal,
@@ -369,6 +378,10 @@ function GenerationPreviewContent() {
       if (!outlines || outlines.length === 0) {
         log.debug('=== Generating outlines (SSE) ===');
         setStreamingOutlines([]);
+        const combinedPdfText = mergeKnowledgeContextWithPdfText(
+          currentSession.knowledgeContext,
+          currentSession.pdfText,
+        );
 
         const outlineResult = await new Promise<{
           outlines: SceneOutline[];
@@ -382,7 +395,7 @@ function GenerationPreviewContent() {
             headers: getApiHeaders(),
             body: JSON.stringify({
               requirements: currentSession.requirements,
-              pdfText: currentSession.pdfText,
+              pdfText: combinedPdfText,
               pdfImages: currentSession.pdfImages,
               imageMapping,
               researchContext: currentSession.researchContext,

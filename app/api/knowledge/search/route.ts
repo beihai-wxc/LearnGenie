@@ -6,16 +6,42 @@ import { createLogger } from '@/lib/logger';
 
 const log = createLogger('KnowledgeSearch API');
 
+const profileSchema = z
+  .object({
+    score: z.number().optional(),
+    description: z.string().optional(),
+  })
+  .passthrough();
+
 const requestSchema = z.object({
   query: z.string().trim().min(1),
   intent: z.literal('learn').optional(),
   topK: z.number().int().min(1).max(10).optional(),
+  profileContext: z
+    .object({
+      nickname: z.string().optional(),
+      bio: z.string().optional(),
+      learningProfile: z
+        .object({
+          knowledgeFoundation: profileSchema.optional(),
+          cognitiveStyle: profileSchema.optional(),
+          errorPronePatterns: profileSchema.optional(),
+          learningPace: profileSchema.optional(),
+          interestDirection: profileSchema.optional(),
+          metaCognitiveStrategy: profileSchema.optional(),
+          emotionalMotivation: profileSchema.optional(),
+          interactionPreference: profileSchema.optional(),
+        })
+        .passthrough()
+        .optional(),
+    })
+    .optional(),
 });
 
 export async function POST(req: NextRequest) {
   try {
     const body = requestSchema.parse(await req.json());
-    const result = await searchKnowledgeBase(body.query, body.topK);
+    const result = await searchKnowledgeBase(body.query, body.topK, body.profileContext);
     return apiSuccess({ ...result });
   } catch (error) {
     log.error('Knowledge search failed:', error);

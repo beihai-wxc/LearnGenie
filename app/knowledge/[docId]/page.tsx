@@ -23,6 +23,9 @@ export default async function KnowledgeDocumentPage({
       fullText={document.content}
       pdfUrl={`/api/knowledge/document/${document.docId}`}
       recommendedRequirement={buildRecommendedRequirement(document.content, document.title)}
+      sourceLabel={document.sourceLabel}
+      difficulty={document.difficulty}
+      recommendedTeachingGoals={document.recommendedTeachingGoals}
     />
   );
 }

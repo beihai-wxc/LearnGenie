@@ -1,0 +1,205 @@
+{
+  "courseId": "ai-course-01",
+  "title": "人工智能导论与应用实践",
+  "description": "面向高校人工智能方向学习者的完整课程结构，覆盖基础认知、核心能力与实践落地。",
+  "chapters": [
+    {
+      "chapterId": "chapter-01-overview",
+      "title": "第一章 人工智能导论与学习地图",
+      "summary": "建立人工智能总览、学习边界与课程全局认知。",
+      "order": 1,
+      "learningStage": "foundation",
+      "docIds": ["core-ai-overview"]
+    },
+    {
+      "chapterId": "chapter-02-math",
+      "title": "第二章 人工智能数学基础",
+      "summary": "掌握线性代数、概率统计、微积分和优化直觉。",
+      "order": 2,
+      "learningStage": "foundation",
+      "prerequisiteChapterIds": ["chapter-01-overview"],
+      "docIds": ["core-math-foundations"]
+    },
+    {
+      "chapterId": "chapter-03-ml",
+      "title": "第三章 机器学习训练范式",
+      "summary": "理解监督学习、泛化、过拟合与模型评估。",
+      "order": 3,
+      "learningStage": "foundation",
+      "prerequisiteChapterIds": ["chapter-01-overview", "chapter-02-math"],
+      "docIds": ["core-machine-learning-foundations"]
+    },
+    {
+      "chapterId": "chapter-04-dl",
+      "title": "第四章 深度学习与神经网络",
+      "summary": "从神经网络机制出发理解主流深度模型。",
+      "order": 4,
+      "learningStage": "foundation",
+      "prerequisiteChapterIds": ["chapter-02-math", "chapter-03-ml"],
+      "docIds": ["core-deep-learning-foundations"]
+    },
+    {
+      "chapterId": "chapter-05-llm",
+      "title": "第五章 Transformer 与大模型",
+      "summary": "理解自注意力、大模型训练与能力边界。",
+      "order": 5,
+      "learningStage": "core",
+      "prerequisiteChapterIds": ["chapter-04-dl"],
+      "docIds": ["capability-llm-transformer"]
+    },
+    {
+      "chapterId": "chapter-06-rag-agent",
+      "title": "第六章 RAG 与智能体系统",
+      "summary": "理解检索增强生成与智能体工作流的系统设计。",
+      "order": 6,
+      "learningStage": "core",
+      "prerequisiteChapterIds": ["chapter-05-llm"],
+      "docIds": ["capability-rag-systems", "capability-agent-systems"]
+    },
+    {
+      "chapterId": "chapter-07-ai-fields",
+      "title": "第七章 视觉、语言与决策智能",
+      "summary": "掌握典型 AI 应用领域的任务特点与系统落地难点。",
+      "order": 7,
+      "learningStage": "core",
+      "prerequisiteChapterIds": ["chapter-04-dl"],
+      "docIds": [
+        "capability-computer-vision",
+        "capability-nlp",
+        "capability-reinforcement-learning"
+      ]
+    },
+    {
+      "chapterId": "chapter-08-practice",
+      "title": "第八章 AI 实战工作流与落地",
+      "summary": "贯通训练、微调、部署、评测和项目落地。",
+      "order": 8,
+      "learningStage": "practice",
+      "prerequisiteChapterIds": ["chapter-05-llm", "chapter-06-rag-agent", "chapter-07-ai-fields"],
+      "docIds": [
+        "practice-pytorch-workflow",
+        "practice-model-finetuning",
+        "practice-ai-app-deployment"
+      ]
+    }
+  ],
+  "documentBindings": [
+    {
+      "docId": "core-ai-overview",
+      "chapterId": "chapter-01-overview",
+      "chapterTitle": "第一章 人工智能导论与学习地图",
+      "learningStage": "foundation",
+      "prerequisites": [],
+      "resourceTypes": ["lecture", "mindmap", "reading", "quiz"],
+      "estimatedStudyTimeMinutes": 35
+    },
+    {
+      "docId": "core-math-foundations",
+      "chapterId": "chapter-02-math",
+      "chapterTitle": "第二章 人工智能数学基础",
+      "learningStage": "foundation",
+      "prerequisites": ["core-ai-overview"],
+      "resourceTypes": ["lecture", "mindmap", "quiz", "reading"],
+      "estimatedStudyTimeMinutes": 45
+    },
+    {
+      "docId": "core-machine-learning-foundations",
+      "chapterId": "chapter-03-ml",
+      "chapterTitle": "第三章 机器学习训练范式",
+      "learningStage": "foundation",
+      "prerequisites": ["core-math-foundations"],
+      "resourceTypes": ["lecture", "quiz", "mindmap", "reading", "code-lab"],
+      "estimatedStudyTimeMinutes": 50
+    },
+    {
+      "docId": "core-deep-learning-foundations",
+      "chapterId": "chapter-04-dl",
+      "chapterTitle": "第四章 深度学习与神经网络",
+      "learningStage": "foundation",
+      "prerequisites": ["core-math-foundations", "core-machine-learning-foundations"],
+      "resourceTypes": ["lecture", "mindmap", "quiz", "code-lab", "reading"],
+      "estimatedStudyTimeMinutes": 55
+    },
+    {
+      "docId": "capability-llm-transformer",
+      "chapterId": "chapter-05-llm",
+      "chapterTitle": "第五章 Transformer 与大模型",
+      "learningStage": "core",
+      "prerequisites": ["core-deep-learning-foundations"],
+      "resourceTypes": ["lecture", "mindmap", "reading", "quiz", "video-script"],
+      "estimatedStudyTimeMinutes": 55
+    },
+    {
+      "docId": "capability-rag-systems",
+      "chapterId": "chapter-06-rag-agent",
+      "chapterTitle": "第六章 RAG 与智能体系统",
+      "learningStage": "core",
+      "prerequisites": ["capability-llm-transformer"],
+      "resourceTypes": ["lecture", "mindmap", "quiz", "project", "reading"],
+      "estimatedStudyTimeMinutes": 45
+    },
+    {
+      "docId": "capability-agent-systems",
+      "chapterId": "chapter-06-rag-agent",
+      "chapterTitle": "第六章 RAG 与智能体系统",
+      "learningStage": "core",
+      "prerequisites": ["capability-llm-transformer", "capability-rag-systems"],
+      "resourceTypes": ["lecture", "mindmap", "project", "reading", "video-script"],
+      "estimatedStudyTimeMinutes": 45
+    },
+    {
+      "docId": "capability-computer-vision",
+      "chapterId": "chapter-07-ai-fields",
+      "chapterTitle": "第七章 视觉、语言与决策智能",
+      "learningStage": "core",
+      "prerequisites": ["core-deep-learning-foundations"],
+      "resourceTypes": ["lecture", "mindmap", "reading", "quiz", "project"],
+      "estimatedStudyTimeMinutes": 40
+    },
+    {
+      "docId": "capability-nlp",
+      "chapterId": "chapter-07-ai-fields",
+      "chapterTitle": "第七章 视觉、语言与决策智能",
+      "learningStage": "core",
+      "prerequisites": ["core-deep-learning-foundations"],
+      "resourceTypes": ["lecture", "mindmap", "reading", "quiz", "project"],
+      "estimatedStudyTimeMinutes": 40
+    },
+    {
+      "docId": "capability-reinforcement-learning",
+      "chapterId": "chapter-07-ai-fields",
+      "chapterTitle": "第七章 视觉、语言与决策智能",
+      "learningStage": "core",
+      "prerequisites": ["core-machine-learning-foundations"],
+      "resourceTypes": ["lecture", "mindmap", "reading", "quiz", "project"],
+      "estimatedStudyTimeMinutes": 45
+    },
+    {
+      "docId": "practice-pytorch-workflow",
+      "chapterId": "chapter-08-practice",
+      "chapterTitle": "第八章 AI 实战工作流与落地",
+      "learningStage": "practice",
+      "prerequisites": ["core-deep-learning-foundations"],
+      "resourceTypes": ["lecture", "code-lab", "project", "quiz", "reading"],
+      "estimatedStudyTimeMinutes": 60
+    },
+    {
+      "docId": "practice-model-finetuning",
+      "chapterId": "chapter-08-practice",
+      "chapterTitle": "第八章 AI 实战工作流与落地",
+      "learningStage": "practice",
+      "prerequisites": ["practice-pytorch-workflow", "capability-llm-transformer"],
+      "resourceTypes": ["lecture", "code-lab", "project", "reading", "video-script"],
+      "estimatedStudyTimeMinutes": 70
+    },
+    {
+      "docId": "practice-ai-app-deployment",
+      "chapterId": "chapter-08-practice",
+      "chapterTitle": "第八章 AI 实战工作流与落地",
+      "learningStage": "practice",
+      "prerequisites": ["practice-pytorch-workflow", "practice-model-finetuning", "capability-rag-systems"],
+      "resourceTypes": ["lecture", "project", "reading", "quiz", "video-script"],
+      "estimatedStudyTimeMinutes": 65
+    }
+  ]
+}
