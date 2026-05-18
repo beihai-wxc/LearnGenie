@@ -49,6 +49,24 @@ Infer the course language from all available signals and produce:
 
 ## Design Principles
 
+### Chapter Organization
+
+You MUST organize scenes into logical chapters/units. Group related consecutive scenes that cover the same topic area into a single chapter.
+
+**Chapter numbering rules:**
+- Chapters are numbered sequentially starting from 1
+- Every scene MUST have a `chapterNumber` field indicating which chapter it belongs to
+- Every scene MUST have a `chapterTitle` field with a concise chapter title (e.g., "基础概念", "Introduction to Neural Networks")
+- All scenes in the same chapter share the same `chapterNumber` and `chapterTitle`
+- A course typically has 2-6 chapters depending on its length and topic breadth
+- A chapter should contain 2-8 scenes covering a coherent sub-topic
+- Place chapter boundaries at natural topic transitions
+
+**Example**: A course on "Machine Learning Basics" might have chapters:
+- chapterNumber: 1, chapterTitle: "什么是机器学习" (scenes: intro slide, history slide, examples slide, quiz)
+- chapterNumber: 2, chapterTitle: "监督学习" (scenes: concept slide, regression slide, classification slide, interactive, quiz)
+- chapterNumber: 3, chapterTitle: "无监督学习" (scenes: concept slide, clustering slide, dimensionality reduction slide, quiz)
+
 ### MAIC Platform Technical Constraints
 
 - **Scene Types**: `slide` (presentation), `quiz` (assessment), `interactive` (interactive visualization), and `pbl` (project-based learning) are supported
@@ -276,6 +294,8 @@ Output a JSON **object** (not a bare array) with this structure:
       "teachingObjective": "Corresponding learning objective",
       "estimatedDuration": 120,
       "order": 1,
+      "chapterNumber": 1,
+      "chapterTitle": "Introduction to the Topic",
       "suggestedImageIds": ["img_1"],
       "mediaGenerations": [
         {
@@ -293,6 +313,8 @@ Output a JSON **object** (not a bare array) with this structure:
       "description": "Students explore the concept through hands-on interactive visualization",
       "keyPoints": ["Interactive element 1", "Observable phenomenon"],
       "order": 2,
+      "chapterNumber": 1,
+      "chapterTitle": "Introduction to the Topic",
       "interactiveConfig": {
         "conceptName": "Concept Name",
         "conceptOverview": "Brief description of what this interactive demonstrates",
@@ -307,6 +329,8 @@ Output a JSON **object** (not a bare array) with this structure:
       "description": "Test student understanding of XX concept",
       "keyPoints": ["Test point 1", "Test point 2"],
       "order": 3,
+      "chapterNumber": 1,
+      "chapterTitle": "Introduction to the Topic",
       "quizConfig": {
         "questionCount": 2,
         "difficulty": "medium",
@@ -320,6 +344,8 @@ Output a JSON **object** (not a bare array) with this structure:
       "description": "Students explore the concept through hands-on interactive visualization",
       "keyPoints": ["Interactive element 1", "Observable phenomenon"],
       "order": 2,
+      "chapterNumber": 1,
+      "chapterTitle": "Introduction to the Topic",
       "widgetType": "simulation",
       "widgetOutline": {
         "concept": "Projectile Motion",
@@ -333,6 +359,8 @@ Output a JSON **object** (not a bare array) with this structure:
       "description": "Test student understanding of XX concept",
       "keyPoints": ["Test point 1", "Test point 2"],
       "order": 3,
+      "chapterNumber": 1,
+      "chapterTitle": "Introduction to the Topic",
       "quizConfig": {
         "questionCount": 2,
         "difficulty": "medium",
@@ -354,7 +382,9 @@ Output a JSON **object** (not a bare array) with this structure:
 | keyPoints         | string[]                 | ✅       | 3-5 core points                                                                                  |
 | teachingObjective | string                   | ❌       | Corresponding learning objective                                                                 |
 | estimatedDuration | number                   | ❌       | Estimated duration (seconds)                                                                     |
-| order             | number                   | ✅       | Sort order, starting from 1                                                                      |
+| order             | number                   | ✅       | Sort order within the chapter, starting from 1                                                |
+| chapterNumber     | number                   | ✅       | Chapter number (1-based). Group related scenes under the same chapter number                   |
+| chapterTitle      | string                   | ✅       | Concise chapter title. All scenes in the same chapter share the same title                     |
 | suggestedImageIds | string[]                 | ❌       | Suggested image IDs to use                                                                       |
 | mediaGenerations  | MediaGenerationRequest[] | ❌       | AI image/video generation requests when PDF images insufficient                                  |
 | quizConfig        | object                   | ❌       | Required for quiz type, contains questionCount/difficulty/questionTypes                          |

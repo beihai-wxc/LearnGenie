@@ -5,7 +5,7 @@ import { ThemeProvider } from '@/lib/hooks/use-theme';
 import { useStageStore } from '@/lib/store';
 import { loadImageMapping } from '@/lib/utils/image-storage';
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useSceneGenerator } from '@/lib/hooks/use-scene-generator';
 import { useMediaGenerationStore } from '@/lib/store/media-generation';
 import { useWhiteboardHistoryStore } from '@/lib/store/whiteboard-history';
@@ -18,6 +18,7 @@ const log = createLogger('Classroom');
 export default function ClassroomDetailPage() {
   const params = useParams();
   const classroomId = params?.id as string;
+  const searchParams = useSearchParams();
 
   const { loadFromStorage } = useStageStore();
 
@@ -25,6 +26,14 @@ export default function ClassroomDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   const generationStartedRef = useRef(false);
+  const retrySceneIdRef = useRef<string | null>(null);
+
+  // Capture retry params on mount
+  const retrySceneId = searchParams.get('sceneId');
+  const retryFlag = searchParams.get('retry');
+  if (retryFlag === '1' && retrySceneId) {
+    retrySceneIdRef.current = retrySceneId;
+  }
 
   const { generateRemaining, retrySingleOutline, stop } = useSceneGenerator({
     onComplete: () => {
@@ -95,6 +104,44 @@ export default function ClassroomDetailPage() {
           .setSelectedAgentIds(
             cleanIds && cleanIds.length > 0 ? cleanIds : ['default-1', 'default-2', 'default-3'],
           );
+      }
+
+      // Update access history after successful load
+      const stage = useStageStore.getState().stage;
+      if (stage) {
+        // Retry deep link: navigate to target scene if retry=1
+        const retrySid = retrySceneIdRef.current;
+        if (retrySid) {
+          const { scenes: loadedScenes } = useStageStore.getState();
+          const targetScene = loadedScenes.find((s) => s.id === retrySid);
+          if (targetScene) {
+            // Block auto-generation so pending outlines don't interfere
+            generationStartedRef.current = true;
+            useStageStore.getState().setCurrentSceneId(retrySid);
+            // Clear quiz draft cache for clean retry
+            try {
+              sessionStorage.removeItem(`quizDraft:${retrySid}`);
+            } catch {
+              // Non-critical
+            }
+            log.info('Retry deep link: navigated to scene', retrySid);
+          } else {
+            log.warn('Retry deep link: scene not found in stage', retrySid);
+          }
+          retrySceneIdRef.current = null;
+        }
+
+        try {
+          const { touchAccessHistory } = await import('@/lib/utils/access-history');
+          await touchAccessHistory(
+            'classroom',
+            classroomId,
+            stage.name || '未命名课堂',
+            `/classroom/${classroomId}`,
+          );
+        } catch (historyErr) {
+          log.warn('Failed to touch classroom access history:', historyErr);
+        }
       }
     } catch (error) {
       log.error('Failed to load classroom:', error);

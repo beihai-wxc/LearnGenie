@@ -52,6 +52,8 @@ export interface Scene {
   type: SceneType;
   title: string;
   order: number; // Display order
+  chapterNumber?: number; // Chapter number (1-based), inherited from SceneOutline
+  chapterTitle?: string; // Chapter title, inherited from SceneOutline
 
   // Type-specific content
   content: SceneContent;

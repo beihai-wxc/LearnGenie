@@ -11,10 +11,11 @@
     "topbarHome": "Home",
     "topbarRecent": "Recent",
     "heroEyebrow": "LearnGenie Studio",
-    "heroTitleBefore": "Today let's",
+    "heroTitleBefore": "Start",
     "heroTitleHighlight": "learn",
-    "heroTitleAfter": "something meaningful",
-    "heroDescription": "Describe a topic, paste a document, or import a classroom and let LearnGenie turn it into an immersive AI-led learning flow.",
+    "heroTitleAfter": "now",
+    "heroDescriptionPart1": "Describe a topic, paste a document, or import a classroom, ",
+    "heroDescriptionPart2": "and let LearnGenie turn it into an immersive AI-led learning flow.",
     "heroStatPrompt": "Ask, upload, or speak to begin",
     "heroStatClassrooms": "{{count}} classrooms ready to revisit",
     "promptPlaceholder": "What would you like to learn or generate today?",
@@ -202,7 +203,12 @@
     "aiGrading": "AI is grading...",
     "aiGradingWait": "Please wait, analyzing your answers",
     "quizReport": "Quiz Report",
-    "retry": "Retry"
+    "retry": "Retry",
+    "collectQuestion": "Collect",
+    "uncollectQuestion": "Uncollect",
+    "collectSuccess": "Collected",
+    "uncollectSuccess": "Uncollected",
+    "collectError": "Operation failed, please retry"
   },
   "roundtable": {
     "teacher": "TEACHER",

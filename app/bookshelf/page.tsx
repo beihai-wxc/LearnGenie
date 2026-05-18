@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, FolderPlus, X } from 'lucide-react';
+import { Plus, Search, FolderPlus, X, Clock, Trash2, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { nanoid } from 'nanoid';
 import { useI18n } from '@/lib/hooks/use-i18n';
-import { cn } from '@/lib/utils';
 import { Sidebar } from '@/components/sidebar/sidebar';
 import { BookshelfTabs } from '@/components/bookshelf/bookshelf-tabs';
 import { ClassroomCard, DocumentCard, CategoryCard } from '@/components/bookshelf/bookshelf-card';
@@ -30,6 +29,13 @@ import {
   type BookshelfRecord,
 } from '@/lib/utils/bookshelf-storage';
 import type { BookshelfCategoryRecord } from '@/lib/utils/database';
+import {
+  listAccessHistory,
+  deleteAccessHistory,
+  migrateStagesToAccessHistory,
+  saveAccessHistory,
+  type AccessHistoryRecord,
+} from '@/lib/utils/access-history';
 
 export default function BookshelfPage() {
   const { t } = useI18n();
@@ -45,6 +51,7 @@ export default function BookshelfPage() {
   const [showUpload, setShowUpload] = useState(false);
   const [showNewCategory, setShowNewCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [historyRecords, setHistoryRecords] = useState<AccessHistoryRecord[]>([]);
 
   // Load all data
   const loadData = useCallback(async () => {
@@ -71,6 +78,11 @@ export default function BookshelfPage() {
         }
         setThumbnails(urls);
       }
+
+      // Migrate existing stages to access history on first load (backward compat)
+      await migrateStagesToAccessHistory();
+      const history = await listAccessHistory(undefined, 200);
+      setHistoryRecords(history);
     } catch (err) {
       toast.error('加载数据失败');
     } finally {
@@ -84,7 +96,7 @@ export default function BookshelfPage() {
 
   // Actions
   const handleOpenClassroom = (id: string) => {
-    router.push(`/stage/${id}`);
+    router.push(`/classroom/${id}`);
   };
 
   const handleDeleteClassroom = async (id: string) => {
@@ -142,12 +154,7 @@ export default function BookshelfPage() {
   };
 
   const handleOpenDocument = (id: string) => {
-    const doc = documents.find((d) => d.id === id);
-    if (doc?.blobKey) {
-      // Open in new tab
-      // Note: In a real app you'd generate a blob URL. For now, just toast.
-      toast.info('打开文档功能开发中');
-    }
+    router.push(`/document-viewer/${id}`);
   };
 
   const handleAddCategory = async () => {
@@ -174,6 +181,32 @@ export default function BookshelfPage() {
     }
   };
 
+  const handleDeleteHistory = async (id: string) => {
+    try {
+      await deleteAccessHistory(id);
+      setHistoryRecords((prev) => prev.filter((h) => h.id !== id));
+      toast.success('记录已删除');
+    } catch {
+      toast.error('删除失败');
+    }
+  };
+
+  const handleOpenHistory = (url: string) => {
+    router.push(url);
+  };
+
+  function formatHistoryDate(timestamp: number): string {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    if (days === 0) return '今天';
+    if (days === 1) return '昨天';
+    if (days < 7) return `${days}天前`;
+    if (days < 30) return `${Math.floor(days / 7)}周前`;
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+  }
+
   // Filter logic
   const filteredClassrooms = classrooms.filter((c) =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -185,8 +218,16 @@ export default function BookshelfPage() {
   const filteredCategories = categories.filter((c) =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+  const filteredHistory = historyRecords.filter((h) =>
+    h.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (h.subtitle && h.subtitle.toLowerCase().includes(searchQuery.toLowerCase())),
+  );
 
-  const hasAnyContent = filteredClassrooms.length > 0 || filteredDocuments.length > 0 || categories.length > 0;
+  const hasAnyContent =
+    filteredClassrooms.length > 0 ||
+    filteredDocuments.length > 0 ||
+    categories.length > 0 ||
+    filteredHistory.length > 0;
 
   return (
     <>
@@ -363,6 +404,65 @@ export default function BookshelfPage() {
                       })}
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Existing history section */}
+              {(activeTab === 'all' || activeTab === 'history') && filteredHistory.length > 0 && (
+                <div className="mb-8">
+                  <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-800 dark:text-slate-200">
+                    <span className="size-2 rounded-full bg-amber-500" />
+                    历史记录 ({filteredHistory.length})
+                  </h2>
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {filteredHistory.map((record) => (
+                      <div
+                        key={record.id}
+                        className="group relative overflow-hidden rounded-2xl border border-slate-200/60 bg-white/80 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-700/60 dark:bg-slate-900/80"
+                      >
+                        <div className="relative aspect-[16/10] flex items-center justify-center bg-gradient-to-br from-slate-100 to-amber-50 dark:from-slate-800 dark:to-slate-700">
+                          <div className="text-center">
+                            <Clock className="mx-auto size-10 text-slate-300 dark:text-slate-600" />
+                            <p className="mt-2 text-xs font-medium uppercase text-slate-400 dark:text-slate-500">
+                              {record.type === 'classroom' && 'AI 课堂'}
+                              {record.type === 'knowledge' && '知识库'}
+                              {record.type === 'document' && '文档'}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteHistory(record.id)}
+                            className="absolute right-3 top-3 size-7 rounded-full border border-white/60 bg-white/80 text-slate-500 opacity-0 backdrop-blur-sm transition-all hover:bg-rose-50 hover:text-rose-500 group-hover:opacity-100 dark:border-slate-700/60 dark:bg-slate-900/80 dark:hover:bg-rose-950/50 dark:hover:text-rose-400"
+                          >
+                            <Trash2 className="mx-auto size-3" />
+                          </button>
+                        </div>
+                        <div className="px-4 py-3.5">
+                          <h3 className="truncate text-sm font-medium text-slate-900 dark:text-white">
+                            {record.title}
+                          </h3>
+                          {record.subtitle && (
+                            <p className="mt-0.5 truncate text-xs text-slate-400 dark:text-slate-500">
+                              {record.subtitle}
+                            </p>
+                          )}
+                          <div className="mt-2 flex items-center justify-between">
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                              访问 {record.accessCount || 1} 次 · {formatHistoryDate(record.updatedAt)}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenHistory(record.url)}
+                              className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 transition-colors hover:text-sky-600 dark:text-slate-300 dark:hover:text-sky-400"
+                            >
+                              打开
+                              <ArrowRight className="size-3" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </>

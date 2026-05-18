@@ -62,6 +62,8 @@ export interface SceneRecord {
   content: SceneContent; // Stored as JSON
   actions?: Action[]; // Stored as JSON
   whiteboard?: Whiteboard[]; // Stored as JSON
+  chapterNumber?: number;
+  chapterTitle?: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -188,6 +190,44 @@ export interface BookshelfCategoryRecord {
   createdAt: number;
 }
 
+/**
+ * AccessHistory table - Records of visited/generated classrooms, knowledge docs, etc.
+ */
+export interface AccessHistoryRecord {
+  id: string; // PK (UUID)
+  type: 'classroom' | 'knowledge' | 'document';
+  targetId: string; // classroomId / docId / documentId
+  title: string;
+  subtitle?: string; // module name, category, etc.
+  url: string; // navigable URL path
+  thumbnailUrl?: string;
+  createdAt: number; // first access time
+  updatedAt: number; // last access time
+  accessCount: number;
+}
+
+/** Wrong-question collection record */
+export interface WrongQuestionRecord {
+  id: string; // PK (nanoid)
+  stageId: string;
+  stageName: string;
+  sceneId: string;
+  sceneTitle: string;
+  chapterNumber: number;
+  chapterTitle?: string;
+  questionId: string;
+  questionSnapshot: import('@/lib/types/stage').QuizQuestion;
+  lastUserAnswer: string | string[];
+  lastResultStatus: 'correct' | 'incorrect';
+  lastEarnedPoints: number;
+  collectedReason: 'auto' | 'manual';
+  wrongCount: number;
+  lastAnsweredAt: number;
+  originUrl: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 /** Build the compound primary key for mediaFiles: `${stageId}:${elementId}` */
 export function mediaFileKey(stageId: string, elementId: string): string {
   return `${stageId}:${elementId}`;
@@ -196,7 +236,7 @@ export function mediaFileKey(stageId: string, elementId: string): string {
 // ==================== Database Definition ====================
 
 const DATABASE_NAME = 'MAIC-Database';
-const _DATABASE_VERSION = 11;
+const _DATABASE_VERSION = 13;
 
 /**
  * MAIC Database Instance
@@ -215,6 +255,8 @@ class MAICDatabase extends Dexie {
   generatedAgents!: EntityTable<GeneratedAgentRecord, 'id'>;
   bookshelf!: EntityTable<BookshelfRecord, 'id'>;
   categories!: EntityTable<BookshelfCategoryRecord, 'id'>;
+  accessHistory!: EntityTable<AccessHistoryRecord, 'id'>;
+  wrongQuestions!: EntityTable<WrongQuestionRecord, 'id'>;
 
   constructor() {
     super(DATABASE_NAME);
@@ -396,6 +438,41 @@ class MAICDatabase extends Dexie {
       generatedAgents: 'id, stageId',
       bookshelf: 'id, type, category, createdAt',
       categories: 'id',
+    });
+
+    // Version 12: Add accessHistory table for unified visit history
+    this.version(12).stores({
+      stages: 'id, updatedAt',
+      scenes: 'id, stageId, order, [stageId+order]',
+      audioFiles: 'id, createdAt',
+      imageFiles: 'id, createdAt',
+      snapshots: '++id',
+      chatSessions: 'id, stageId, [stageId+createdAt]',
+      playbackState: 'stageId',
+      stageOutlines: 'stageId',
+      mediaFiles: 'id, stageId, [stageId+type]',
+      generatedAgents: 'id, stageId',
+      bookshelf: 'id, type, category, createdAt',
+      categories: 'id',
+      accessHistory: 'id, type, targetId, updatedAt, [type+updatedAt]',
+    });
+
+    // Version 13: Add wrongQuestions table for quiz wrong-question collection
+    this.version(13).stores({
+      stages: 'id, updatedAt',
+      scenes: 'id, stageId, order, [stageId+order]',
+      audioFiles: 'id, createdAt',
+      imageFiles: 'id, createdAt',
+      snapshots: '++id',
+      chatSessions: 'id, stageId, [stageId+createdAt]',
+      playbackState: 'stageId',
+      stageOutlines: 'stageId',
+      mediaFiles: 'id, stageId, [stageId+type]',
+      generatedAgents: 'id, stageId',
+      bookshelf: 'id, type, category, createdAt',
+      categories: 'id',
+      accessHistory: 'id, type, targetId, updatedAt, [type+updatedAt]',
+      wrongQuestions: 'id, stageId, chapterNumber, createdAt',
     });
   }
 }

@@ -18,9 +18,17 @@ const inter = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'OpenMAIC',
+  title: 'LearnGenie',
   description:
-    'The open-source AI interactive classroom. Upload a PDF to instantly generate an immersive, multi-agent learning experience.',
+    'LearnGenie: The open-source AI interactive classroom. Upload a PDF to instantly generate an immersive, multi-agent learning experience.',
+  icons: {
+    icon: [
+      { url: '/apple-icon.png', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-icon.png', type: 'image/png' },
+    ],
+  },
 };
 
 export default function RootLayout({

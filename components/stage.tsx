@@ -47,7 +47,7 @@ export function Stage({
   onRetryOutline?: (outlineId: string) => Promise<void>;
 }) {
   const { t } = useI18n();
-  const { mode, getCurrentScene, scenes, currentSceneId, setCurrentSceneId, generatingOutlines } =
+  const { mode, getCurrentScene, scenes, currentSceneId, setCurrentSceneId, generatingOutlines, stage } =
     useStageStore();
   const failedOutlines = useStageStore.use.failedOutlines();
 
@@ -960,6 +960,7 @@ export function Stage({
             currentSceneIndex={currentSceneIndex}
             scenesCount={totalScenesCount}
             mode={mode}
+            stageName={stage?.name ?? ''}
             engineState={canvasEngineState}
             isLiveSession={
               chatIsStreaming || isTopicPending || engineMode === 'live' || !!chatSessionType

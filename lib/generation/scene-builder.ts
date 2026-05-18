@@ -163,6 +163,8 @@ export function buildCompleteScene(
       type: 'slide',
       title: outline.title,
       order: outline.order,
+      chapterNumber: outline.chapterNumber,
+      chapterTitle: outline.chapterTitle,
       content: {
         type: 'slide',
         canvas: slide,
@@ -180,6 +182,7 @@ export function buildCompleteScene(
       type: 'quiz',
       title: outline.title,
       order: outline.order,
+      chapterNumber: outline.chapterNumber,
       content: {
         type: 'quiz',
         questions: content.questions,
@@ -197,6 +200,7 @@ export function buildCompleteScene(
       type: 'interactive',
       title: outline.title,
       order: outline.order,
+      chapterNumber: outline.chapterNumber,
       content: {
         type: 'interactive',
         url: '',
@@ -219,6 +223,7 @@ export function buildCompleteScene(
       type: 'pbl',
       title: outline.title,
       order: outline.order,
+      chapterNumber: outline.chapterNumber,
       content: {
         type: 'pbl',
         projectConfig: content.projectConfig,

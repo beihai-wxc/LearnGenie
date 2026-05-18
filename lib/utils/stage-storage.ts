@@ -162,6 +162,29 @@ export async function listStages(): Promise<StageListItem[]> {
 }
 
 /**
+ * Get multiple stages by their IDs. Returns only the ones that exist.
+ */
+export async function getStagesByIds(ids: string[]): Promise<StageListItem[]> {
+  try {
+    const allStages = await db.stages.toArray();
+    const idSet = new Set(ids);
+    return allStages
+      .filter((s) => idSet.has(s.id))
+      .map((stage) => ({
+        id: stage.id,
+        name: stage.name,
+        description: stage.description,
+        sceneCount: 0,
+        createdAt: stage.createdAt,
+        updatedAt: stage.updatedAt,
+      }));
+  } catch (error) {
+    log.error('Failed to get stages by ids:', error);
+    return [];
+  }
+}
+
+/**
  * Get first slide scene's canvas data for each stage (for thumbnail preview).
  * Also resolves gen_img_* placeholders from mediaFiles so thumbnails show real images.
  * Returns a map of stageId -> Slide (canvas data with resolved images)
