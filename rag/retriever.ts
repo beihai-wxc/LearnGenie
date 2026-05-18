@@ -50,7 +50,7 @@ interface KnowledgeRetrieverState {
   metadata: KnowledgeIndexMetadata;
 }
 
-type BuildKnowledgeIndexOptions = {
+export type BuildKnowledgeIndexOptions = {
   ensurePdfFiles?: boolean;
   force?: boolean;
 };
@@ -62,7 +62,7 @@ type SearchChunkMatch = {
   score: number;
 };
 
-type SearchKnowledgeResult = {
+export type SearchKnowledgeResult = {
   docId: string;
   title: string;
   module: string;

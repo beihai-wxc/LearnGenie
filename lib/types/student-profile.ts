@@ -90,6 +90,26 @@ export interface StudentProfileDimensions {
   interactionPreference: InteractionPreference;
 }
 
+/**
+ * Learning summary — tracks the user's learning journey.
+ * Patterned after DeepTutor's SUMMARY.md sections.
+ */
+export interface LearningSummary {
+  currentFocus: string;
+  accomplishments: string;
+  openQuestions: string;
+  updatedAt: number;
+}
+
+export function createDefaultLearningSummary(): LearningSummary {
+  return {
+    currentFocus: '',
+    accomplishments: '',
+    openQuestions: '',
+    updatedAt: Date.now(),
+  };
+}
+
 export type DimensionKey = keyof StudentProfileDimensions;
 
 export interface ProfileExtractionResult {
