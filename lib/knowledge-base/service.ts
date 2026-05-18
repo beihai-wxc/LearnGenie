@@ -5,14 +5,26 @@ import {
   getKnowledgeDocumentMap,
   getKnowledgeDocumentsFromStore,
   resetRetrieverCache,
-  searchKnowledgeIndex,
+  searchKnowledgeIndex as lexicalSearch,
 } from '@/rag/retriever';
+import type { SearchKnowledgeResult as LexicalResult } from '@/rag/retriever';
+import {
+  searchKnowledgeIndex as vectorSearch,
+  resetVectorStoreCache,
+} from '@/lib/rag/retriever';
+import { getEmbeddingClient, resetEmbeddingClient } from '@/lib/rag/embedding/client';
+import type { EmbeddingConfig } from '@/lib/rag/embedding/types';
+import { LocalVectorStore } from '@/lib/rag/vector-store/local-store';
 import {
   KNOWLEDGE_COURSE_STRUCTURE_FILE,
   KNOWLEDGE_PDF_DIR,
   KNOWLEDGE_SEARCH_MATCH_THRESHOLD,
   KNOWLEDGE_SEARCH_TOP_K,
   KNOWLEDGE_UPLOADS_FILE,
+  DEFAULT_EMBEDDING_MODEL,
+  DEFAULT_EMBEDDING_DIMENSIONS,
+  DEFAULT_EMBEDDING_BATCH_SIZE,
+  DEFAULT_EMBEDDING_BATCH_DELAY,
 } from './constants';
 import type {
   KnowledgeDocument,
@@ -411,7 +423,7 @@ async function buildRecommendedLearningPath(
 }
 
 function toSearchResult(
-  result: Awaited<ReturnType<typeof searchKnowledgeIndex>>[number],
+  result: Awaited<ReturnType<typeof lexicalSearch>>[number] | Awaited<ReturnType<typeof vectorSearch>>[number],
 ): KnowledgeSearchResult {
   return {
     docId: result.docId,
@@ -444,8 +456,53 @@ function toSearchResult(
   };
 }
 
+let vectorIndexReady = false;
+
 async function ensureKnowledgeIndexReady() {
   await buildKnowledgeIndex({ ensurePdfFiles: false });
+}
+
+async function ensureVectorIndexReady(embeddingConfig: EmbeddingConfig) {
+  if (vectorIndexReady) return;
+  const signature = LocalVectorStore.resolveSignature(
+    embeddingConfig.model,
+    embeddingConfig.dimensions || DEFAULT_EMBEDDING_DIMENSIONS,
+    embeddingConfig.baseUrl,
+  );
+  const store = new LocalVectorStore();
+  const exists = await store.loadIndex(signature);
+  if (!exists) {
+    const { buildVectorIndex } = await import('@/lib/rag/indexer');
+    await buildVectorIndex({
+      model: embeddingConfig.model,
+      baseUrl: embeddingConfig.baseUrl,
+      dimensions: embeddingConfig.dimensions || DEFAULT_EMBEDDING_DIMENSIONS,
+      force: true,
+    });
+    await store.loadIndex(signature);
+  }
+  vectorIndexReady = true;
+}
+
+function getEmbeddingConfig(): EmbeddingConfig | null {
+  try {
+    const { useSettingsStore } = require('@/lib/store/settings');
+    const settings = useSettingsStore.getState();
+    if (!settings.embeddingEnabled || !settings.embeddingModel) return null;
+    const binding = (settings.embeddingBinding || 'openai') as EmbeddingConfig['binding'];
+    return {
+      model: settings.embeddingModel || DEFAULT_EMBEDDING_MODEL,
+      apiKey: settings.embeddingApiKey || settings.providersConfig?.openai?.apiKey || '',
+      baseUrl: settings.embeddingBaseUrl || settings.providersConfig?.openai?.baseUrl || '',
+      binding,
+      dimensions: settings.embeddingDimensions || DEFAULT_EMBEDDING_DIMENSIONS,
+      batchSize: DEFAULT_EMBEDDING_BATCH_SIZE,
+      batchDelay: DEFAULT_EMBEDDING_BATCH_DELAY,
+      requestTimeout: 60,
+    };
+  } catch {
+    return null;
+  }
 }
 
 async function writeUploadedDocuments(documents: KnowledgeDocument[]) {
@@ -500,7 +557,37 @@ export async function searchKnowledgeBase(
     return cached;
   }
   await ensureKnowledgeIndexReady();
-  const results = await searchKnowledgeIndex(query, topK);
+
+  const embedConfig = getEmbeddingConfig();
+  let results: Awaited<ReturnType<typeof vectorSearch>>;
+
+  if (embedConfig) {
+    try {
+      getEmbeddingClient(embedConfig);
+      await ensureVectorIndexReady(embedConfig);
+      results = await vectorSearch(query, topK, {
+        model: embedConfig.model,
+        dimensions: embedConfig.dimensions || DEFAULT_EMBEDDING_DIMENSIONS,
+        baseUrl: embedConfig.baseUrl,
+      });
+    } catch (err) {
+      log.warn('Vector search failed, falling back to lexical:', err);
+      const lexResults = await lexicalSearch(query, topK);
+      results = lexResults.map((r) => ({
+        ...r,
+        matchedBy: r.matchedBy as 'vector' | 'hybrid',
+        topChunks: r.topChunks.map((c) => ({ ...c, score: c.score })),
+      }));
+    }
+  } else {
+    const lexResults = await lexicalSearch(query, topK);
+    results = lexResults.map((r) => ({
+      ...r,
+      matchedBy: r.matchedBy as 'vector' | 'hybrid',
+      topChunks: r.topChunks.map((c) => ({ ...c, score: c.score })),
+    }));
+  }
+
   const formatted = personalizeSearchResults(results.map(toSearchResult), profileContext);
   const bestMatch = formatted[0] ?? null;
   const recommendedPath =
@@ -512,8 +599,7 @@ export async function searchKnowledgeBase(
     matched,
     results: formatted,
     bestMatch,
-    fallbackAction:
-      matched ? 'open_pdf' : 'generate_classroom',
+    fallbackAction: matched ? 'open_pdf' : 'generate_classroom',
     autoContext: matched ? buildInjectedKnowledgeContext(query, formatted) : null,
     recommendedPath,
     safetyNote: matched
@@ -624,6 +710,9 @@ export async function getKnowledgePdfBuffer(docId: string): Promise<Buffer | nul
 
 export async function resetKnowledgeCache() {
   resetRetrieverCache();
+  resetVectorStoreCache();
+  resetEmbeddingClient();
   searchCache.clear();
   courseStructureCache = undefined;
+  vectorIndexReady = false;
 }
