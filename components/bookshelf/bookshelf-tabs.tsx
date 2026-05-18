@@ -14,7 +14,6 @@ const TABS = [
   { key: 'document', label: '文档' },
   { key: 'category', label: '分组' },
   { key: 'history', label: '历史记录' },
-  { key: 'wrong-questions', label: '错题收藏' },
 ];
 
 export function BookshelfTabs({ activeTab, onTabChange, className }: BookshelfTabsProps) {

@@ -2,13 +2,84 @@
 
 import type { KeyboardEvent } from 'react';
 import { BookOpenText, Sparkles } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, useAnimationControls } from 'motion/react';
+import { useEffect } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { UserProfileCard } from '@/components/user-profile';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { useUserProfileStore } from '@/lib/store/user-profile';
 import { HomePromptBar } from '@/components/home/home-prompt-bar';
 import type { SettingsSection } from '@/lib/types/settings';
+
+const SCROLL_DURATION = 4000;
+const PAUSE_DURATION = 4000;
+
+function ScrollingDescription() {
+  const { t } = useI18n();
+  const controls1 = useAnimationControls();
+  const controls2 = useAnimationControls();
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const runAnimation = async () => {
+      while (isMounted) {
+        await controls1.start({
+          x: ['100%', '0%'],
+          transition: { duration: SCROLL_DURATION / 1000, ease: 'easeOut' },
+        });
+
+        if (!isMounted) return;
+
+        await controls2.start({
+          x: ['100%', '0%'],
+          transition: { duration: SCROLL_DURATION / 1000, ease: 'easeOut' },
+        });
+
+        if (!isMounted) return;
+
+        await new Promise((resolve) => setTimeout(resolve, PAUSE_DURATION));
+
+        if (!isMounted) return;
+
+        await Promise.all([
+          controls1.start({ x: '-100%', transition: { duration: SCROLL_DURATION / 2000, ease: 'easeIn' } }),
+          controls2.start({ x: '-100%', transition: { duration: SCROLL_DURATION / 2000, ease: 'easeIn' } }),
+        ]);
+
+        if (!isMounted) return;
+
+        controls1.set({ x: '100%' });
+        controls2.set({ x: '100%' });
+      }
+    };
+
+    runAnimation();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [controls1, controls2]);
+
+  return (
+    <div className="relative overflow-hidden">
+      <motion.p
+        className="whitespace-nowrap text-lg text-slate-600 dark:text-slate-300"
+        initial={{ x: '100%' }}
+        animate={controls1}
+      >
+        {t('home.heroDescriptionPart1')}
+      </motion.p>
+      <motion.p
+        className="whitespace-nowrap text-lg text-slate-600 dark:text-slate-300"
+        initial={{ x: '100%' }}
+        animate={controls2}
+      >
+        {t('home.heroDescriptionPart2')}
+      </motion.p>
+    </div>
+  );
+}
 
 interface HomeHeroProps {
   requirement: string;
@@ -89,20 +160,7 @@ export function HomeHero(props: HomeHeroProps) {
           </div>
 
           <div className="max-w-2xl space-y-3 px-4">
-            <div className="relative overflow-hidden">
-              <motion.p
-                className="whitespace-nowrap text-lg text-slate-600 dark:text-slate-300"
-                initial={{ x: '100%' }}
-                animate={{ x: '-100%' }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 15,
-                  ease: 'linear',
-                }}
-              >
-                {t('home.heroDescription')}
-              </motion.p>
-            </div>
+            <ScrollingDescription />
           </div>
         </motion.div>
 

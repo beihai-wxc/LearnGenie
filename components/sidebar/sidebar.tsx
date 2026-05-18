@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen, Brain, Lightbulb } from 'lucide-react';
+import { BookOpen, Brain, Lightbulb, Bookmark } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter, usePathname } from 'next/navigation';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -30,6 +30,12 @@ const sidebarItems: SidebarItem[] = [
     label: '书架',
     icon: <BookOpen className="size-5" />,
     path: '/bookshelf',
+  },
+  {
+    id: 'wrong-questions',
+    label: '题目收藏',
+    icon: <Bookmark className="size-5" />,
+    path: '/wrong-questions',
   },
 ];
 
