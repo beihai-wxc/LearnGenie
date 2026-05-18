@@ -26,7 +26,6 @@ import { nanoid } from 'nanoid';
 import type { Stage } from '@/lib/types/stage';
 import type { SceneOutline, PdfImage, ImageMapping } from '@/lib/types/generation';
 import { AgentRevealModal } from '@/components/agent/agent-reveal-modal';
-import { AgentWorkflowPanel } from '@/components/agent/agent-workflow-panel';
 import { createLogger } from '@/lib/logger';
 import { type GenerationSessionState, ALL_STEPS, getActiveSteps } from './types';
 import { StepVisualizer } from './components/visualizers';
@@ -929,38 +928,6 @@ function GenerationPreviewContent() {
       </motion.div>
 
       <div className="z-10 w-full max-w-lg space-y-8 flex flex-col items-center">
-        {session?.knowledgeContextSources?.length || session?.knowledgeSafetyNote || session?.agentWorkflow ? (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full"
-          >
-            <Card className="border-sky-200/70 bg-white/80 p-4 text-left shadow-lg dark:border-sky-900 dark:bg-slate-900/80">
-              <div className="text-xs font-semibold uppercase tracking-widest text-sky-700 dark:text-sky-300">
-                知识来源与可信度
-              </div>
-              {session?.knowledgeContextSources?.length ? (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {session.knowledgeContextSources.map((source) => (
-                    <span
-                      key={source}
-                      className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs text-sky-700 dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-300"
-                    >
-                      {source}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
-              {session?.knowledgeSafetyNote ? (
-                <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                  {session.knowledgeSafetyNote}
-                </p>
-              ) : null}
-              {session?.agentWorkflow ? <AgentWorkflowPanel workflow={session.agentWorkflow} /> : null}
-            </Card>
-          </motion.div>
-        ) : null}
-
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

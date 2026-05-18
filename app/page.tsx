@@ -80,6 +80,7 @@ export default function Page() {
   const [error, setError] = useState<string | null>(null);
   const [isKnowledgeSearching, setIsKnowledgeSearching] = useState(false);
   const [knowledgePanel, setKnowledgePanel] = useState<KnowledgeResultPanelState | null>(null);
+  const [knowledgeDialogOpen, setKnowledgeDialogOpen] = useState(false);
   const { cachedValue: cachedRequirement, updateCache: updateRequirementCache } =
     useDraftCache<string>({ key: 'requirementDraft' });
 
@@ -103,10 +104,11 @@ export default function Page() {
     useMediaGenerationStore.setState({ tasks: {} });
   }, []);
   const updateForm = <K extends keyof FormState>(field: K, value: FormState[K]) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    if (field === 'requirement' || field === 'pdfFile') {
-      setKnowledgePanel(null);
-    }
+      setForm((prev) => ({ ...prev, [field]: value }));
+      if (field === 'requirement' || field === 'pdfFile') {
+        setKnowledgePanel(null);
+        setKnowledgeDialogOpen(false);
+      }
     try {
       if (field === 'interactiveMode') {
         localStorage.setItem(INTERACTIVE_MODE_STORAGE_KEY, String(value));
@@ -328,10 +330,11 @@ export default function Page() {
             safetyNote: uploadMatchJson.safetyNote,
             agentWorkflow: workflowJson.workflow as AgentWorkflowSnapshot,
             fallbackSession,
-            fallbackLabel: '直接基于上传文件生成课堂',
+            fallbackLabel: '开始智能生成课堂',
             fallbackHint:
-              '如果这些知识库资料不符合你的意图，你仍然可以直接使用刚上传的文件生成课堂。直接继续时，系统也会自动参考最相关的知识片段。',
+              '系统会保留你的原始主题与上传内容，并在后台自动结合最相关的知识库片段来辅助生成课堂。你可以先浏览这些资料，但不需要手动选择。',
           });
+          setKnowledgeDialogOpen(true);
           return;
         }
 
@@ -390,10 +393,11 @@ export default function Page() {
           safetyNote: knowledgeJson.safetyNote,
           agentWorkflow: workflowJson.workflow as AgentWorkflowSnapshot,
           fallbackSession,
-          fallbackLabel: '继续直接根据主题生成课程',
+          fallbackLabel: '开始智能生成课堂',
           fallbackHint:
-            '如果你不想手动选择资料，也可以直接继续生成。系统会自动带入最相关的知识片段，再基于你的主题生成课堂。',
+            '系统不会完全照搬知识库内容，也不会只做通用生成，而是保留你的原始主题，在后台自动带入最相关的知识片段来辅助生成课堂。',
         });
+        setKnowledgeDialogOpen(true);
         return;
       }
 
@@ -469,6 +473,8 @@ export default function Page() {
             />
             {knowledgePanel ? (
               <KnowledgeSearchResults
+                open={knowledgeDialogOpen}
+                onOpenChange={setKnowledgeDialogOpen}
                 title={knowledgePanel.title}
                 query={knowledgePanel.query}
                 results={knowledgePanel.results}
