@@ -4,10 +4,7 @@ import type { KeyboardEvent } from 'react';
 import { BookOpenText, Sparkles } from 'lucide-react';
 import { motion, useAnimationControls } from 'motion/react';
 import { useEffect } from 'react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { UserProfileCard } from '@/components/user-profile';
 import { useI18n } from '@/lib/hooks/use-i18n';
-import { useUserProfileStore } from '@/lib/store/user-profile';
 import { HomePromptBar } from '@/components/home/home-prompt-bar';
 import type { SettingsSection } from '@/lib/types/settings';
 
@@ -99,9 +96,6 @@ interface HomeHeroProps {
 
 export function HomeHero(props: HomeHeroProps) {
   const { t } = useI18n();
-  const avatar = useUserProfileStore((state) => state.avatar);
-  const nickname = useUserProfileStore((state) => state.nickname);
-  const displayName = nickname || t('profile.defaultNickname');
 
   return (
     <section id="home-hero" className="relative pt-8 md:pt-16">
@@ -117,29 +111,6 @@ export function HomeHero(props: HomeHeroProps) {
               <BookOpenText className="size-4 text-sky-500" />
               {t('home.heroEyebrow')}
             </span>
-
-            <Popover>
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/70 px-3 py-2 text-sm text-slate-700 shadow-[0_18px_44px_rgba(159,172,195,0.16)] backdrop-blur-md dark:border-white/10 dark:bg-slate-900/65 dark:text-slate-200"
-                >
-                  <img
-                    src={avatar}
-                    alt={displayName}
-                    className="size-8 rounded-full object-cover ring-2 ring-sky-200/80 dark:ring-sky-400/20"
-                  />
-                  <span>{t('home.greetingWithName', { name: displayName })}</span>
-                </button>
-              </PopoverTrigger>
-              <PopoverContent
-                align="center"
-                sideOffset={14}
-                className="w-[min(92vw,22rem)] border-none bg-transparent p-0 shadow-none"
-              >
-                <UserProfileCard />
-              </PopoverContent>
-            </Popover>
           </div>
 
           <div className="relative max-w-4xl px-4">
