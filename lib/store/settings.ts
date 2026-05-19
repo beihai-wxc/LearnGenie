@@ -145,6 +145,14 @@ export interface SettingsState {
     }
   >;
 
+  // Embedding settings (RAG vector search)
+  embeddingBinding: string;
+  embeddingModel: string;
+  embeddingApiKey: string;
+  embeddingBaseUrl: string;
+  embeddingDimensions: number;
+  embeddingEnabled: boolean;
+
   // Global TTS/ASR toggles
   ttsEnabled: boolean;
   asrEnabled: boolean;
@@ -280,6 +288,14 @@ export interface SettingsState {
     providerId: WebSearchProviderId,
     config: Partial<{ apiKey: string; baseUrl: string; enabled: boolean }>,
   ) => void;
+
+  // Embedding actions
+  setEmbeddingBinding: (binding: string) => void;
+  setEmbeddingModel: (model: string) => void;
+  setEmbeddingApiKey: (apiKey: string) => void;
+  setEmbeddingBaseUrl: (baseUrl: string) => void;
+  setEmbeddingDimensions: (dimensions: number) => void;
+  setEmbeddingEnabled: (enabled: boolean) => void;
 
   // Server provider actions
   fetchServerProviders: () => Promise<void>;
@@ -645,6 +661,14 @@ export const useSettingsStore = create<SettingsState>()(
         // Web Search settings (use defaults)
         ...defaultWebSearchConfig,
 
+        // Embedding settings (defaults for RAG vector search)
+        embeddingBinding: 'openai',
+        embeddingModel: 'text-embedding-3-large',
+        embeddingApiKey: '',
+        embeddingBaseUrl: '',
+        embeddingDimensions: 3072,
+        embeddingEnabled: false,
+
         // Actions
         setModel: (providerId, modelId) => set({ providerId, modelId }),
 
@@ -883,6 +907,14 @@ export const useSettingsStore = create<SettingsState>()(
               },
             },
           })),
+
+        // Embedding actions
+        setEmbeddingBinding: (binding) => set({ embeddingBinding: binding }),
+        setEmbeddingModel: (model) => set({ embeddingModel: model }),
+        setEmbeddingApiKey: (apiKey) => set({ embeddingApiKey: apiKey }),
+        setEmbeddingBaseUrl: (baseUrl) => set({ embeddingBaseUrl: baseUrl }),
+        setEmbeddingDimensions: (dimensions) => set({ embeddingDimensions: dimensions }),
+        setEmbeddingEnabled: (enabled) => set({ embeddingEnabled: enabled }),
 
         // Fetch server-configured providers and merge into local state
         fetchServerProviders: async () => {

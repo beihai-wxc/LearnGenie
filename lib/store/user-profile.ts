@@ -7,8 +7,10 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import {
   createDefaultProfileDimensions,
+  createDefaultLearningSummary,
   mergeProfileDimensions,
   type StudentProfileDimensions,
+  type LearningSummary,
   type DimensionKey,
   type ProfileConversationEntry,
 } from '@/lib/types/student-profile';
@@ -31,6 +33,10 @@ export interface UserProfileState {
   bio: string;
   /** 8-dimension learning profile built conversationally */
   learningProfile: StudentProfileDimensions;
+  /** User identity — stable self-description (DeepTutor-style Identity) */
+  identity: string;
+  /** Learning journey summary (DeepTutor-style SUMMARY.md) */
+  learningSummary: LearningSummary;
   /** Number of conversation rounds used for profile building */
   conversationCount: number;
   /** Last profile update timestamp */
@@ -41,6 +47,8 @@ export interface UserProfileState {
   setNickname: (nickname: string) => void;
   setBio: (bio: string) => void;
   setLearningProfile: (dimensions: Partial<StudentProfileDimensions>) => void;
+  setIdentity: (identity: string) => void;
+  setLearningSummary: (summary: Partial<LearningSummary>) => void;
   incrementConversationCount: () => void;
   addConversationEntry: (entry: Omit<ProfileConversationEntry, 'id' | 'timestamp'>) => void;
   clearConversationHistory: () => void;
@@ -54,6 +62,8 @@ export const useUserProfileStore = create<UserProfileState>()(
       nickname: '',
       bio: '',
       learningProfile: createDefaultProfileDimensions(),
+      identity: '',
+      learningSummary: createDefaultLearningSummary(),
       conversationCount: 0,
       updatedAt: 0,
       conversationHistory: [],
@@ -64,6 +74,15 @@ export const useUserProfileStore = create<UserProfileState>()(
         set((state) => ({
           learningProfile: mergeProfileDimensions(state.learningProfile, partial),
           updatedAt: Date.now(),
+        })),
+      setIdentity: (identity) => set({ identity }),
+      setLearningSummary: (partial) =>
+        set((state) => ({
+          learningSummary: {
+            ...state.learningSummary,
+            ...partial,
+            updatedAt: Date.now(),
+          },
         })),
       incrementConversationCount: () =>
         set((state) => ({
@@ -82,8 +101,8 @@ export const useUserProfileStore = create<UserProfileState>()(
     }),
     {
       name: 'user-profile-storage',
-      version: 2,
-      migrate: (persistedState: unknown) => {
+      version: 3,
+      migrate: (persistedState: unknown, version: number) => {
         const persisted = persistedState as Record<string, unknown>;
         if (!persisted.learningProfile) {
           persisted.learningProfile = createDefaultProfileDimensions();
@@ -96,6 +115,14 @@ export const useUserProfileStore = create<UserProfileState>()(
         }
         if (!persisted.conversationHistory) {
           persisted.conversationHistory = [];
+        }
+        if (version < 3) {
+          if (!persisted.identity) {
+            persisted.identity = '';
+          }
+          if (!persisted.learningSummary) {
+            persisted.learningSummary = createDefaultLearningSummary();
+          }
         }
         return persisted as unknown as UserProfileState;
       },

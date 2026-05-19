@@ -1,5 +1,6 @@
 import { ScanLine, Search, Bot, FileText, LayoutPanelLeft, Clapperboard } from 'lucide-react';
 import { useSettingsStore } from '@/lib/store/settings';
+import type { AgentWorkflowSnapshot } from '@/lib/agents/types';
 import type {
   SceneOutline,
   UserRequirements,
@@ -12,6 +13,10 @@ export interface GenerationSessionState {
   sessionId: string;
   requirements: UserRequirements;
   pdfText: string;
+  knowledgeContext?: string;
+  knowledgeContextSources?: string[];
+  knowledgeSafetyNote?: string;
+  agentWorkflow?: AgentWorkflowSnapshot;
   pdfImages?: PdfImage[];
   imageStorageIds?: string[];
   imageMapping?: ImageMapping;
