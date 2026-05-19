@@ -7,6 +7,9 @@ const echartsModule = () => import('echarts');
 const wordcloudModule = () => import('echarts-wordcloud');
 import { Sidebar } from '@/components/sidebar/sidebar';
 import { useUserProfileStore } from '@/lib/store/user-profile';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { UserProfileCard } from '@/components/user-profile';
+import { useI18n } from '@/lib/hooks/use-i18n';
 import type { StudentProfileDimensions, DimensionKey } from '@/lib/types/student-profile';
 
 const DIMENSION_META: Record<string, { label: string; color: string; shortLabel: string }> = {
@@ -158,6 +161,38 @@ function extractWordCloudData(profile: StudentProfileDimensions | undefined) {
     if (ip.preference && ip.preference !== 'unknown' && prefMap[ip.preference]) tags.push({ name: prefMap[ip.preference], value: ip.score, category: '交互偏好' });
   }
   return tags;
+}
+
+function UserProfileButton() {
+  const { t } = useI18n();
+  const avatar = useUserProfileStore((s) => s.avatar);
+  const nickname = useUserProfileStore((s) => s.nickname);
+  const displayName = nickname || t('profile.defaultNickname');
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/70 px-3 py-2 text-sm text-slate-700 shadow-[0_18px_44px_rgba(159,172,195,0.16)] backdrop-blur-md dark:border-white/10 dark:bg-slate-900/65 dark:text-slate-200"
+        >
+          <img
+            src={avatar}
+            alt={displayName}
+            className="size-8 rounded-full object-cover ring-2 ring-sky-200/80 dark:ring-sky-400/20"
+          />
+          <span>嗨，{displayName}，点击介绍一下自己吧</span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="end"
+        sideOffset={14}
+        className="w-[min(92vw,22rem)] border-none bg-transparent p-0 shadow-none"
+      >
+        <UserProfileCard />
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 export default function ProfilePage() {
@@ -508,7 +543,7 @@ export default function ProfilePage() {
         <div className="relative overflow-hidden border-b border-slate-200/50 bg-white/80 dark:border-slate-800/50 dark:bg-slate-900/80">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-sky-100/60 via-white to-violet-100/50 dark:from-sky-950/30 dark:via-slate-900/50 dark:to-violet-950/20" />
           <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 md:py-10">
-            <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-4 sm:gap-5">
               <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-600 dark:bg-sky-500/20 dark:text-sky-400 sm:size-12">
                 <Brain className="size-5 sm:size-6" />
               </div>
@@ -516,6 +551,8 @@ export default function ProfilePage() {
                 <h1 className="text-xl font-bold tracking-tight text-slate-800 sm:text-2xl dark:text-slate-100">学生肖像</h1>
                 <p className="mt-0.5 text-xs text-slate-500 sm:text-sm dark:text-slate-400">学习画像与维度分析</p>
               </div>
+
+              <UserProfileButton />
             </div>
           </div>
         </div>
