@@ -37,6 +37,26 @@ import {
   type AccessHistoryRecord,
 } from '@/lib/utils/access-history';
 
+const BOOKSHELF_STATE_KEY = 'bookshelf-scroll-state';
+
+function saveBookshelfState(activeTab: string, scrollY: number) {
+  try {
+    sessionStorage.setItem(BOOKSHELF_STATE_KEY, JSON.stringify({ activeTab, scrollY }));
+  } catch { /* noop */ }
+}
+
+function loadBookshelfState(): { activeTab: string; scrollY: number } | null {
+  try {
+    const raw = sessionStorage.getItem(BOOKSHELF_STATE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    sessionStorage.removeItem(BOOKSHELF_STATE_KEY);
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 export default function BookshelfPage() {
   const { t } = useI18n();
   const router = useRouter();
@@ -94,8 +114,46 @@ export default function BookshelfPage() {
     loadData();
   }, [loadData]);
 
+  // Restore active tab on mount
+  const [pendingScrollY, setPendingScrollY] = useState<number | null>(null);
+
+  useEffect(() => {
+    const saved = loadBookshelfState();
+    if (saved) {
+      setActiveTab(saved.activeTab);
+      setPendingScrollY(saved.scrollY);
+    }
+  }, []);
+
+  // Restore scroll position after data loads and DOM renders
+  useEffect(() => {
+    if (!isLoading && pendingScrollY !== null) {
+      // Multiple attempts to ensure content is fully painted
+      let attempts = 0;
+      const tryScroll = () => {
+        const targetY = pendingScrollY;
+        if (targetY === null) return;
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        if (maxScroll >= targetY || attempts >= 5) {
+          window.scrollTo(0, Math.min(targetY, maxScroll));
+          setPendingScrollY(null);
+        } else {
+          attempts++;
+          requestAnimationFrame(tryScroll);
+        }
+      };
+      requestAnimationFrame(tryScroll);
+    }
+  }, [isLoading, pendingScrollY]);
+
+  // Save state before navigating away
+  const saveStateBeforeNav = useCallback(() => {
+    saveBookshelfState(activeTab, window.scrollY);
+  }, [activeTab]);
+
   // Actions
   const handleOpenClassroom = (id: string) => {
+    saveStateBeforeNav();
     router.push(`/classroom/${id}`);
   };
 
@@ -154,6 +212,7 @@ export default function BookshelfPage() {
   };
 
   const handleOpenDocument = (id: string) => {
+    saveStateBeforeNav();
     router.push(`/document-viewer/${id}`);
   };
 
@@ -192,6 +251,7 @@ export default function BookshelfPage() {
   };
 
   const handleOpenHistory = (url: string) => {
+    saveStateBeforeNav();
     router.push(url);
   };
 
