@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { Eye, FileText, Pencil, Trash2, ArrowRight } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Eye, Pencil, Trash2, ArrowRight, Bookmark } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
 
 // ==================== Classroom Card ====================
 
@@ -16,9 +15,15 @@ interface ClassroomCardProps {
   createdAt: number;
   updatedAt: number;
   thumbnailUrl?: string;
+  isFavorited: boolean;
+  favoriteGroup?: string;
+  groups: string[];
   onDelete: (id: string) => void;
   onRename: (id: string, name: string) => void;
   onOpen: (id: string) => void;
+  onFavorite: (id: string, group?: string) => void;
+  onUnfavorite: (id: string) => void;
+  onAddGroup: (name: string) => void;
 }
 
 export function ClassroomCard({
@@ -28,14 +33,24 @@ export function ClassroomCard({
   createdAt,
   updatedAt,
   thumbnailUrl,
+  isFavorited,
+  favoriteGroup,
+  groups,
   onDelete,
   onRename,
   onOpen,
+  onFavorite,
+  onUnfavorite,
+  onAddGroup,
 }: ClassroomCardProps) {
   const [editing, setEditing] = useState(false);
   const [nameDraft, setNameDraft] = useState(name);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [showFavoriteMenu, setShowFavoriteMenu] = useState(false);
+  const [showNewGroup, setShowNewGroup] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (editing) inputRef.current?.focus();
@@ -53,6 +68,55 @@ export function ClassroomCard({
     setEditing(false);
   };
 
+  // Close menu on outside click
+  const handleClickOutside = useCallback((e: MouseEvent) => {
+    if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+      setShowFavoriteMenu(false);
+      setShowNewGroup(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (showFavoriteMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showFavoriteMenu, handleClickOutside]);
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isFavorited) {
+      // Already favorited: unfavorite directly if only default group, else show menu
+      if (groups.length <= 1) {
+        onUnfavorite(id);
+      } else {
+        setShowFavoriteMenu(!showFavoriteMenu);
+      }
+    } else {
+      // Not favorited: favorite directly if only default group, else show picker
+      if (groups.length <= 1) {
+        onFavorite(id, '我的收藏');
+      } else {
+        setShowFavoriteMenu(!showFavoriteMenu);
+      }
+    }
+  };
+
+  const handleSelectGroup = (group: string) => {
+    onFavorite(id, group);
+    setShowFavoriteMenu(false);
+  };
+
+  const handleAddNewGroup = () => {
+    const name = newGroupName.trim();
+    if (!name) return;
+    onAddGroup(name);
+    onFavorite(id, name);
+    setShowNewGroup(false);
+    setNewGroupName('');
+    setShowFavoriteMenu(false);
+  };
+
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-slate-200/60 bg-white/80 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-700/60 dark:bg-slate-900/80">
       {/* Thumbnail */}
@@ -67,7 +131,6 @@ export function ClassroomCard({
           </div>
         )}
 
-        {/* Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
 
         {/* Top badges */}
@@ -77,20 +140,99 @@ export function ClassroomCard({
           </span>
         </div>
 
-        {/* Action buttons */}
-        <div className="absolute right-3 top-3 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+        {/* Top-right action buttons */}
+        <div className="absolute right-3 top-3 flex items-center gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+          {/* Favorite button */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                onClick={handleFavoriteClick}
+                className={`size-8 rounded-full border border-white/60 bg-white/80 shadow-sm backdrop-blur-sm hover:bg-white dark:border-slate-700/60 dark:bg-slate-900/80 ${
+                  isFavorited
+                    ? 'text-amber-500 hover:text-amber-600'
+                    : 'text-slate-600 hover:text-amber-500'
+                }`}
+                aria-label="收藏"
+              >
+                <Bookmark className={`size-3.5 ${isFavorited ? 'fill-amber-500' : ''}`} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{isFavorited ? '取消收藏' : '收藏'}</TooltipContent>
+          </Tooltip>
+          {/* Rename */}
           <IconActionButton
             label="重命名"
             onClick={() => { setNameDraft(name); setEditing(true); }}
           >
             <Pencil className="size-3" />
           </IconActionButton>
+          {/* Delete */}
           <IconActionButton
             label="删除"
             onClick={() => setConfirmingDelete(true)}
           >
             <Trash2 className="size-3" />
           </IconActionButton>
+          {/* Favorite menu dropdown */}
+          <AnimatePresence>
+            {showFavoriteMenu && (
+              <motion.div
+                ref={menuRef}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="absolute right-0 top-9 z-20 w-36 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg dark:border-white/10 dark:bg-slate-800"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <p className="px-2 py-1 text-[11px] font-medium text-slate-400">收藏到</p>
+                {groups
+                  .filter((g) => !isFavorited || g !== favoriteGroup)
+                  .map((g) => (
+                    <button
+                      key={g}
+                      onClick={() => handleSelectGroup(g)}
+                      className="w-full rounded-lg px-2 py-1.5 text-left text-xs text-slate-700 transition-colors hover:bg-sky-50 dark:text-slate-300 dark:hover:bg-sky-500/10"
+                    >
+                      {isFavorited ? `移到 ${g}` : g}
+                    </button>
+                  ))}
+                <div className="my-1 h-px bg-slate-100 dark:bg-white/10" />
+                {isFavorited && (
+                  <button
+                    onClick={() => { onUnfavorite(id); setShowFavoriteMenu(false); }}
+                    className="w-full rounded-lg px-2 py-1.5 text-left text-xs text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-500/10"
+                  >
+                    取消收藏
+                  </button>
+                )}
+                {showNewGroup ? (
+                  <div className="flex items-center gap-1 px-1">
+                    <input
+                      value={newGroupName}
+                      onChange={(e) => setNewGroupName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleAddNewGroup();
+                        if (e.key === 'Escape') { setShowNewGroup(false); setNewGroupName(''); }
+                      }}
+                      placeholder="新分组名"
+                      className="flex-1 rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none dark:border-white/10 dark:bg-slate-700"
+                      autoFocus
+                    />
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowNewGroup(true)}
+                    className="w-full rounded-lg px-2 py-1.5 text-left text-xs text-slate-500 transition-colors hover:bg-sky-50 dark:text-slate-400 dark:hover:bg-sky-500/10"
+                  >
+                    + 新建分组
+                  </button>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Delete confirmation */}
@@ -181,173 +323,7 @@ export function ClassroomCard({
   );
 }
 
-// ==================== Document Card ====================
-
-interface DocumentCardProps {
-  id: string;
-  title: string;
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-  uploadedAt: number;
-  category: string;
-  onDelete: (id: string) => void;
-  onOpen: (id: string) => void;
-}
-
-export function DocumentCard({
-  id,
-  title,
-  fileName,
-  fileType,
-  fileSize,
-  uploadedAt,
-  category,
-  onDelete,
-  onOpen,
-}: DocumentCardProps) {
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
-
-  return (
-    <div className="group relative overflow-hidden rounded-2xl border border-slate-200/60 bg-white/80 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-700/60 dark:bg-slate-900/80">
-      {/* File icon area */}
-      <div className="relative aspect-[16/10] flex items-center justify-center bg-gradient-to-br from-slate-100 to-sky-50 dark:from-slate-800 dark:to-slate-700">
-        <FileIcon type={fileType} />
-
-        {/* Category badge */}
-        {category && (
-          <span className="absolute left-3 top-3 rounded-full border border-white/60 bg-white/80 px-2.5 py-0.5 text-[10px] font-medium text-slate-600 backdrop-blur-sm dark:border-slate-700/60 dark:bg-slate-900/80 dark:text-slate-300">
-            {category}
-          </span>
-        )}
-
-        {/* Delete button */}
-        <button
-          type="button"
-          onClick={() => setConfirmingDelete(true)}
-          className="absolute right-3 top-3 size-7 rounded-full border border-white/60 bg-white/80 text-slate-500 opacity-0 backdrop-blur-sm transition-all hover:bg-rose-50 hover:text-rose-500 group-hover:opacity-100 dark:border-slate-700/60 dark:bg-slate-900/80 dark:hover:bg-rose-950/50 dark:hover:text-rose-400"
-        >
-          <Trash2 className="mx-auto size-3" />
-        </button>
-      </div>
-
-      {/* Card body */}
-      <div className="px-4 py-3.5">
-        <h3 className="truncate text-sm font-medium text-slate-900 dark:text-white">{title}</h3>
-        <p className="mt-0.5 truncate text-xs text-slate-400 dark:text-slate-500">{fileName}</p>
-        <div className="mt-2 flex items-center justify-between">
-          <span className="text-[10px] text-slate-400 dark:text-slate-500">
-            {formatFileSize(fileSize)} · {fileType.toUpperCase()}
-          </span>
-          <button
-            type="button"
-            onClick={() => onOpen(id)}
-            className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 transition-colors hover:text-sky-600 dark:text-slate-300 dark:hover:text-sky-400"
-          >
-            查看
-            <ArrowRight className="size-3" />
-          </button>
-        </div>
-      </div>
-
-      {/* Delete confirmation overlay */}
-      <AnimatePresence>
-        {confirmingDelete && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/60 backdrop-blur-sm"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="text-sm font-medium text-white">确认删除？</p>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setConfirmingDelete(false)}
-                className="rounded-full border border-white/20 px-3 py-1 text-xs text-white/80 hover:bg-white/10"
-              >
-                取消
-              </button>
-              <button
-                type="button"
-                onClick={() => { onDelete(id); setConfirmingDelete(false); }}
-                className="rounded-full bg-rose-500 px-3 py-1 text-xs font-medium text-white hover:bg-rose-400"
-              >
-                删除
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-// ==================== Category Card ====================
-
-interface CategoryCardProps {
-  name: string;
-  color: string;
-  count: number;
-  onDelete: (name: string) => void;
-  onOpen: (name: string) => void;
-}
-
-export function CategoryCard({ name, color, count, onDelete, onOpen }: CategoryCardProps) {
-  return (
-    <div className="group relative overflow-hidden rounded-2xl border border-slate-200/60 bg-white/80 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-700/60 dark:bg-slate-900/80">
-      <div className="flex aspect-[16/10] items-center justify-center bg-gradient-to-br from-slate-100 to-sky-50 dark:from-slate-800 dark:to-slate-700">
-        <div
-          className="size-16 rounded-2xl flex items-center justify-center text-2xl font-bold text-white"
-          style={{ backgroundColor: color || '#0ea5e9' }}
-        >
-          {name.charAt(0).toUpperCase()}
-        </div>
-      </div>
-      <div className="px-4 py-3.5">
-        <h3 className="text-sm font-medium text-slate-900 dark:text-white">{name}</h3>
-        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{count} 个项目</p>
-        <button
-          type="button"
-          onClick={() => onOpen(name)}
-          className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-slate-600 transition-colors hover:text-sky-600 dark:text-slate-300 dark:hover:text-sky-400"
-        >
-          查看
-          <ArrowRight className="size-3" />
-        </button>
-      </div>
-      <button
-        type="button"
-        onClick={() => onDelete(name)}
-        className="absolute right-3 top-3 size-7 rounded-full border border-white/60 bg-white/80 text-slate-500 opacity-0 backdrop-blur-sm transition-all hover:bg-rose-50 hover:text-rose-500 group-hover:opacity-100 dark:border-slate-700/60 dark:bg-slate-900/80 dark:hover:bg-rose-950/50 dark:hover:text-rose-400"
-      >
-        <Trash2 className="mx-auto size-3" />
-      </button>
-    </div>
-  );
-}
-
 // ==================== Helpers ====================
-
-function FileIcon({ type }: { type: string }) {
-  const icons: Record<string, string> = {
-    pdf: '📄',
-    zip: '📦',
-    doc: '📝',
-    docx: '📝',
-    txt: '📝',
-    ppt: '📊',
-    pptx: '📊',
-  };
-  const emoji = icons[type] || '📄';
-  return (
-    <div className="text-center">
-      <span className="text-5xl">{emoji}</span>
-      <p className="mt-2 text-xs font-medium uppercase text-slate-400 dark:text-slate-500">{type}</p>
-    </div>
-  );
-}
 
 function IconActionButton({
   children,
@@ -377,7 +353,7 @@ function IconActionButton({
   );
 }
 
-function formatDate(timestamp: number): string {
+export function formatDate(timestamp: number): string {
   const date = new Date(timestamp);
   const now = new Date();
   const diff = now.getTime() - date.getTime();
@@ -387,10 +363,4 @@ function formatDate(timestamp: number): string {
   if (days < 7) return `${days}天前`;
   if (days < 30) return `${Math.floor(days / 7)}周前`;
   return `${date.getMonth() + 1}/${date.getDate()}`;
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes}B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
 }
