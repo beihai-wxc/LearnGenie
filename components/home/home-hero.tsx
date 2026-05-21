@@ -8,8 +8,8 @@ import { useI18n } from '@/lib/hooks/use-i18n';
 import { HomePromptBar } from '@/components/home/home-prompt-bar';
 import type { SettingsSection } from '@/lib/types/settings';
 
-const SCROLL_DURATION = 4000;
-const PAUSE_DURATION = 4000;
+const SCROLL_DURATION = 6000;
+const PAUSE_DURATION = 3000;
 
 function ScrollingDescription() {
   const { t } = useI18n();

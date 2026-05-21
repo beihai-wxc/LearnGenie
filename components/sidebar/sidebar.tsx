@@ -1,15 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { BookOpen, Brain, Lightbulb, Bookmark } from 'lucide-react';
+import { BookOpen, Brain, Lightbulb, Bookmark, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter, usePathname } from 'next/navigation';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useAuthStore } from '@/lib/store/auth';
-import { UserMenu } from '@/components/sidebar/user-menu';
-import { AvatarSelectDialog } from '@/components/sidebar/avatar-select-dialog';
+import { useUIStore } from '@/lib/store/ui';
+import { SettingsDialog } from '@/components/settings';
 
 interface SidebarItem {
   id: string;
@@ -49,7 +47,8 @@ export function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
-  const [avatarOpen, setAvatarOpen] = useState(false);
+  const settingsOpen = useUIStore((s) => s.settingsOpen);
+  const setSettingsOpen = useUIStore((s) => s.setSettingsOpen);
 
   const handleClick = (item: SidebarItem) => {
     if (item.path.startsWith('#')) {
@@ -99,33 +98,28 @@ export function Sidebar() {
 
         <div className="mt-auto flex flex-col items-center w-full px-3 pb-4">
           <div className="mb-3 h-px w-full bg-slate-200 dark:bg-slate-700" />
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                className={cn(
-                  'flex w-full items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200',
-                  'hover:bg-sky-50 hover:shadow-sm dark:hover:bg-sky-500/10',
-                )}
-              >
-                <Avatar className="size-8 shrink-0">
-                  <AvatarImage
-                    src={user?.avatar || '/avatars/user.png'}
-                    alt={user?.nickname || 'User'}
-                  />
-                  <AvatarFallback>{(user?.nickname || 'U')[0]}</AvatarFallback>
-                </Avatar>
-                <span className="text-sm font-medium text-slate-700 truncate dark:text-slate-300">
-                  {user?.nickname || '未登录'}
-                </span>
-              </button>
-            </PopoverTrigger>
-            <PopoverContent align="end" side="right" sideOffset={12} className="w-auto p-2">
-              <UserMenu onAvatarChange={() => setAvatarOpen(true)} />
-            </PopoverContent>
-          </Popover>
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className={cn(
+              'flex w-full items-center gap-2 rounded-xl px-2 py-2 transition-all duration-200',
+              'hover:bg-sky-50 hover:shadow-sm dark:hover:bg-sky-500/10',
+            )}
+          >
+            <Avatar className="size-8 shrink-0">
+              <AvatarImage
+                src={user?.avatar || '/avatars/user.png'}
+                alt={user?.nickname || 'User'}
+              />
+              <AvatarFallback>{(user?.nickname || 'U')[0]}</AvatarFallback>
+            </Avatar>
+            <span className="flex-1 text-left text-sm font-medium text-slate-700 truncate dark:text-slate-300">
+              {user?.nickname || '未登录'}
+            </span>
+            <Settings className="size-4 shrink-0 text-slate-400" />
+          </button>
         </div>
 
-        <AvatarSelectDialog open={avatarOpen} onOpenChange={setAvatarOpen} />
+        <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
       </aside>
     </TooltipProvider>
   );

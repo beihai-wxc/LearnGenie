@@ -5,7 +5,7 @@ const DATA_DIR = path.join(process.cwd(), '.data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 
 export interface StoredUser {
-  phone: string;
+  email: string;
   passwordHash: string;
   nickname: string;
   avatar: string;
@@ -41,35 +41,35 @@ async function writeUsers(users: Record<string, StoredUser>) {
   await writeLock;
 }
 
-export async function getUserByPhone(phone: string): Promise<StoredUser | undefined> {
+export async function getUserByEmail(email: string): Promise<StoredUser | undefined> {
   const users = await readUsers();
-  return users[phone];
+  return users[email];
 }
 
-export async function getUserByPhoneWithPassword(
-  phone: string,
+export async function getUserByEmailWithPassword(
+  email: string,
 ): Promise<StoredUser | undefined> {
-  return getUserByPhone(phone);
+  return getUserByEmail(email);
 }
 
 export async function createUser(user: StoredUser): Promise<StoredUser> {
   const users = await readUsers();
-  if (users[user.phone]) {
+  if (users[user.email]) {
     throw new Error('User already exists');
   }
-  users[user.phone] = user;
+  users[user.email] = user;
   await writeUsers(users);
   return user;
 }
 
 export async function updateUser(
-  phone: string,
+  email: string,
   updates: Partial<Pick<StoredUser, 'nickname' | 'avatar' | 'passwordHash'>>,
 ): Promise<StoredUser | null> {
   const users = await readUsers();
-  const existing = users[phone];
+  const existing = users[email];
   if (!existing) return null;
-  users[phone] = { ...existing, ...updates, updatedAt: new Date().toISOString() };
+  users[email] = { ...existing, ...updates, updatedAt: new Date().toISOString() };
   await writeUsers(users);
-  return users[phone];
+  return users[email];
 }

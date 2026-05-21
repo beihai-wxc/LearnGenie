@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     return apiError('INVALID_REQUEST', 400, 'Invalid avatar format');
   }
 
-  const updated = await updateUser(payload.phone, { avatar });
+  const updated = await updateUser(payload.email, { avatar });
   if (!updated) {
     return apiError('INVALID_REQUEST', 404, 'User not found');
   }

@@ -17,7 +17,7 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return compare(password, hash);
 }
 
-export async function createToken(payload: { phone: string }): Promise<string> {
+export async function createToken(payload: { email: string }): Promise<string> {
   return new SignJWT({ ...payload })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -25,11 +25,11 @@ export async function createToken(payload: { phone: string }): Promise<string> {
     .sign(getJwtSecret());
 }
 
-export async function verifyToken(token: string): Promise<{ phone: string } | null> {
+export async function verifyToken(token: string): Promise<{ email: string } | null> {
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, getJwtSecret());
-    return payload as { phone: string };
+    return payload as { email: string };
   } catch {
     return null;
   }

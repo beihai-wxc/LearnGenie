@@ -1,39 +1,39 @@
 import { cookies } from 'next/headers';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
-import { getUserByPhoneWithPassword } from '@/lib/server/user-store';
+import { getUserByEmailWithPassword } from '@/lib/server/user-store';
 import { verifyPassword, createToken } from '@/lib/server/auth-utils';
 
 export async function POST(request: Request) {
-  let body: { phone?: string; password?: string };
+  let body: { email?: string; password?: string };
   try {
     body = await request.json();
   } catch {
     return apiError('INVALID_REQUEST', 400, 'Invalid JSON body');
   }
 
-  const { phone, password } = body;
+  const { email, password } = body;
 
-  if (!phone || !phone.trim()) {
-    return apiError('INVALID_REQUEST', 400, 'Phone number is required');
+  if (!email || !email.trim()) {
+    return apiError('INVALID_REQUEST', 400, 'Email is required');
   }
 
   if (!password) {
     return apiError('INVALID_REQUEST', 400, 'Password is required');
   }
 
-  const phoneTrimmed = phone.trim();
-  const user = await getUserByPhoneWithPassword(phoneTrimmed);
+  const emailTrimmed = email.trim().toLowerCase();
+  const user = await getUserByEmailWithPassword(emailTrimmed);
 
   if (!user) {
-    return apiError('INVALID_REQUEST', 401, 'Invalid phone number or password');
+    return apiError('INVALID_REQUEST', 401, 'Invalid email or password');
   }
 
   const valid = await verifyPassword(password, user.passwordHash);
   if (!valid) {
-    return apiError('INVALID_REQUEST', 401, 'Invalid phone number or password');
+    return apiError('INVALID_REQUEST', 401, 'Invalid email or password');
   }
 
-  const token = await createToken({ phone: user.phone });
+  const token = await createToken({ email: user.email });
 
   const cookieStore = await cookies();
   cookieStore.set('auth_token', token, {
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
   return apiSuccess({
     token,
     user: {
-      phone: user.phone,
+      email: user.email,
       nickname: user.nickname,
       avatar: user.avatar,
     },

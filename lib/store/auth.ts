@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 export interface AuthUser {
-  phone: string;
+  email: string;
   nickname: string;
   avatar: string;
 }
@@ -13,8 +13,8 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   setAuth: (token: string, user: AuthUser) => void;
-  login: (phone: string, password: string) => Promise<void>;
-  register: (phone: string, password: string, nickname?: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, nickname?: string) => Promise<void>;
   logout: () => void;
   fetchUser: () => Promise<void>;
   updateAvatar: (avatar: string) => Promise<void>;
@@ -30,13 +30,13 @@ export const useAuthStore = create<AuthState>()(
 
       setAuth: (token, user) => set({ token, user, isAuthenticated: true }),
 
-      login: async (phone, password) => {
+      login: async (email, password) => {
         set({ isLoading: true });
         try {
           const res = await fetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone, password }),
+            body: JSON.stringify({ email, password }),
           });
           const data = await res.json();
           if (!data.success) throw new Error(data.error || 'Login failed');
@@ -47,13 +47,13 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      register: async (phone, password, nickname) => {
+      register: async (email, password, nickname) => {
         set({ isLoading: true });
         try {
           const res = await fetch('/api/auth/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone, password, nickname }),
+            body: JSON.stringify({ email, password, nickname }),
           });
           const data = await res.json();
           if (!data.success) throw new Error(data.error || 'Registration failed');

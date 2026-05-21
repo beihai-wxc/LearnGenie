@@ -9,11 +9,11 @@ import { createLogger } from '@/lib/logger';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { storeImages } from '@/lib/utils/image-storage';
 import { useSettingsStore } from '@/lib/store/settings';
+import { useUIStore } from '@/lib/store/ui';
 import { useUserProfileStore } from '@/lib/store/user-profile';
 import { useMediaGenerationStore } from '@/lib/store/media-generation';
 import { useDraftCache } from '@/lib/hooks/use-draft-cache';
 import type { UserRequirements } from '@/lib/types/generation';
-import type { SettingsSection } from '@/lib/types/settings';
 import type { PdfImage } from '@/lib/types/generation';
 import type { ParsedPdfContent } from '@/lib/types/pdf';
 import type {
@@ -21,9 +21,7 @@ import type {
   KnowledgeSearchResult,
 } from '@/lib/knowledge-base/types';
 import type { AgentWorkflowSnapshot } from '@/lib/agents/types';
-import { listStages } from '@/lib/utils/stage-storage';
-import { SettingsDialog } from '@/components/settings';
-import { HomeHero } from '@/components/home/home-hero';
+import { listStages } from '@/lib/utils/stage-storage';import { HomeHero } from '@/components/home/home-hero';
 import { KnowledgeSearchResults } from '@/components/knowledge/knowledge-search-results';
 import { Sidebar } from '@/components/sidebar/sidebar';
 import { ProtectedRoute } from '@/components/auth/protected-route';
@@ -77,8 +75,7 @@ function GenerateContent() {
   const router = useRouter();
   const currentModelId = useSettingsStore((state) => state.modelId);
   const [form, setForm] = useState<FormState>(initialFormState);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settingsSection, setSettingsSection] = useState<SettingsSection | undefined>(undefined);
+  const setSettingsOpen = useUIStore((s) => s.setSettingsOpen);
   const [error, setError] = useState<string | null>(null);
   const [isKnowledgeSearching, setIsKnowledgeSearching] = useState(false);
   const [knowledgePanel, setKnowledgePanel] = useState<KnowledgeResultPanelState | null>(null);
@@ -435,34 +432,13 @@ function GenerateContent() {
         <div className="home-bg-glow home-bg-glow-right" />
         <div className="home-bg-grid" />
 
-        <div className="fixed top-4 right-4 z-50">
-          <button
-            type="button"
-            onClick={() => setSettingsOpen(true)}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200/70 bg-white/75 text-slate-500 transition-colors hover:text-slate-900 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-400 dark:hover:text-white backdrop-blur-xl shadow-lg"
-            aria-label={t('settings.title')}
-          >
-            <Settings className="size-4" />
-          </button>
-        </div>
-
-        <SettingsDialog
-          open={settingsOpen}
-          onOpenChange={(open) => {
-            setSettingsOpen(open);
-            if (!open) setSettingsSection(undefined);
-          }}
-          initialSection={settingsSection}
-        />
-
         <main className="relative z-10 flex-1 px-4 md:px-8">
           <div className="mx-auto max-w-7xl">
             <HomeHero
               requirement={form.requirement}
               onRequirementChange={(value) => updateForm('requirement', value)}
               onSubmit={handleGenerate}
-              onSettingsOpen={(section) => {
-                setSettingsSection(section);
+              onSettingsOpen={() => {
                 setSettingsOpen(true);
               }}
               onKeyDown={handleKeyDown}
