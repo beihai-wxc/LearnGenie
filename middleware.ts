@@ -80,7 +80,6 @@ const PROTECTED_PAGE_PREFIXES = [
   '/classroom',
   '/generation-preview',
   '/knowledge',
-  '/document-viewer',
 ];
 
 function isProtectedPath(pathname: string): boolean {

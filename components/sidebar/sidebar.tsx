@@ -33,7 +33,7 @@ const sidebarItems: SidebarItem[] = [
   },
   {
     id: 'bookshelf',
-    label: '书架',
+    label: '历史课堂',
     icon: <BookOpen className="size-5" />,
     path: '/bookshelf',
   },

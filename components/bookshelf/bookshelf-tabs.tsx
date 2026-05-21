@@ -11,9 +11,7 @@ interface BookshelfTabsProps {
 const TABS = [
   { key: 'all', label: '全部' },
   { key: 'classroom', label: '课堂' },
-  { key: 'document', label: '文档' },
   { key: 'category', label: '分组' },
-  { key: 'history', label: '历史记录' },
 ];
 
 export function BookshelfTabs({ activeTab, onTabChange, className }: BookshelfTabsProps) {

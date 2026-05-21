@@ -854,7 +854,7 @@ function GenerationPreviewContent() {
         log.warn('Failed to save classroom access history:', historyErr);
       }
 
-      router.push(`/classroom/${stage.id}`);
+      router.replace(`/classroom/${stage.id}`);
     } catch (err) {
       // AbortError is expected when navigating away — don't show as error
       if (err instanceof DOMException && err.name === 'AbortError') {
