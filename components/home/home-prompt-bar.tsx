@@ -264,7 +264,7 @@ export function HomePromptBar({
                   )}
                 >
                   {interactiveMode && (
-                    <span className="home-breathe-ring absolute inset-[-4px] rounded-full" />
+                    <span className="absolute inset-[-4px] rounded-full border border-blue-300/50 animate-pulse" />
                   )}
                   <Atom className="relative z-10 size-3.5" />
                   <span className="relative z-10">{t('toolbar.interactiveModeLabel')}</span>

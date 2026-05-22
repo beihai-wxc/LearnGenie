@@ -9,8 +9,8 @@ const steps = [
     icon: <FileText className="size-6" />,
     title: '输入学习主题',
     description: '输入任何想学的内容，或上传 PDF、Word 等学习资料，AI 自动解析要点。',
-    color: '#9552e0',
-    bg: 'bg-[#f4ebff]',
+    color: '#0069e0',
+    bg: 'bg-[#e5f6ff]',
   },
   {
     step: '02',
@@ -39,7 +39,7 @@ const stats = [
 
 export function LandingHowItWorks() {
   return (
-    <section className="bg-[#ebf5ff] px-4 py-24 md:px-8">
+    <section id="how-it-works" className="bg-gradient-to-b from-white to-[#f6fafd] px-4 py-24 md:px-8">
       <div className="mx-auto max-w-7xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -77,7 +77,7 @@ export function LandingHowItWorks() {
                     className="absolute -right-2 -top-2 flex size-7 items-center justify-center rounded-full text-xs font-semibold text-white"
                     style={{ backgroundColor: item.color }}
                   >
-                    {item.step}
+                    {index + 1}
                   </span>
                 </div>
                 <h3 className="mb-3 text-[18px] font-medium leading-[1.25] -tracking-[0.02em] text-[#0a0d12]">
@@ -97,13 +97,13 @@ export function LandingHowItWorks() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="rounded-[32px] bg-[#fafdff] px-8 py-10"
-          style={{ boxShadow: 'rgba(4, 69, 144, 0.08) 0px 14px 20px 4px' }}
+          className="rounded-[32px] bg-white px-8 py-10"
+          style={{ boxShadow: 'rgba(4, 69, 144, 0.06) 0px 8px 20px 2px' }}
         >
           <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
             {stats.map((stat) => (
               <div key={stat.label} className="text-center">
-                <div className="text-[32px] font-medium leading-[1.17] -tracking-[0.02em] text-[#0069e0]">
+                <div className="text-[32px] font-medium leading-[1.17] -tracking-[0.02em] text-blue-600">
                   {stat.value}
                 </div>
                 <div className="mt-1 text-[14px] text-[#535862]">

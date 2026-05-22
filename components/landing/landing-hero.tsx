@@ -1,44 +1,45 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export function LandingHero() {
   const router = useRouter();
 
   return (
-    <section className="relative flex min-h-[90vh] items-center justify-center overflow-hidden bg-[#ebf5ff] px-4 pt-16">
-      {/* Decorative orbs */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-24 -top-24 size-[500px] rounded-full bg-[#f4ebff] opacity-50 blur-3xl" />
-        <div className="absolute -right-32 top-1/4 size-[400px] rounded-full bg-[#e5f6ff] opacity-50 blur-3xl" />
-        <div className="absolute left-1/3 -bottom-32 size-[350px] rounded-full bg-[#fff9e0] opacity-40 blur-3xl" />
+    <section className="relative flex min-h-[84rem] items-center justify-center overflow-hidden bg-[#fafdff] px-4 pt-16 max-md:min-h-[700px]">
+      {/* Subtle radial glow */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-1/2 top-1/2 h-[74%] w-[118%] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(30.84%_45.06%_at_50%_50%,#ebf6ff,#fafdff)]" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-4xl text-center">
+      <div className="relative z-10 mx-auto max-w-4xl -mt-14 text-center">
+        {/* Badge */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: 'easeOut' }}
         >
           <span className="inline-flex items-center gap-2 rounded-[90px] border border-[#cce7ff] bg-white/70 px-4 py-1.5 text-[14px] text-[#535862] backdrop-blur-sm">
-            <Sparkles className="size-3.5 text-[#0069e0]" />
+            <span className="size-2 rounded-full bg-[#0069e0]" />
             AI 多智能体交互式课堂
           </span>
         </motion.div>
 
+        {/* Title */}
         <motion.h1
           initial={{ opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.1, ease: 'easeOut' }}
-          className="mt-8 text-[clamp(2.8rem,7vw,5rem)] font-medium leading-[1.08] -tracking-[0.02em] text-[#0a0d12]"
+          className="mt-8 text-[clamp(3rem,7vw,5rem)] font-medium leading-[1.1] -tracking-[0.02em] text-[#0a0d12]"
         >
           用 AI 开启
           <br />
           沉浸式学习之旅
         </motion.h1>
 
+        {/* Description */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -49,6 +50,7 @@ export function LandingHero() {
           包含课件、测验、白板、讨论等完整的学习体验。
         </motion.p>
 
+        {/* CTAs */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -57,20 +59,22 @@ export function LandingHero() {
         >
           <button
             onClick={() => router.push('/register')}
-            className="inline-flex h-12 items-center gap-2 rounded-[32px] bg-[#181d27] px-8 text-[14px] font-medium text-white transition-all hover:bg-[#0a0d12]"
-            style={{ boxShadow: 'rgba(10, 13, 18, 0.08) 0px 1px 2px 0px, rgb(10, 13, 18) 0px 0px 0px 1px' }}
+            className="inline-flex h-12 items-center gap-2 rounded-[32px] bg-[#181d27] px-8 text-[14px] font-semibold text-white shadow-[0_1px_2px_rgba(10,13,18,0.8),0_0_0_1px_#0a0d12] transition-all hover:bg-[#0a0d12]"
           >
             立即开始
             <ArrowRight className="size-4" />
           </button>
           <button
             onClick={() => router.push('/login')}
-            className="inline-flex h-12 items-center rounded-[32px] border border-[#cce7ff] bg-white px-8 text-[14px] font-medium text-[#535862] transition-all hover:border-[#0069e0] hover:text-[#0a0d12]"
+            className="inline-flex h-12 items-center rounded-[32px] border border-[#eef0f1] bg-white px-8 text-[14px] font-medium text-[#535862] transition-all hover:border-[#0069e0] hover:text-[#0a0d12]"
           >
             已有账号？去登录
           </button>
         </motion.div>
       </div>
+
+      {/* Bottom gradient fade to next section */}
+      <div className="pointer-events-none absolute bottom-0 left-0 h-[38rem] w-full bg-[linear-gradient(357deg,#fff_2.12%,#fafdff_27.98%)]" />
     </section>
   );
 }

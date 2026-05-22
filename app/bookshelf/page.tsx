@@ -280,7 +280,7 @@ export default function BookshelfPage() {
                 <div className="mb-8">
                   <div className="mb-4 flex items-center justify-between">
                     <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-800 dark:text-slate-200">
-                      <span className="size-2 rounded-full bg-purple-500" />
+                      <span className="size-2 rounded-full bg-blue-500" />
                       分组管理 ({groups.length})
                     </h2>
                     {!showNewGroup ? (
@@ -302,13 +302,13 @@ export default function BookshelfPage() {
                             if (e.key === 'Escape') { setShowNewGroup(false); setNewGroupName(''); }
                           }}
                           placeholder="输入分组名称"
-                          className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-purple-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                          className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-blue-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
                           autoFocus
                         />
                         <button
                           type="button"
                           onClick={handleCreateGroup}
-                          className="rounded-lg bg-purple-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-purple-600"
+                          className="rounded-lg bg-blue-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-600"
                         >
                           添加
                         </button>
@@ -376,7 +376,7 @@ export default function BookshelfPage() {
                           onClick={() => setSelectedGroup(group)}
                           className="group rounded-2xl border border-slate-200/60 bg-white/80 p-6 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-700/60 dark:bg-slate-900/80"
                         >
-                          <div className="mb-3 inline-flex size-12 items-center justify-center rounded-xl bg-purple-100 text-purple-600 dark:bg-purple-500/15 dark:text-purple-400">
+                          <div className="mb-3 inline-flex size-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400">
                             <FolderOpen className="size-6" />
                           </div>
                           <h3 className="text-base font-medium text-slate-900 dark:text-white">

@@ -8,8 +8,8 @@ const previews = [
     icon: <Presentation className="size-5" />,
     title: '智能课件',
     description: 'AI 自动排版，图文并茂的知识讲解',
-    color: '#9552e0',
-    bg: 'bg-[#f4ebff]',
+    color: '#0069e0',
+    bg: 'bg-[#e5f6ff]',
   },
   {
     icon: <MessageCircle className="size-5" />,

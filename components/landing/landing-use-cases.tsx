@@ -8,7 +8,7 @@ const useCases = [
     icon: <GraduationCap className="size-6" />,
     title: '考试复习',
     description: '上传课程笔记或教材 PDF，AI 自动生成复习课件和测验题，帮助高效备考。',
-    iconBg: 'bg-[#f4ebff] text-[#9552e0]',
+    iconBg: 'bg-[#e5f6ff] text-[#0069e0]',
   },
   {
     icon: <BookOpenText className="size-6" />,

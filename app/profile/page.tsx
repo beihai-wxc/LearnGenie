@@ -7,9 +7,11 @@ const echartsModule = () => import('echarts');
 const wordcloudModule = () => import('echarts-wordcloud');
 import { Sidebar } from '@/components/sidebar/sidebar';
 import { useUserProfileStore } from '@/lib/store/user-profile';
+import { useAuthStore } from '@/lib/store/auth';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { UserProfileCard } from '@/components/user-profile';
 import { useI18n } from '@/lib/hooks/use-i18n';
+import { cn } from '@/lib/utils';
 import type { StudentProfileDimensions, DimensionKey } from '@/lib/types/student-profile';
 
 const DIMENSION_META: Record<string, { label: string; color: string; shortLabel: string }> = {
@@ -163,21 +165,27 @@ function extractWordCloudData(profile: StudentProfileDimensions | undefined) {
   return tags;
 }
 
-function UserProfileButton() {
+function UserProfileButton({ className }: { className?: string }) {
   const { t } = useI18n();
-  const avatar = useUserProfileStore((s) => s.avatar);
-  const nickname = useUserProfileStore((s) => s.nickname);
-  const displayName = nickname || t('profile.defaultNickname');
+  const user = useAuthStore((s) => s.user);
+  const profileAvatar = useUserProfileStore((s) => s.avatar);
+  const profileNickname = useUserProfileStore((s) => s.nickname);
+
+  const displayAvatar = user?.avatar || profileAvatar || '/avatars/user.png';
+  const displayName = user?.nickname || profileNickname || t('profile.defaultNickname');
 
   return (
     <Popover>
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/70 px-3 py-2 text-sm text-slate-700 shadow-[0_18px_44px_rgba(159,172,195,0.16)] backdrop-blur-md dark:border-white/10 dark:bg-slate-900/65 dark:text-slate-200"
+          className={cn(
+            "inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/70 px-3 py-2 text-sm text-slate-700 shadow-[0_18px_44px_rgba(159,172,195,0.16)] backdrop-blur-md dark:border-white/10 dark:bg-slate-900/65 dark:text-slate-200",
+            className,
+          )}
         >
           <img
-            src={avatar}
+            src={displayAvatar}
             alt={displayName}
             className="size-8 rounded-full object-cover ring-2 ring-sky-200/80 dark:ring-sky-400/20"
           />
@@ -552,7 +560,7 @@ export default function ProfilePage() {
                 <p className="mt-0.5 text-xs text-slate-500 sm:text-sm dark:text-slate-400">学习画像与维度分析</p>
               </div>
 
-              <UserProfileButton />
+              <UserProfileButton className="ml-8" />
             </div>
           </div>
         </div>

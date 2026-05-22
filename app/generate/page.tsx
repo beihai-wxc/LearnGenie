@@ -427,10 +427,8 @@ function GenerateContent() {
     <>
       <Sidebar />
       <div className="ml-52 home-page flex min-h-[100dvh] flex-col overflow-x-hidden pb-10">
-        <div className="home-bg-mesh" />
         <div className="home-bg-glow home-bg-glow-left" />
         <div className="home-bg-glow home-bg-glow-right" />
-        <div className="home-bg-grid" />
 
         <main className="relative z-10 flex-1 px-4 md:px-8">
           <div className="mx-auto max-w-7xl">

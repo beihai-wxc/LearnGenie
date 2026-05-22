@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { ChevronDown } from 'lucide-react';
+import { motion } from 'motion/react';
 
 const FAQS = [
   {
@@ -27,53 +26,52 @@ export function LandingFAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section className="bg-white px-4 py-24 md:px-8">
+    <section className="bg-gradient-to-b from-[#f6fafd] to-white px-4 py-24 md:px-8">
       <div className="mx-auto max-w-2xl">
         <div className="mb-12 text-center">
           <h2 className="text-[32px] font-medium leading-[1.17] -tracking-[0.02em] text-[#0a0d12] md:text-[48px] md:leading-[1.11]">
-            可能的疑问
+            常见问题
           </h2>
         </div>
 
-        <div className="space-y-3">
+        <div className="flex flex-col gap-4">
           {FAQS.map((faq, i) => {
             const isOpen = openIndex === i;
             return (
               <div
                 key={i}
-                className="rounded-[24px] bg-[#fafdff] overflow-hidden"
-                style={{ boxShadow: 'rgba(4, 69, 144, 0.06) 0px 8px 16px 2px' }}
+                className="rounded-[32px] bg-[#fcfcfd]"
               >
                 <button
                   onClick={() => setOpenIndex(isOpen ? null : i)}
-                  className="flex w-full items-center justify-between gap-4 px-8 py-5 text-left"
+                  className="flex w-full items-center justify-between gap-4 px-[32px] py-8 text-left md:px-[40px]"
                 >
-                  <span className="text-[16px] font-medium text-[#0a0d12]">
+                  <span className="text-[16px] font-medium text-[#0a0d12] md:text-[18px]">
                     {faq.q}
                   </span>
                   <motion.span
-                    animate={{ rotate: isOpen ? 180 : 0 }}
+                    animate={{ rotate: isOpen ? 45 : 0 }}
                     transition={{ duration: 0.25 }}
-                    className="shrink-0 text-[#93979f]"
+                    className="shrink-0 text-[#a4a7ae]"
                   >
-                    <ChevronDown className="size-5" />
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
                   </motion.span>
                 </button>
-                <AnimatePresence initial={false}>
-                  {isOpen && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3, ease: 'easeInOut' }}
-                      className="overflow-hidden"
-                    >
-                      <p className="px-8 pb-5 text-[14px] leading-[1.7] text-[#535862]">
-                        {faq.a}
-                      </p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <motion.div
+                  initial={false}
+                  animate={{
+                    height: isOpen ? 'auto' : 0,
+                    opacity: isOpen ? 1 : 0,
+                  }}
+                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                  className="overflow-hidden"
+                >
+                  <p className="px-[32px] pb-8 text-[14px] leading-[1.7] text-[#93979f] md:px-[40px] md:text-[16px]">
+                    {faq.a}
+                  </p>
+                </motion.div>
               </div>
             );
           })}
