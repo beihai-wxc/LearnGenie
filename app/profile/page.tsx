@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
-import { Brain, RefreshCw } from 'lucide-react';
+import { Brain, Book, Lightbulb, AlertTriangle, Timer, Compass, Crosshair, Heart, MessageSquare } from 'lucide-react';
 import type { ECharts, EChartsOption } from 'echarts';
 const echartsModule = () => import('echarts');
 const wordcloudModule = () => import('echarts-wordcloud');
@@ -14,15 +14,15 @@ import { useI18n } from '@/lib/hooks/use-i18n';
 import { cn } from '@/lib/utils';
 import type { StudentProfileDimensions, DimensionKey } from '@/lib/types/student-profile';
 
-const DIMENSION_META: Record<string, { label: string; color: string; shortLabel: string }> = {
-  knowledgeFoundation: { label: '知识基础', color: '#0ea5e9', shortLabel: '知识基础' },
-  cognitiveStyle: { label: '认知风格', color: '#8b5cf6', shortLabel: '认知风格' },
-  errorPronePatterns: { label: '易错点偏好', color: '#ef4444', shortLabel: '易错点' },
-  learningPace: { label: '学习节奏', color: '#f59e0b', shortLabel: '学习节奏' },
-  interestDirection: { label: '兴趣方向', color: '#10b981', shortLabel: '兴趣方向' },
-  metaCognitiveStrategy: { label: '元认知策略', color: '#6366f1', shortLabel: '元认知' },
-  emotionalMotivation: { label: '情感动机', color: '#ec4899', shortLabel: '情感动机' },
-  interactionPreference: { label: '交互偏好', color: '#14b8a6', shortLabel: '交互偏好' },
+const DIMENSION_META: Record<string, { label: string; color: string; shortLabel: string; icon: React.ElementType }> = {
+  knowledgeFoundation: { label: '知识基础', color: '#0ea5e9', shortLabel: '知识基础', icon: Book },
+  cognitiveStyle: { label: '认知风格', color: '#8b5cf6', shortLabel: '认知风格', icon: Lightbulb },
+  errorPronePatterns: { label: '易错点偏好', color: '#ef4444', shortLabel: '易错点', icon: AlertTriangle },
+  learningPace: { label: '学习节奏', color: '#f59e0b', shortLabel: '学习节奏', icon: Timer },
+  interestDirection: { label: '兴趣方向', color: '#10b981', shortLabel: '兴趣方向', icon: Compass },
+  metaCognitiveStrategy: { label: '元认知策略', color: '#6366f1', shortLabel: '元认知', icon: Crosshair },
+  emotionalMotivation: { label: '情感动机', color: '#ec4899', shortLabel: '情感动机', icon: Heart },
+  interactionPreference: { label: '交互偏好', color: '#14b8a6', shortLabel: '交互偏好', icon: MessageSquare },
 };
 
 const FRIENDLY_DIMENSION_NAMES: Record<string, string> = {
@@ -587,20 +587,23 @@ export default function ProfilePage() {
           <div className="rounded-2xl border border-slate-200/50 bg-white/80 p-5 shadow-sm dark:border-slate-700/50 dark:bg-slate-900/80">
             <h2 className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-300">维度详情</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {dimensionKeys.map((key) => (
-                <div key={key} className="flex items-center gap-3 rounded-xl border border-slate-200/60 p-4 dark:border-slate-700/50">
-                  <div
-                    className="flex size-9 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold"
-                    style={{ backgroundColor: `${DIMENSION_META[key].color}1a`, color: DIMENSION_META[key].color }}
-                  >
-                    {DIMENSION_META[key].shortLabel}
+              {dimensionKeys.map((key) => {
+                const DimensionIcon = DIMENSION_META[key].icon;
+                return (
+                  <div key={key} className="flex items-center gap-3 rounded-xl border border-slate-200/60 p-4 dark:border-slate-700/50">
+                    <div
+                      className="flex size-9 shrink-0 items-center justify-center rounded-lg"
+                      style={{ backgroundColor: `${DIMENSION_META[key].color}1a`, color: DIMENSION_META[key].color }}
+                    >
+                      <DimensionIcon className="size-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{DIMENSION_META[key].label}</p>
+                      <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">待了解</p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{DIMENSION_META[key].label}</p>
-                    <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">待了解</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

@@ -22,7 +22,7 @@ export function RegisterForm() {
 
   const validate = () => {
     const next: Record<string, string> = {};
-    if (!email.trim() || !email.includes('@')) next.email = '请输入有效的邮箱地址';
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) next.email = '请输入有效的邮箱地址';
     if (!password || password.length < 6) next.password = '密码至少 6 位';
     if (password !== confirmPassword) next.confirmPassword = '两次密码输入不一致';
     setErrors(next);

@@ -6,7 +6,7 @@ import { motion } from 'motion/react';
 const FAQS = [
   {
     q: 'LearnGenie 是免费的吗？',
-    a: '是的，完全免费。LearnGenie 是基于 AGPL-3.0 协议的开源项目，你可以自由下载、部署和使用，无需支付任何软件费用。',
+    a: '是的，完全免费。你可以自由使用，无需支付任何费用。',
   },
   {
     q: 'AI 生成的课堂内容准确吗？',
@@ -26,11 +26,11 @@ export function LandingFAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section className="bg-gradient-to-b from-[#f6fafd] to-white px-4 py-24 md:px-8">
+    <section id="faq" className="bg-gradient-to-b from-[#f6fafd] to-white px-4 py-24 md:px-8">
       <div className="mx-auto max-w-2xl">
         <div className="mb-12 text-center">
           <h2 className="text-[32px] font-medium leading-[1.17] -tracking-[0.02em] text-[#0a0d12] md:text-[48px] md:leading-[1.11]">
-            常见问题
+            Q&A
           </h2>
         </div>
 

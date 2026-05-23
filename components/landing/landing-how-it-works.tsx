@@ -31,10 +31,9 @@ const steps = [
 ];
 
 const stats = [
-  { value: '10+', label: 'AI 模型支持' },
   { value: '5', label: '智能体角色' },
-  { value: '无限', label: '知识库容量' },
-  { value: '免费', label: '开源使用' },
+  { value: '多门课程', label: '知识库容量' },
+  { value: '免费', label: '使用' },
 ];
 
 export function LandingHowItWorks() {
@@ -100,7 +99,7 @@ export function LandingHowItWorks() {
           className="rounded-[32px] bg-white px-8 py-10"
           style={{ boxShadow: 'rgba(4, 69, 144, 0.06) 0px 8px 20px 2px' }}
         >
-          <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-3">
             {stats.map((stat) => (
               <div key={stat.label} className="text-center">
                 <div className="text-[32px] font-medium leading-[1.17] -tracking-[0.02em] text-blue-600">

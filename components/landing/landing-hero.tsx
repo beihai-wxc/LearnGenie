@@ -64,12 +64,6 @@ export function LandingHero() {
             立即开始
             <ArrowRight className="size-4" />
           </button>
-          <button
-            onClick={() => router.push('/login')}
-            className="inline-flex h-12 items-center rounded-[32px] border border-[#eef0f1] bg-white px-8 text-[14px] font-medium text-[#535862] transition-all hover:border-[#0069e0] hover:text-[#0a0d12]"
-          >
-            已有账号？去登录
-          </button>
         </motion.div>
       </div>
 
