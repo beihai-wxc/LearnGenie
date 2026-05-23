@@ -30,22 +30,48 @@ export function LandingFeatures() {
           </p>
         </motion.div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((f, index) => (
-            <motion.div
-              key={f.title}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className={`group rounded-[32px] p-10 transition-all duration-300 hover:-translate-y-1 ${f.cardBg}`}
-              style={{ boxShadow: 'rgba(4, 69, 144, 0.06) 0px 8px 20px 2px' }}
-            >
-              <div className={`mb-6 inline-flex size-12 items-center justify-center rounded-[16px] ${f.iconBg}`}>{f.icon}</div>
-              <h3 className="mb-3 text-[18px] font-medium leading-[1.25] -tracking-[0.02em] text-[#0a0d12]">{f.title}</h3>
-              <p className="text-[14px] leading-[1.5] text-[#535862]">{f.description}</p>
-            </motion.div>
-          ))}
+        <div className="flex flex-col gap-6">
+          {/* Row 1 - slide from left */}
+          <motion.div
+            initial={{ opacity: 0, x: -800 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.9, ease: 'easeOut' }}
+            className="flex flex-wrap justify-center gap-6"
+          >
+            {FEATURES.slice(0, 3).map((f) => (
+              <motion.div
+                key={f.title}
+                className={`group w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] rounded-[32px] p-10 transition-all duration-300 hover:-translate-y-1 ${f.cardBg}`}
+                style={{ boxShadow: 'rgba(4, 69, 144, 0.06) 0px 8px 20px 2px' }}
+              >
+                <div className={`mb-6 inline-flex size-12 items-center justify-center rounded-[16px] ${f.iconBg}`}>{f.icon}</div>
+                <h3 className="mb-3 text-[18px] font-medium leading-[1.25] -tracking-[0.02em] text-[#0a0d12]">{f.title}</h3>
+                <p className="text-[14px] leading-[1.5] text-[#535862]">{f.description}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Row 2 - slide from right */}
+          <motion.div
+            initial={{ opacity: 0, x: 800 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.9, ease: 'easeOut', delay: 0.15 }}
+            className="flex flex-wrap justify-center gap-6"
+          >
+            {FEATURES.slice(3).map((f) => (
+              <motion.div
+                key={f.title}
+                className={`group w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] rounded-[32px] p-10 transition-all duration-300 hover:-translate-y-1 ${f.cardBg}`}
+                style={{ boxShadow: 'rgba(4, 69, 144, 0.06) 0px 8px 20px 2px' }}
+              >
+                <div className={`mb-6 inline-flex size-12 items-center justify-center rounded-[16px] ${f.iconBg}`}>{f.icon}</div>
+                <h3 className="mb-3 text-[18px] font-medium leading-[1.25] -tracking-[0.02em] text-[#0a0d12]">{f.title}</h3>
+                <p className="text-[14px] leading-[1.5] text-[#535862]">{f.description}</p>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </div>
     </section>
