@@ -8,13 +8,13 @@ export function LandingHero() {
   const router = useRouter();
 
   return (
-    <section className="relative flex min-h-[84rem] items-center justify-center overflow-hidden bg-[#fafdff] px-4 pt-16 max-md:min-h-[700px]">
+    <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#fafdff] px-4 max-md:min-h-screen">
       {/* Subtle radial glow */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute left-1/2 top-1/2 h-[74%] w-[118%] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(30.84%_45.06%_at_50%_50%,#ebf6ff,#fafdff)]" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-4xl -mt-14 text-center">
+      <div className="relative z-10 mx-auto max-w-4xl text-center">
         {/* Badge */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
