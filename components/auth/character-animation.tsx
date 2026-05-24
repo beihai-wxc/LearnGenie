@@ -163,7 +163,7 @@ export function CharacterAnimation() {
                 <motion.g
                   animate={noAnim ? {} : { rotate: [-5, 5, -5] }}
                   transition={noAnim ? {} : { duration: 0.6, ease: 'easeInOut', repeat: Infinity }}
-                  style={{ transformBox: 'view-box', transformOrigin: '118px 165px' }}
+                  style={{ transformBox: 'view-box', transformOrigin: '118px 165px' } as React.CSSProperties}
                 >
                   <path
                     d="M118 165 Q110 140 108 120 Q115 90 138 75"
@@ -309,7 +309,6 @@ export function CharacterAnimation() {
                     : {
                         scale: { duration: 0.4, ease: 'easeOut' },
                         rotate: { duration: 1.5, ease: 'easeInOut', repeat: Infinity },
-                        exit: { duration: 0.35, ease: 'easeIn' },
                       }
                 }
               >

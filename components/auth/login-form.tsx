@@ -56,15 +56,11 @@ export function LoginForm() {
           返回
         </button>
 
-        <div className="w-full max-w-[380px]">
-          <div
-            className="rounded-[32px] bg-[#fafdff] p-10"
-            style={{ boxShadow: 'rgba(4, 69, 144, 0.08) 0px 14px 20px 4px' }}
-          >
-            <h1 className="mb-2 text-[24px] font-medium leading-[1.2] -tracking-[0.02em] text-[#0a0d12]">
+        <div className="w-[70%] max-w-[460px]">
+            <h1 className="mb-2 text-[28px] font-medium leading-[1.2] -tracking-[0.02em] text-[#0a0d12]">
               欢迎回来
             </h1>
-            <p className="mb-8 text-[14px] leading-[1.5] text-[#535862]">登录你的账号，继续学习</p>
+            <p className="mb-8 text-[15px] leading-[1.5] text-[#535862]">登录你的账号，继续学习</p>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
@@ -117,7 +113,6 @@ export function LoginForm() {
                 立即注册
               </a>
             </p>
-          </div>
         </div>
       </div>
     </div>

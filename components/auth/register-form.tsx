@@ -58,15 +58,11 @@ export function RegisterForm() {
           返回
         </button>
 
-        <div className="w-full max-w-[380px]">
-          <div
-            className="rounded-[32px] bg-[#fafdff] p-10"
-            style={{ boxShadow: 'rgba(4, 69, 144, 0.08) 0px 14px 20px 4px' }}
-          >
-            <h1 className="mb-2 text-[24px] font-medium leading-[1.2] -tracking-[0.02em] text-[#0a0d12]">
+        <div className="w-[70%] max-w-[460px]">
+            <h1 className="mb-2 text-[28px] font-medium leading-[1.2] -tracking-[0.02em] text-[#0a0d12]">
               创建账号
             </h1>
-            <p className="mb-8 text-[14px] leading-[1.5] text-[#535862]">注册后即可使用全部功能</p>
+            <p className="mb-8 text-[15px] leading-[1.5] text-[#535862]">注册后即可使用全部功能</p>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
@@ -151,7 +147,6 @@ export function RegisterForm() {
                 立即登录
               </a>
             </p>
-          </div>
         </div>
       </div>
     </div>
