@@ -59,11 +59,6 @@ export function RegisterForm() {
         </button>
 
         <div className="w-full max-w-[380px]">
-          <div className="mb-10 text-center">
-            <img src="/logo-horizontal.png" alt="LearnGenie" className="mx-auto h-7 w-auto" />
-            <p className="mt-3 text-sm text-[#535862]">开启你的 AI 互动学习之旅</p>
-          </div>
-
           <div
             className="rounded-[32px] bg-[#fafdff] p-10"
             style={{ boxShadow: 'rgba(4, 69, 144, 0.08) 0px 14px 20px 4px' }}

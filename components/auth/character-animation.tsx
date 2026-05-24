@@ -150,7 +150,7 @@ export function CharacterAnimation() {
 
           {/* ====== LEFT ARM - Stage-dependent ====== */}
 
-          {/* Confused left arm (scratching head — upper arm static, forearm pivots at elbow) */}
+          {/* Confused left arm (scratching head — whole arm rotates around shoulder) */}
           <AnimatePresence>
             {stage === 'confused' && (
               <motion.g
@@ -160,32 +160,20 @@ export function CharacterAnimation() {
                 exit={noAnim ? {} : { opacity: 0 }}
                 transition={noAnim ? {} : { duration: 0.2 }}
               >
-                <g transform="translate(118, 165)">
-                  {/* Upper arm: shoulder → elbow (fixed) */}
+                <motion.g
+                  animate={noAnim ? {} : { rotate: [-5, 5, -5] }}
+                  transition={noAnim ? {} : { duration: 0.6, ease: 'easeInOut', repeat: Infinity }}
+                  style={{ transformBox: 'view-box', transformOrigin: '118px 165px' }}
+                >
                   <path
-                    d="M0 0 Q-4 -21 -8 -42"
+                    d="M118 165 Q110 140 108 120 Q115 90 138 75"
                     fill="none"
                     stroke="#ffd5c2"
                     strokeWidth="9"
                     strokeLinecap="round"
                   />
-                  {/* Forearm: elbow → hand (rotates to scratch around elbow pivot) */}
-                  <g transform="translate(-8, -42)">
-                    <motion.g
-                      animate={noAnim ? {} : { rotate: [-15, 15, -15] }}
-                      transition={noAnim ? {} : { duration: 0.75, ease: 'easeInOut', repeat: Infinity }}
-                    >
-                      <path
-                        d="M0 0 Q14 -26 32 -53"
-                        fill="none"
-                        stroke="#ffd5c2"
-                        strokeWidth="9"
-                        strokeLinecap="round"
-                      />
-                      <circle cx="32" cy="-53" r="6" fill="#ffd5c2" />
-                    </motion.g>
-                  </g>
-                </g>
+                  <circle cx="138" cy="75" r="6" fill="#ffd5c2" />
+                </motion.g>
               </motion.g>
             )}
           </AnimatePresence>
@@ -461,6 +449,137 @@ export function CharacterAnimation() {
             )}
           </AnimatePresence>
 
+          {/* ====== DECORATIVE ELEMENTS ====== */}
+
+          {/* Cloud - top left */}
+          <motion.g
+            animate={noAnim ? {} : { x: [0, 6, 0], y: [0, -3, 0] }}
+            transition={noAnim ? {} : { duration: 6, ease: 'easeInOut', repeat: Infinity }}
+          >
+            <ellipse cx="52" cy="42" rx="22" ry="12" fill="white" opacity="0.7" />
+            <ellipse cx="38" cy="46" rx="14" ry="9" fill="white" opacity="0.7" />
+            <ellipse cx="66" cy="46" rx="16" ry="9" fill="white" opacity="0.7" />
+          </motion.g>
+
+          {/* Cloud - top right */}
+          <motion.g
+            animate={noAnim ? {} : { x: [0, -5, 0], y: [0, -4, 0] }}
+            transition={noAnim ? {} : { duration: 7, ease: 'easeInOut', repeat: Infinity, delay: 1.5 }}
+          >
+            <ellipse cx="340" cy="55" rx="18" ry="10" fill="white" opacity="0.55" />
+            <ellipse cx="328" cy="58" rx="12" ry="7" fill="white" opacity="0.55" />
+            <ellipse cx="352" cy="58" rx="13" ry="7" fill="white" opacity="0.55" />
+          </motion.g>
+
+          {/* Cloud - middle left */}
+          <motion.g
+            animate={noAnim ? {} : { x: [0, 4, 0], y: [0, -2, 0] }}
+            transition={noAnim ? {} : { duration: 8, ease: 'easeInOut', repeat: Infinity, delay: 3 }}
+          >
+            <ellipse cx="30" cy="140" rx="15" ry="8" fill="white" opacity="0.45" />
+            <ellipse cx="20" cy="143" rx="10" ry="6" fill="white" opacity="0.45" />
+            <ellipse cx="40" cy="143" rx="11" ry="6" fill="white" opacity="0.45" />
+          </motion.g>
+
+          {/* Small star - top area */}
+          <motion.g
+            animate={noAnim ? {} : { opacity: [0.3, 0.8, 0.3], scale: [0.8, 1.1, 0.8] }}
+            transition={noAnim ? {} : { duration: 2.5, ease: 'easeInOut', repeat: Infinity }}
+            style={{ transformBox: 'view-box', transformOrigin: '280px 30px' }}
+          >
+            <path
+              d="M278 28 L280 24 L282 28 L286 30 L282 32 L280 36 L278 32 L274 30 Z"
+              fill="#f6ad55"
+              opacity="0.7"
+            />
+          </motion.g>
+
+          {/* Small star - right area */}
+          <motion.g
+            animate={noAnim ? {} : { opacity: [0.4, 0.9, 0.4], scale: [0.9, 1.15, 0.9] }}
+            transition={noAnim ? {} : { duration: 3, ease: 'easeInOut', repeat: Infinity, delay: 0.8 }}
+            style={{ transformBox: 'view-box', transformOrigin: '370px 120px' }}
+          >
+            <path
+              d="M368 118 L370 115 L372 118 L375 120 L372 122 L370 125 L368 122 L365 120 Z"
+              fill="#9552e0"
+              opacity="0.6"
+            />
+          </motion.g>
+
+          {/* Small star - left area */}
+          <motion.g
+            animate={noAnim ? {} : { opacity: [0.3, 0.7, 0.3], scale: [0.85, 1.1, 0.85] }}
+            transition={noAnim ? {} : { duration: 2.8, ease: 'easeInOut', repeat: Infinity, delay: 1.6 }}
+            style={{ transformBox: 'view-box', transformOrigin: '75px 85px' }}
+          >
+            <path
+              d="M73 83 L75 80 L77 83 L80 85 L77 87 L75 90 L73 87 L70 85 Z"
+              fill="#0069e0"
+              opacity="0.5"
+            />
+          </motion.g>
+
+          {/* Book - bottom right floating */}
+          <motion.g
+            animate={noAnim ? {} : { y: [0, -6, 0], rotate: [0, 3, 0] }}
+            transition={noAnim ? {} : { duration: 5, ease: 'easeInOut', repeat: Infinity }}
+            style={{ transformBox: 'view-box', transformOrigin: '340px 250px' }}
+          >
+            <rect x="320" y="240" width="36" height="28" rx="2" fill="#e05252" />
+            <rect x="322" y="242" width="32" height="24" rx="1" fill="#f87171" />
+            <line x1="338" y1="242" x2="338" y2="266" stroke="#e05252" strokeWidth="1.5" />
+            <rect x="325" y="247" width="10" height="2" rx="1" fill="white" opacity="0.5" />
+            <rect x="325" y="252" width="8" height="2" rx="1" fill="white" opacity="0.5" />
+            <rect x="341" y="247" width="10" height="2" rx="1" fill="white" opacity="0.5" />
+            <rect x="341" y="252" width="8" height="2" rx="1" fill="white" opacity="0.5" />
+          </motion.g>
+
+          {/* Pencil - bottom left floating */}
+          <motion.g
+            animate={noAnim ? {} : { y: [0, -5, 0], rotate: [-5, 5, -5] }}
+            transition={noAnim ? {} : { duration: 4.5, ease: 'easeInOut', repeat: Infinity, delay: 0.5 }}
+            style={{ transformBox: 'view-box', transformOrigin: '55px 260px' }}
+          >
+            <rect x="48" y="240" width="6" height="30" rx="1" fill="#f6ad55" />
+            <rect x="48" y="240" width="6" height="6" rx="1" fill="#e8c840" />
+            <polygon points="48,270 54,270 51,278" fill="#ffd5c2" />
+            <rect x="48" y="238" width="6" height="4" rx="1" fill="#e05252" />
+            <line x1="51" y1="246" x2="51" y2="268" stroke="#e8c840" strokeWidth="0.5" opacity="0.5" />
+          </motion.g>
+
+          {/* Light bulb - studying stage only */}
+          <AnimatePresence>
+            {stage === 'studying' && (
+              <motion.g
+                key="lightbulb"
+                initial={noAnim ? {} : { scale: 0, opacity: 0 }}
+                animate={noAnim ? {} : { scale: 1, opacity: 1 }}
+                exit={noAnim ? {} : { scale: 0, opacity: 0 }}
+                transition={noAnim ? {} : { type: 'spring', stiffness: 250, damping: 15, delay: 0.5 }}
+              >
+                <motion.g
+                  animate={noAnim ? {} : { y: [0, -4, 0] }}
+                  transition={noAnim ? {} : { duration: 3, ease: 'easeInOut', repeat: Infinity }}
+                >
+                  <circle cx="220" cy="52" r="12" fill="#fef3c7" stroke="#f6ad55" strokeWidth="1.5" />
+                  <path d="M215 48 Q220 42 225 48" fill="none" stroke="#f6ad55" strokeWidth="1" />
+                  <line x1="220" y1="64" x2="220" y2="68" stroke="#f6ad55" strokeWidth="1.5" />
+                  <line x1="216" y1="65" x2="216" y2="68" stroke="#f6ad55" strokeWidth="1" />
+                  <line x1="224" y1="65" x2="224" y2="68" stroke="#f6ad55" strokeWidth="1" />
+                  <motion.circle
+                    cx="220"
+                    cy="52"
+                    r="16"
+                    fill="#fef3c7"
+                    animate={noAnim ? {} : { opacity: [0.15, 0.35, 0.15] }}
+                    transition={noAnim ? {} : { duration: 2, ease: 'easeInOut', repeat: Infinity }}
+                  />
+                </motion.g>
+              </motion.g>
+            )}
+          </AnimatePresence>
+
           {/* Tablet glare gradient */}
           <defs>
             <linearGradient id="tabletGlare" x1="0" y1="0" x2="0" y2="1">
@@ -472,9 +591,10 @@ export function CharacterAnimation() {
       </motion.div>
       </div>
 
-      {/* Tagline */}
-      <div className="absolute bottom-12 left-8 right-8 text-center">
-        <p className="text-sm leading-relaxed text-[#535862]">
+      {/* Logo + Tagline — centered in left panel, aligned with back button */}
+      <div className="absolute left-1/2 top-6 -translate-x-1/2 text-center">
+        <img src="/logo-horizontal.png" alt="LearnGenie" className="h-7 w-auto" />
+        <p className="mt-2 text-sm text-[#535862]">
           开启你的
           <span className="font-medium text-[#0069e0]"> AI 互动学习</span>
           {' '}之旅
