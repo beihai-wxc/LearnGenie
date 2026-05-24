@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/lib/store/auth';
-import { AuthDecoration } from './auth-decoration';
+import { CharacterAnimation } from './character-animation';
 
 export function RegisterForm() {
   const router = useRouter();
@@ -45,7 +45,7 @@ export function RegisterForm() {
     <div className="flex min-h-screen bg-[#ebf5ff]">
       {/* Left - decoration */}
       <div className="hidden lg:block w-1/2">
-        <AuthDecoration />
+        <CharacterAnimation />
       </div>
 
       {/* Right - form */}

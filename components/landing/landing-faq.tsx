@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 import { motion } from 'motion/react';
+import { useReducedMotion } from '@/lib/hooks/use-reduced-motion';
+
+const SPRING_TRANSITION = { type: 'spring', stiffness: 260, damping: 20 };
 
 const FAQS = [
   {
@@ -24,6 +27,7 @@ const FAQS = [
 
 export function LandingFAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const reducedMotion = useReducedMotion();
 
   return (
     <section id="faq" className="bg-gradient-to-b from-[#f6fafd] to-white px-4 py-24 md:px-8">
@@ -38,9 +42,19 @@ export function LandingFAQ() {
           {FAQS.map((faq, i) => {
             const isOpen = openIndex === i;
             return (
-              <div
+              <motion.div
                 key={i}
                 className="rounded-[32px] bg-[#fcfcfd]"
+                animate={
+                  reducedMotion
+                    ? {}
+                    : {
+                        boxShadow: isOpen
+                          ? 'rgba(4, 69, 144, 0.1) 0px 12px 24px 4px'
+                          : 'rgba(4, 69, 144, 0) 0px 0px 0px 0px',
+                      }
+                }
+                transition={{ duration: 0.3 }}
               >
                 <button
                   onClick={() => setOpenIndex(isOpen ? null : i)}
@@ -50,7 +64,7 @@ export function LandingFAQ() {
                     {faq.q}
                   </span>
                   <motion.span
-                    animate={{ rotate: isOpen ? 45 : 0 }}
+                    animate={{ rotate: isOpen ? 90 : 0 }}
                     transition={{ duration: 0.25 }}
                     className="shrink-0 text-[#a4a7ae]"
                   >
@@ -68,11 +82,15 @@ export function LandingFAQ() {
                   transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                   className="overflow-hidden"
                 >
-                  <p className="px-[32px] pb-8 text-[14px] leading-[1.7] text-[#93979f] md:px-[40px] md:text-[16px]">
+                  <motion.p
+                    className="px-[32px] pb-8 text-[14px] leading-[1.7] text-[#93979f] md:px-[40px] md:text-[16px]"
+                    animate={isOpen ? { y: 0 } : { y: -8 }}
+                    transition={{ duration: 0.25 }}
+                  >
                     {faq.a}
-                  </p>
+                  </motion.p>
                 </motion.div>
-              </div>
+              </motion.div>
             );
           })}
         </div>

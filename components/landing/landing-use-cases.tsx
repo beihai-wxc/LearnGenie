@@ -2,6 +2,9 @@
 
 import { motion } from 'motion/react';
 import { GraduationCap, BookOpenText, FileSearch, Code2 } from 'lucide-react';
+import { useReducedMotion } from '@/lib/hooks/use-reduced-motion';
+
+const SPRING_TRANSITION = { type: 'spring', stiffness: 260, damping: 20 };
 
 const useCases = [
   {
@@ -31,14 +34,16 @@ const useCases = [
 ];
 
 export function LandingUseCases() {
+  const reducedMotion = useReducedMotion();
+
   return (
     <section className="bg-[#ebf5ff] px-4 py-24 md:px-8">
       <div className="mx-auto max-w-7xl">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={SPRING_TRANSITION}
           className="mb-16 text-center"
         >
           <h2 className="text-[32px] font-medium leading-[1.17] -tracking-[0.02em] text-[#0a0d12] md:text-[48px] md:leading-[1.11]">
@@ -53,11 +58,16 @@ export function LandingUseCases() {
           {useCases.map((item, index) => (
             <motion.div
               key={item.title}
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="group rounded-[32px] bg-[#fafdff] p-8 transition-all hover:-translate-y-1"
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ ...SPRING_TRANSITION, delay: index * 0.15 }}
+              whileHover={
+                reducedMotion
+                  ? {}
+                  : { y: -4 }
+              }
+              className="group rounded-[32px] bg-[#fafdff] p-8 transition-colors duration-300 hover:bg-[#f0f8ff]"
               style={{ boxShadow: 'rgba(4, 69, 144, 0.08) 0px 14px 20px 4px' }}
             >
               <div className={`mb-5 inline-flex size-12 items-center justify-center rounded-[16px] ${item.iconBg}`}>

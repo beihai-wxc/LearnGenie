@@ -2,6 +2,9 @@
 
 import { motion } from 'motion/react';
 import { MessageCircle, Presentation, PenTool, Layout } from 'lucide-react';
+import { useReducedMotion } from '@/lib/hooks/use-reduced-motion';
+
+const SPRING_TRANSITION = { type: 'spring', stiffness: 260, damping: 20 };
 
 const previews = [
   {
@@ -35,11 +38,29 @@ const previews = [
 ];
 
 function ClassroomMockup() {
+  const reducedMotion = useReducedMotion();
+
   return (
-    <div className="overflow-hidden rounded-[32px] bg-[#fafdff]"
+    <motion.div
+      className="overflow-hidden rounded-[32px] bg-[#fafdff]"
       style={{ boxShadow: 'rgba(4, 69, 144, 0.08) 0px 14px 20px 4px' }}
+      animate={
+        reducedMotion
+          ? {}
+          : {
+              y: [0, -4, 0],
+            }
+      }
+      transition={
+        reducedMotion
+          ? {}
+          : {
+              duration: 3,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }
+      }
     >
-      {/* Browser chrome */}
       <div className="flex items-center gap-2 border-b border-[#cce7ff] px-5 py-3">
         <div className="size-3 rounded-full bg-red-400" />
         <div className="size-3 rounded-full bg-amber-400" />
@@ -47,14 +68,12 @@ function ClassroomMockup() {
         <span className="ml-3 text-[13px] text-[#93979f]">LearnGenie 课堂</span>
       </div>
       <div className="flex h-80">
-        {/* Sidebar */}
         <div className="flex w-16 flex-col items-center gap-4 border-r border-[#cce7ff] bg-[#fafdff] p-3">
           <div className="mt-1 size-6 rounded-[8px] bg-[#e5f6ff]" />
           <div className="size-5 rounded-[6px] bg-[#ebf5ff]" />
           <div className="size-5 rounded-[6px] bg-[#ebf5ff]" />
           <div className="mt-auto mb-2 size-7 rounded-full bg-[#f4ebff]" />
         </div>
-        {/* Content */}
         <div className="flex flex-1 flex-col bg-white p-5">
           <div className="mb-3 h-5 w-2/3 rounded-[8px] bg-[#ebf5ff]" />
           <div className="mb-6 h-4 w-full rounded-[6px] bg-[#fafdff]" />
@@ -75,19 +94,21 @@ function ClassroomMockup() {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 export function LandingProductPreview() {
+  const reducedMotion = useReducedMotion();
+
   return (
     <section className="bg-white px-4 py-24 md:px-8">
       <div className="mx-auto max-w-7xl">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={SPRING_TRANSITION}
           className="mb-16 text-center"
         >
           <h2 className="text-[32px] font-medium leading-[1.17] -tracking-[0.02em] text-[#0a0d12] md:text-[48px] md:leading-[1.11]">
@@ -100,19 +121,19 @@ export function LandingProductPreview() {
 
         <div className="grid gap-8 lg:grid-cols-2">
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.5 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={SPRING_TRANSITION}
           >
             <ClassroomMockup />
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.5 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={SPRING_TRANSITION}
             className="flex flex-col justify-center space-y-6"
           >
             {previews.map((item, index) => (
@@ -120,13 +141,27 @@ export function LandingProductPreview() {
                 key={item.title}
                 initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: 0.2 + index * 0.1 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ ...SPRING_TRANSITION, delay: 0.2 + index * 0.12 }}
                 className="flex items-start gap-4"
+                whileHover={
+                  reducedMotion
+                    ? {}
+                    : { x: 4 }
+                }
               >
-                <div className={`flex size-10 shrink-0 items-center justify-center rounded-[16px] ${item.bg}`} style={{ color: item.color }}>
+                <motion.div
+                  className={`flex size-10 shrink-0 items-center justify-center rounded-[16px] ${item.bg}`}
+                  style={{ color: item.color }}
+                  whileHover={
+                    reducedMotion
+                      ? {}
+                      : { scale: 1.1 }
+                  }
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                >
                   {item.icon}
-                </div>
+                </motion.div>
                 <div>
                   <h3 className="text-[16px] font-medium leading-[1.4] text-[#0a0d12]">
                     {item.title}
