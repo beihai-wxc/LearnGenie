@@ -397,7 +397,9 @@ export async function saveGeneratedAgents(
   }
 
   // Write to IndexedDB
-  const records = agents.map((a) => ({ ...a, stageId, createdAt: Date.now() }));
+  const { getCurrentUserId } = await import('@/lib/utils/user-context');
+  const userId = getCurrentUserId() ?? '';
+  const records = agents.map((a) => ({ ...a, userId, stageId, createdAt: Date.now() }));
   await db.generatedAgents.bulkPut(records);
 
   // Add to registry

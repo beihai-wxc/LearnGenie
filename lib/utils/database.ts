@@ -40,6 +40,7 @@ export interface Snapshot {
  */
 export interface StageRecord {
   id: string; // Primary key
+  userId: string; // Owner email
   name: string;
   description?: string;
   createdAt: number; // timestamp
@@ -55,6 +56,7 @@ export interface StageRecord {
  */
 export interface SceneRecord {
   id: string; // Primary key
+  userId: string; // Owner email
   stageId: string; // Foreign key -> stages.id
   type: SceneType;
   title: string;
@@ -99,6 +101,7 @@ export interface ImageFileRecord {
  */
 export interface ChatSessionRecord {
   id: string; // PK (session id)
+  userId: string; // Owner email
   stageId: string; // FK -> stages.id
   type: SessionType;
   title: string;
@@ -118,6 +121,7 @@ export interface ChatSessionRecord {
  */
 export interface PlaybackStateRecord {
   stageId: string; // PK
+  userId: string; // Owner email
   sceneIndex: number;
   actionIndex: number;
   consumedDiscussions: string[];
@@ -129,6 +133,7 @@ export interface PlaybackStateRecord {
  */
 export interface StageOutlinesRecord {
   stageId: string; // Primary key (FK -> stages.id)
+  userId: string; // Owner email
   outlines: SceneOutline[];
   createdAt: number;
   updatedAt: number;
@@ -139,6 +144,7 @@ export interface StageOutlinesRecord {
  */
 export interface MediaFileRecord {
   id: string; // Compound key: `${stageId}:${elementId}`
+  userId: string; // Owner email
   stageId: string; // FK → stages.id
   type: 'image' | 'video';
   blob: Blob; // Media binary
@@ -159,6 +165,7 @@ export interface MediaFileRecord {
  */
 export interface GeneratedAgentRecord {
   id: string; // PK: agent ID (e.g. "gen-abc123")
+  userId: string; // Owner email
   stageId: string; // FK -> stages.id
   name: string;
   role: string; // 'teacher' | 'assistant' | 'student'
@@ -171,6 +178,7 @@ export interface GeneratedAgentRecord {
 
 export interface BookshelfRecord {
   id: string; // PK (UUID)
+  userId: string; // Owner email
   title: string;
   type: 'classroom' | 'document';
   stageId?: string; // FK for classroom type
@@ -185,6 +193,7 @@ export interface BookshelfRecord {
 
 export interface BookshelfCategoryRecord {
   id: string; // PK (category name)
+  userId: string; // Owner email
   name: string;
   color?: string;
   createdAt: number;
@@ -195,6 +204,7 @@ export interface BookshelfCategoryRecord {
  */
 export interface AccessHistoryRecord {
   id: string; // PK (UUID)
+  userId: string; // Owner email
   type: 'classroom' | 'knowledge' | 'document';
   targetId: string; // classroomId / docId / documentId
   title: string;
@@ -209,6 +219,7 @@ export interface AccessHistoryRecord {
 /** Wrong-question collection record */
 export interface WrongQuestionRecord {
   id: string; // PK (nanoid)
+  userId: string; // Owner email
   stageId: string;
   stageName: string;
   sceneId: string;
@@ -236,7 +247,7 @@ export function mediaFileKey(stageId: string, elementId: string): string {
 // ==================== Database Definition ====================
 
 const DATABASE_NAME = 'MAIC-Database';
-const _DATABASE_VERSION = 13;
+const _DATABASE_VERSION = 14;
 
 /**
  * MAIC Database Instance
@@ -473,6 +484,24 @@ class MAICDatabase extends Dexie {
       categories: 'id',
       accessHistory: 'id, type, targetId, updatedAt, [type+updatedAt]',
       wrongQuestions: 'id, stageId, chapterNumber, createdAt',
+    });
+
+    // Version 14: Add userId to all user-data tables for multi-account isolation
+    this.version(14).stores({
+      stages: 'id, userId, updatedAt, [userId+updatedAt]',
+      scenes: 'id, userId, stageId, order, [userId+stageId+order]',
+      audioFiles: 'id, createdAt',
+      imageFiles: 'id, createdAt',
+      snapshots: '++id',
+      chatSessions: 'id, userId, stageId, [userId+stageId+createdAt]',
+      playbackState: 'stageId, userId',
+      stageOutlines: 'stageId, userId',
+      mediaFiles: 'id, userId, stageId, [userId+stageId+type]',
+      generatedAgents: 'id, userId, stageId',
+      bookshelf: 'id, userId, type, category, createdAt, [userId+type], [userId+category]',
+      categories: 'id, userId',
+      accessHistory: 'id, userId, type, targetId, updatedAt, [userId+type+updatedAt]',
+      wrongQuestions: 'id, userId, stageId, chapterNumber, createdAt, [userId+stageId]',
     });
   }
 }

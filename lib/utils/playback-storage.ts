@@ -3,9 +3,11 @@
  *
  * Stores minimal state needed to resume playback from a breakpoint:
  * position (sceneIndex + actionIndex) and consumed discussions.
+ * All queries are scoped to the current authenticated user via userId.
  */
 
 import { db } from './database';
+import { getCurrentUserId } from './user-context';
 
 export interface PlaybackSnapshot {
   sceneIndex: number;
@@ -22,8 +24,10 @@ export async function savePlaybackState(
   stageId: string,
   snapshot: PlaybackSnapshot,
 ): Promise<void> {
+  const userId = getCurrentUserId();
   await db.playbackState.put({
     stageId,
+    userId: userId ?? '',
     sceneIndex: snapshot.sceneIndex,
     actionIndex: snapshot.actionIndex,
     consumedDiscussions: snapshot.consumedDiscussions,

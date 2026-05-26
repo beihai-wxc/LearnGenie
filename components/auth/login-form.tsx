@@ -64,7 +64,7 @@ export function LoginForm() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="mb-2 block text-[14px] font-medium text-[#0a0d12]">邮箱</label>
+                <label className="mb-2 block text-[14px] font-medium text-[#0a0d12]">邮箱 （测试邮箱：test@example.com）</label>
                 <input
                   type="email"
                   value={email}
@@ -76,7 +76,7 @@ export function LoginForm() {
               </div>
 
               <div>
-                <label className="mb-2 block text-[14px] font-medium text-[#0a0d12]">密码</label>
+                <label className="mb-2 block text-[14px] font-medium text-[#0a0d12]">密码 （测试密码：123456）</label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { getCurrentUserId } from '@/lib/utils/user-context';
 
 interface UseDraftCacheOptions {
   key: string;
@@ -13,6 +14,11 @@ interface UseDraftCacheReturn<T> {
   clearCache: () => void;
 }
 
+function scopedKey(baseKey: string): string {
+  const userId = getCurrentUserId();
+  return userId ? `${baseKey}-${userId}` : baseKey;
+}
+
 export function useDraftCache<T>({
   key,
   debounceMs = 500,
@@ -20,7 +26,7 @@ export function useDraftCache<T>({
   const [cachedValue] = useState<T | undefined>(() => {
     if (typeof window === 'undefined') return undefined;
     try {
-      const raw = localStorage.getItem(key);
+      const raw = localStorage.getItem(scopedKey(key));
       if (raw !== null) {
         return JSON.parse(raw) as T;
       }
@@ -33,6 +39,8 @@ export function useDraftCache<T>({
   const pendingValueRef = useRef<T | undefined>(undefined);
   const keyRef = useRef(key);
 
+  const resolveKey = useCallback(() => scopedKey(keyRef.current), []);
+
   useEffect(() => {
     keyRef.current = key;
   }, [key]);
@@ -44,13 +52,13 @@ export function useDraftCache<T>({
     }
     if (pendingValueRef.current !== undefined) {
       try {
-        localStorage.setItem(keyRef.current, JSON.stringify(pendingValueRef.current));
+        localStorage.setItem(resolveKey(), JSON.stringify(pendingValueRef.current));
       } catch {
         /* ignore quota errors */
       }
       pendingValueRef.current = undefined;
     }
-  }, []);
+  }, [resolveKey]);
 
   const updateCache = useCallback(
     (value: T) => {
@@ -61,14 +69,14 @@ export function useDraftCache<T>({
       timerRef.current = setTimeout(() => {
         timerRef.current = null;
         try {
-          localStorage.setItem(keyRef.current, JSON.stringify(value));
+          localStorage.setItem(resolveKey(), JSON.stringify(value));
         } catch {
           /* ignore quota errors */
         }
         pendingValueRef.current = undefined;
       }, debounceMs);
     },
-    [debounceMs],
+    [debounceMs, resolveKey],
   );
 
   const clearCache = useCallback(() => {
@@ -78,11 +86,11 @@ export function useDraftCache<T>({
     }
     pendingValueRef.current = undefined;
     try {
-      localStorage.removeItem(keyRef.current);
+      localStorage.removeItem(resolveKey());
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [resolveKey]);
 
   // Flush pending write on unmount
   useEffect(() => {

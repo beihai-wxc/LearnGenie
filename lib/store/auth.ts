@@ -65,6 +65,11 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: async () => {
+        // Clear per-user localStorage before wiping auth state
+        const email = get().user?.email;
+        if (email) {
+          try { localStorage.removeItem(`user-profile-storage-${email}`); } catch { /* noop */ }
+        }
         set({ token: null, user: null, isAuthenticated: false });
         try {
           await fetch('/api/auth/logout', { method: 'POST' });

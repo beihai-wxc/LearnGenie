@@ -1,24 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
-import { ArrowRight, Atom, Paperclip, FileText, X } from 'lucide-react';
+import { useEffect, useRef, type KeyboardEvent } from 'react';
+import { ArrowRight, Atom, Paperclip, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { GenerationToolbar } from '@/components/generation/generation-toolbar';
 import { AgentBar } from '@/components/agent/agent-bar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/hooks/use-i18n';
-import { useSettingsStore } from '@/lib/store/settings';
-import { PDF_PROVIDERS } from '@/lib/pdf/constants';
-import type { PDFProviderId } from '@/lib/pdf/types';
 import type { SettingsSection } from '@/lib/types/settings';
 
 // ─── Constants ───────────────────────────────────────────────
@@ -56,11 +45,7 @@ export function HomePromptBar({
 }: HomePromptBarProps) {
   const { t } = useI18n();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const pdfProviderId = useSettingsStore((s) => s.pdfProviderId);
-  const pdfProvidersConfig = useSettingsStore((s) => s.pdfProvidersConfig);
-  const setPDFProvider = useSettingsStore((s) => s.setPDFProvider);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
 
   // PDF handler
   const handleFileSelect = (file: File) => {
@@ -95,130 +80,42 @@ export function HomePromptBar({
           />
 
           <div className="flex items-center gap-2 pb-1">
-            {/* PDF Upload Button */}
+            {/* PDF Upload */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept=".pdf"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) handleFileSelect(f);
+                e.target.value = '';
+              }}
+            />
             <Tooltip>
               <TooltipTrigger asChild>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    {pdfFile ? (
-                      <button className="flex items-center gap-1.5 rounded-full border border-violet-200/60 bg-violet-100 px-2.5 py-1.5 text-xs font-medium text-violet-700 transition-colors hover:bg-violet-200 dark:border-violet-700/50 dark:bg-violet-900/30 dark:text-violet-300 dark:hover:bg-violet-800">
-                        <Paperclip className="size-3.5" />
-                        <span className="max-w-[80px] truncate">{pdfFile.name}</span>
-                        <span
-                          className="size-3.5 rounded-full inline-flex items-center justify-center hover:bg-violet-200 dark:hover:bg-violet-800"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onPdfFileChange(null);
-                          }}
-                        >
-                          <X className="size-2.5" />
-                        </span>
-                      </button>
-                    ) : (
-                      <button className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/70 bg-white/70 text-slate-600 transition-colors hover:bg-slate-100 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10">
-                        <Paperclip className="size-4" />
-                      </button>
-                    )}
-                  </PopoverTrigger>
-                  <PopoverContent align="end" className="w-72 p-0">
-                    {/* Parser selector */}
-                    <div className="flex items-center gap-2 px-3 pt-3 pb-2">
-                      <span className="text-xs font-medium text-muted-foreground shrink-0">
-                        {t('toolbar.pdfParser')}
-                      </span>
-                      <Select value={pdfProviderId} onValueChange={(v) => setPDFProvider(v as PDFProviderId)}>
-                        <SelectTrigger className="h-7 text-xs flex-1 min-w-0">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.values(PDF_PROVIDERS).map((provider) => {
-                            const cfg = pdfProvidersConfig[provider.id];
-                            const available =
-                              !provider.requiresApiKey || !!cfg?.apiKey || !!cfg?.isServerConfigured;
-                            return (
-                              <SelectItem key={provider.id} value={provider.id} disabled={!available}>
-                                <div className={cn('flex items-center gap-1.5', !available && 'opacity-50')}>
-                                  {provider.icon && (
-                                    <img src={provider.icon} alt={provider.name} className="w-3.5 h-3.5" />
-                                  )}
-                                  {provider.name}
-                                  {cfg?.isServerConfigured && (
-                                    <span className="text-[9px] px-1 py-0 rounded border text-muted-foreground">
-                                      {t('settings.serverConfigured')}
-                                    </span>
-                                  )}
-                                </div>
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Upload area / file info */}
-                    <div className="px-3 pb-3">
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        className="hidden"
-                        accept=".pdf"
-                        onChange={(e) => {
-                          const f = e.target.files?.[0];
-                          if (f) handleFileSelect(f);
-                          e.target.value = '';
-                        }}
-                      />
-                      {pdfFile ? (
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <div className="size-8 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center shrink-0">
-                              <FileText className="size-4 text-violet-600 dark:text-violet-400" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-medium truncate">{pdfFile.name}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {(pdfFile.size / 1024 / 1024).toFixed(2)} MB
-                              </p>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => onPdfFileChange(null)}
-                            className="w-full text-xs text-destructive hover:underline text-left"
-                          >
-                            {t('toolbar.removePdf')}
-                          </button>
-                        </div>
-                      ) : (
-                        <div
-                          className={cn(
-                            'flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-4 transition-colors cursor-pointer',
-                            isDragging
-                              ? 'border-violet-400 bg-violet-50 dark:bg-violet-950/20'
-                              : 'border-muted-foreground/20 hover:border-violet-300',
-                          )}
-                          onClick={() => fileInputRef.current?.click()}
-                          onDragOver={(e) => {
-                            e.preventDefault();
-                            setIsDragging(true);
-                          }}
-                          onDragLeave={() => setIsDragging(false)}
-                          onDrop={(e) => {
-                            e.preventDefault();
-                            setIsDragging(false);
-                            const f = e.dataTransfer.files?.[0];
-                            if (f) handleFileSelect(f);
-                          }}
-                        >
-                          <Paperclip className="size-5 text-muted-foreground/50 mb-1.5" />
-                          <p className="text-xs font-medium">{t('toolbar.pdfUpload')}</p>
-                          <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-                            {t('upload.pdfSizeLimit')}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </PopoverContent>
-                </Popover>
+                {pdfFile ? (
+                  <button className="flex items-center gap-1.5 rounded-full border border-violet-200/60 bg-violet-100 px-2.5 py-1.5 text-xs font-medium text-violet-700 transition-colors hover:bg-violet-200 dark:border-violet-700/50 dark:bg-violet-900/30 dark:text-violet-300 dark:hover:bg-violet-800">
+                    <Paperclip className="size-3.5" />
+                    <span className="max-w-[80px] truncate">{pdfFile.name}</span>
+                    <span
+                      className="size-3.5 rounded-full inline-flex items-center justify-center hover:bg-violet-200 dark:hover:bg-violet-800"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onPdfFileChange(null);
+                      }}
+                    >
+                      <X className="size-2.5" />
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/70 bg-white/70 text-slate-600 transition-colors hover:bg-slate-100 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Paperclip className="size-4" />
+                  </button>
+                )}
               </TooltipTrigger>
               <TooltipContent>{t('toolbar.uploadPdf')}</TooltipContent>
             </Tooltip>

@@ -200,9 +200,13 @@ const useStageStoreBase = create<StageState>()((set, get) => ({
     // Persist outlines to IndexedDB
     const stageId = get().stage?.id;
     if (stageId) {
-      import('@/lib/utils/database').then(({ db }) => {
+      Promise.all([
+        import('@/lib/utils/database'),
+        import('@/lib/utils/user-context'),
+      ]).then(([{ db }, { getCurrentUserId }]) => {
         db.stageOutlines.put({
           stageId,
+          userId: getCurrentUserId() ?? '',
           outlines,
           createdAt: Date.now(),
           updatedAt: Date.now(),

@@ -8,6 +8,7 @@ import { db, mediaFileKey } from '@/lib/utils/database';
 import type { AudioFileRecord, MediaFileRecord, GeneratedAgentRecord } from '@/lib/utils/database';
 import type { ClassroomManifest, ManifestScene } from '@/lib/export/classroom-zip-types';
 import { rewriteAudioRefsToIds } from '@/lib/export/classroom-zip-utils';
+import { getCurrentUserId } from '@/lib/utils/user-context';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('ImportClassroom');
@@ -106,6 +107,8 @@ export function useImportClassroom(onSuccess?: () => void) {
         setPhase('writingMedia');
         toast.loading(t('import.writingMedia'), { id: toastId });
 
+        const userId = getCurrentUserId() ?? '';
+
         // Write audio files one at a time
         for (const [zipPath, newId] of Object.entries(audioRefToNewId)) {
           const zipEntry = zip.file(zipPath);
@@ -132,6 +135,7 @@ export function useImportClassroom(onSuccess?: () => void) {
 
           const record: MediaFileRecord = {
             id: newId,
+            userId,
             stageId: newStageId,
             type: meta.mimeType?.startsWith('video/') ? 'video' : 'image',
             blob,
@@ -159,6 +163,7 @@ export function useImportClassroom(onSuccess?: () => void) {
         // Write stage
         await db.stages.put({
           id: newStageId,
+          userId,
           name: manifest.stage.name || 'Imported Classroom',
           description: manifest.stage.description,
           languageDirective: manifest.stage.language,
@@ -172,6 +177,7 @@ export function useImportClassroom(onSuccess?: () => void) {
         if (manifest.agents?.length) {
           const agentRecords: GeneratedAgentRecord[] = manifest.agents.map((a, i) => ({
             id: newAgentIds[i],
+            userId,
             stageId: newStageId,
             name: a.name,
             role: a.role,
@@ -205,6 +211,7 @@ export function useImportClassroom(onSuccess?: () => void) {
 
           return {
             id: newSceneId,
+            userId,
             stageId: newStageId,
             type: mScene.type,
             title: mScene.title,
