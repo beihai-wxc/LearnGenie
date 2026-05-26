@@ -17,6 +17,7 @@ interface KnowledgeSearchResultsProps {
   title: string;
   query: string;
   results: KnowledgeSearchResult[];
+  matched?: boolean;
   autoContextSources?: string[];
   recommendedPath?: KnowledgeLearningPath | null;
   safetyNote?: string;
@@ -31,6 +32,8 @@ export function KnowledgeSearchResults({
   onOpenChange,
   title,
   query,
+  results,
+  matched = true,
   autoContextSources,
   recommendedPath,
   safetyNote,
@@ -54,13 +57,15 @@ export function KnowledgeSearchResults({
               <div>
                 <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300">
                   <BookOpen className="size-3.5" />
-                  知识库命中
+                  {matched ? '知识库命中' : '知识库检索'}
                 </div>
                 <h2 className="mt-3 text-xl font-semibold text-slate-900 dark:text-slate-50">
                   {title}
                 </h2>
                 <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                  已分析你的主题，并检索到可用于辅助生成课堂的相关知识资料：{query}
+                  {matched
+                    ? `已分析你的主题，并检索到可用于辅助生成课堂的相关知识资料：${query}`
+                    : `已分析你的主题，但未在知识库中找到足够匹配的资料：${query}`}
                 </p>
               </div>
               <button
