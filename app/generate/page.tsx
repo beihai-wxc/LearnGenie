@@ -24,7 +24,7 @@ import type { AgentWorkflowSnapshot } from '@/lib/agents/types';
 import { listStages } from '@/lib/utils/stage-storage';import { HomeHero } from '@/components/home/home-hero';
 import { KnowledgeSearchResults } from '@/components/knowledge/knowledge-search-results';
 import { Sidebar } from '@/components/sidebar/sidebar';
-import { ProtectedRoute } from '@/components/auth/protected-route';
+import ProtectedRoute from '@/components/auth/protected-route';
 
 const log = createLogger('GeneratePage');
 
