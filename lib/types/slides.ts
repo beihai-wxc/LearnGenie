@@ -635,6 +635,8 @@ export interface PPTVideoElement extends PPTBaseElement {
   autoplay: boolean;
   poster?: string;
   ext?: string;
+  /** mediaRef key into Stage.videoManifest for server-generated video tracking */
+  mediaRef?: string;
 }
 
 /**

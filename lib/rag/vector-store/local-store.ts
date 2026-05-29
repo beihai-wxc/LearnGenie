@@ -72,7 +72,7 @@ function hybridScore(
         }
       }
     }
-    keywordOverlap = hits / Math.min(chunk.keywords.length, queryTokens.size);
+    keywordOverlap = hits / Math.max(chunk.keywords.length, queryTokens.size);
   }
   return vectorSim * 0.7 + keywordOverlap * 0.3;
 }

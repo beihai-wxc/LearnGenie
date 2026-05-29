@@ -47,9 +47,42 @@ export function parseActionsFromStructuredOutput(
   // Step 1: Strip markdown code fences if present
   const cleaned = stripCodeFences(response.trim());
 
-  // Step 2: Find the JSON array range
+  // Step 2: Find the JSON array range using bracket-counting to skip brackets inside strings
   const startIdx = cleaned.indexOf('[');
-  const endIdx = cleaned.lastIndexOf(']');
+  let endIdx = -1;
+  if (startIdx >= 0) {
+    let depth = 0;
+    let inString = false;
+    let escape = false;
+    for (let i = startIdx; i < cleaned.length; i++) {
+      const ch = cleaned[i];
+      if (escape) {
+        escape = false;
+        continue;
+      }
+      if (ch === '\\' && inString) {
+        escape = true;
+        continue;
+      }
+      if (ch === '"') {
+        inString = !inString;
+        continue;
+      }
+      if (inString) continue;
+      if (ch === '[') depth++;
+      else if (ch === ']') {
+        depth--;
+        if (depth === 0) {
+          endIdx = i;
+          break;
+        }
+      }
+    }
+  }
+  // Fallback to simple lastIndexOf if bracket-counting didn't find a match
+  if (endIdx === -1) {
+    endIdx = cleaned.lastIndexOf(']');
+  }
 
   if (startIdx === -1) {
     log.warn('No JSON array found in response');

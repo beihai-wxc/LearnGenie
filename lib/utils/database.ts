@@ -206,6 +206,21 @@ export interface AccessHistoryRecord {
   accessCount: number;
 }
 
+/** VoxCPM voice profile stored in IndexedDB */
+export interface VoiceProfileRecord {
+  id: string;
+  providerId: string;
+  name: string;
+  kind?: 'prompt' | 'clone';
+  voicePrompt?: string;
+  promptText?: string;
+  referenceAudio?: Blob;
+  referenceAudioName?: string;
+  referenceAudioMimeType?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 /** Wrong-question collection record */
 export interface WrongQuestionRecord {
   id: string; // PK (nanoid)
@@ -236,7 +251,7 @@ export function mediaFileKey(stageId: string, elementId: string): string {
 // ==================== Database Definition ====================
 
 const DATABASE_NAME = 'MAIC-Database';
-const _DATABASE_VERSION = 13;
+const _DATABASE_VERSION = 14;
 
 /**
  * MAIC Database Instance
@@ -257,6 +272,7 @@ class MAICDatabase extends Dexie {
   categories!: EntityTable<BookshelfCategoryRecord, 'id'>;
   accessHistory!: EntityTable<AccessHistoryRecord, 'id'>;
   wrongQuestions!: EntityTable<WrongQuestionRecord, 'id'>;
+  voiceProfiles!: EntityTable<VoiceProfileRecord, 'id'>;
 
   constructor() {
     super(DATABASE_NAME);
@@ -473,6 +489,25 @@ class MAICDatabase extends Dexie {
       categories: 'id',
       accessHistory: 'id, type, targetId, updatedAt, [type+updatedAt]',
       wrongQuestions: 'id, stageId, chapterNumber, createdAt',
+    });
+
+    // Version 14: Add voiceProfiles table for VoxCPM TTS voice profiles
+    this.version(14).stores({
+      stages: 'id, updatedAt',
+      scenes: 'id, stageId, order, [stageId+order]',
+      audioFiles: 'id, createdAt',
+      imageFiles: 'id, createdAt',
+      snapshots: '++id',
+      chatSessions: 'id, stageId, [stageId+createdAt]',
+      playbackState: 'stageId',
+      stageOutlines: 'stageId',
+      mediaFiles: 'id, stageId, [stageId+type]',
+      generatedAgents: 'id, stageId',
+      bookshelf: 'id, type, category, createdAt',
+      categories: 'id',
+      accessHistory: 'id, type, targetId, updatedAt, [type+updatedAt]',
+      wrongQuestions: 'id, stageId, chapterNumber, createdAt',
+      voiceProfiles: 'id, providerId',
     });
   }
 }

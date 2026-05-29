@@ -372,34 +372,26 @@ export function useSceneGenerator(options: UseSceneGeneratorOptions = {}) {
 
           if (actionsResult.success && actionsResult.scene) {
             const scene = actionsResult.scene;
-            const settings = useSettingsStore.getState();
 
-            // TTS generation — failure means the whole scene fails
-            if (settings.ttsEnabled && settings.ttsProviderId !== 'browser-native-tts') {
-              const ttsResult = await generateTTSForScene(scene, signal);
-              if (!ttsResult.success) {
-                if (abortRef.current || store.getState().generationEpoch !== startEpoch) {
-                  pausedByFailureOrAbort = true;
-                  break;
-                }
-                store.getState().addFailedOutline(outline);
-                options.onSceneFailed?.(outline, ttsResult.error || 'TTS generation failed');
-                store.getState().setGenerationStatus('paused');
-                pausedByFailureOrAbort = true;
-                break;
-              }
-            }
-
-            // Epoch changed — stage switched, discard this scene
-            if (store.getState().generationEpoch !== startEpoch) {
-              pausedByFailureOrAbort = true;
-              break;
-            }
-
+            // Save scene immediately so epoch change won't discard it
             removeGeneratingOutline(outline.id);
             store.getState().addScene(scene);
             options.onSceneGenerated?.(scene, outline.order);
             previousSpeeches = actionsResult.previousSpeeches || [];
+
+            // TTS generation (non-blocking for scene, failure logged but scene kept)
+            const settings = useSettingsStore.getState();
+            if (settings.ttsEnabled && settings.ttsProviderId !== 'browser-native-tts') {
+              generateTTSForScene(scene, signal).catch((err) => {
+                log.warn('TTS generation failed for scene:', scene.id, err);
+              });
+            }
+
+            // Epoch changed — stage switched, stop generating more but keep this scene
+            if (store.getState().generationEpoch !== startEpoch) {
+              pausedByFailureOrAbort = true;
+              break;
+            }
           } else {
             if (abortRef.current || store.getState().generationEpoch !== startEpoch) {
               pausedByFailureOrAbort = true;

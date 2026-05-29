@@ -115,7 +115,22 @@ export class PlaybackEngine {
 
   /** Restore playback position from a snapshot */
   restoreFromSnapshot(snapshot: PlaybackSnapshot): void {
-    this.sceneIndex = snapshot.sceneIndex;
+    // Validate sceneId against current scenes to prevent stale-position jumps
+    if (snapshot.sceneId && this.scenes.length > 0) {
+      const resolvedIndex = this.scenes.findIndex((s) => s.id === snapshot.sceneId);
+      if (resolvedIndex >= 0) {
+        this.sceneIndex = resolvedIndex;
+        this.actionIndex = snapshot.actionIndex;
+        this.consumedDiscussions = new Set(snapshot.consumedDiscussions);
+        return;
+      }
+      // sceneId not found — fall through to index-based restore
+      log.warn(
+        `Snapshot sceneId "${snapshot.sceneId}" not found in current stage, using index-based restore`,
+      );
+    }
+
+    this.sceneIndex = Math.min(snapshot.sceneIndex, Math.max(this.scenes.length - 1, 0));
     this.actionIndex = snapshot.actionIndex;
     this.consumedDiscussions = new Set(snapshot.consumedDiscussions);
   }

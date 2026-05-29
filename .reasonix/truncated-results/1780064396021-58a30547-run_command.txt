@@ -1,0 +1,188 @@
+$ npx tsc --noEmit 2>&1 | more
+[exit 0]
+app/api/agent/evaluate/route.ts(24,7): error TS2322: Type '{ viewedResourceTypes?: string[] | undefined; completedQuiz?: boolean | undefined; selfReportedUnderstanding?: "high" | "low" | "medium" | undefined; freeformFeedback?: string | undefined; }' is not assignable to type 'EvaluationAgentInput'.
+  Types of property 'viewedResourceTypes' are incompatible.
+    Type 'string[] | undefined' is not assignable to type 'AgentResourceType[] | undefined'.
+      Type 'string[]' is not assignable to type 'AgentResourceType[]'.
+        Type 'string' is not assignable to type 'AgentResourceType'.
+app/api/knowledge/match-upload/route.ts(43,72): error TS2345: Argument of type '{ nickname?: string | undefined; bio?: string | undefined; learningProfile?: { [x: string]: unknown; knowledgeFoundation?: { [x: string]: unknown; score?: number | undefined; description?: string | undefined; } | undefined; ... 6 more ...; interactionPreference?: { ...; } | undefined; } | undefined; } | undefined' is not assignable to parameter of type 'KnowledgeSearchProfileContext | undefined'.
+  Type '{ nickname?: string | undefined; bio?: string | undefined; learningProfile?: { [x: string]: unknown; knowledgeFoundation?: { [x: string]: unknown; score?: number | undefined; description?: string | undefined; } | undefined; ... 6 more ...; interactionPreference?: { ...; } | undefined; } | undefined; }' is not assignable to type 'KnowledgeSearchProfileContext'.
+    Types of property 'learningProfile' are incompatible.
+      Type '{ [x: string]: unknown; knowledgeFoundation?: { [x: string]: unknown; score?: number | undefined; description?: string | undefined; } | undefined; cognitiveStyle?: { [x: string]: unknown; score?: number | undefined; description?: string | undefined; } | undefined; ... 5 more ...; interactionPreference?: { ...; } | u...' is not assignable to type 'StudentProfileDimensions | undefined'.
+        Type '{ [x: string]: unknown; knowledgeFoundation?: { [x: string]: unknown; score?: number | undefined; description?: string | undefined; } | undefined; cognitiveStyle?: { [x: string]: unknown; score?: number | undefined; description?: string | undefined; } | undefined; ... 5 more ...; interactionPreference?: { ...; } | u...' is not assignable to type 'StudentProfileDimensions'.
+          Types of property 'knowledgeFoundation' are incompatible.
+            Type '{ [x: string]: unknown; score?: number | undefined; description?: string | undefined; } | undefined' is not assignable to type 'KnowledgeFoundation'.
+              Type 'undefined' is not assignable to type 'KnowledgeFoundation'.
+app/api/knowledge/search/route.ts(44,69): error TS2345: Argument of type '{ nickname?: string | undefined; bio?: string | undefined; learningProfile?: { [x: string]: unknown; knowledgeFoundation?: { [x: string]: unknown; score?: number | undefined; description?: string | undefined; } | undefined; ... 6 more ...; interactionPreference?: { ...; } | undefined; } | undefined; } | undefined' is not assignable to parameter of type 'KnowledgeSearchProfileContext | undefined'.
+  Type '{ nickname?: string | undefined; bio?: string | undefined; learningProfile?: { [x: string]: unknown; knowledgeFoundation?: { [x: string]: unknown; score?: number | undefined; description?: string | undefined; } | undefined; ... 6 more ...; interactionPreference?: { ...; } | undefined; } | undefined; }' is not assignable to type 'KnowledgeSearchProfileContext'.
+    Types of property 'learningProfile' are incompatible.
+      Type '{ [x: string]: unknown; knowledgeFoundation?: { [x: string]: unknown; score?: number | undefined; description?: string | undefined; } | undefined; cognitiveStyle?: { [x: string]: unknown; score?: number | undefined; description?: string | undefined; } | undefined; ... 5 more ...; interactionPreference?: { ...; } | u...' is not assignable to type 'StudentProfileDimensions | undefined'.
+        Type '{ [x: string]: unknown; knowledgeFoundation?: { [x: string]: unknown; score?: number | undefined; description?: string | undefined; } | undefined; cognitiveStyle?: { [x: string]: unknown; score?: number | undefined; description?: string | undefined; } | undefined; ... 5 more ...; interactionPreference?: { ...; } | u...' is not assignable to type 'StudentProfileDimensions'.
+          Types of property 'knowledgeFoundation' are incompatible.
+            Type '{ [x: string]: unknown; score?: number | undefined; description?: string | undefined; } | undefined' is not assignable to type 'KnowledgeFoundation'.
+              Type 'undefined' is not assignable to type 'KnowledgeFoundation'.
+DeepTutor/DeepTutor-main/web/app/(admin)/admin/users/page.tsx(5,33): error TS2307: Cannot find module '@/lib/auth' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(admin)/admin/users/page.tsx(12,8): error TS2307: Cannot find module '@/lib/admin-api' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(admin)/admin/users/page.tsx(13,29): error TS2307: Cannot find module '@/features/multi-user/components/GrantEditor' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(admin)/admin/users/page.tsx(67,29): error TS7006: Parameter 'status' implicitly has an 'any' type.
+DeepTutor/DeepTutor-main/web/app/(auth)/login/page.tsx(6,58): error TS2307: Cannot find module '@/lib/auth' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(auth)/login/page.tsx(22,29): error TS7006: Parameter 'status' implicitly has an 'any' type.
+DeepTutor/DeepTutor-main/web/app/(auth)/login/page.tsx(28,32): error TS7006: Parameter 'first' implicitly has an 'any' type.
+DeepTutor/DeepTutor-main/web/app/(auth)/register/page.tsx(6,61): error TS2307: Cannot find module '@/lib/auth' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(auth)/register/page.tsx(21,29): error TS7006: Parameter 'status' implicitly has an 'any' type.
+DeepTutor/DeepTutor-main/web/app/(auth)/register/page.tsx(26,30): error TS7006: Parameter 'first' implicitly has an 'any' type.
+DeepTutor/DeepTutor-main/web/app/(utility)/knowledge/page.tsx(5,27): error TS2307: Cannot find module '@/components/knowledge/KnowledgePage' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(utility)/layout.tsx(1,28): error TS2307: Cannot find module '@/components/sidebar/UtilitySidebar' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(utility)/notebook/page.tsx(32,8): error TS2307: Cannot find module '@/lib/notebook-api' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(utility)/notebook/page.tsx(35,16): error TS2307: Cannot find module '@/components/common/MarkdownRenderer' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(utility)/notebook/page.tsx(240,32): error TS18047: 'renamingCat' is possibly 'null'.
+DeepTutor/DeepTutor-main/web/app/(utility)/notebook/page.tsx(242,42): error TS2345: Argument of type '{ name: string; id?: number | undefined; }' is not assignable to parameter of type 'SetStateAction<{ id: number; name: string; } | null>'.
+  Type '{ name: string; id?: number | undefined; }' is not assignable to type '{ id: number; name: string; }'.
+    Types of property 'id' are incompatible.
+      Type 'number | undefined' is not assignable to type 'number'.
+        Type 'undefined' is not assignable to type 'number'.
+DeepTutor/DeepTutor-main/web/app/(utility)/notebook/page.tsx(439,27): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+DeepTutor/DeepTutor-main/web/app/(utility)/notebook/page.tsx(523,31): error TS2322: Type 'unknown' is not assignable to type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>'.
+DeepTutor/DeepTutor-main/web/app/(utility)/notebook/page.tsx(565,33): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: string; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: string; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+DeepTutor/DeepTutor-main/web/app/(utility)/notebook/page.tsx(571,33): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+DeepTutor/DeepTutor-main/web/app/(utility)/notebook/page.tsx(591,33): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+DeepTutor/DeepTutor-main/web/app/(utility)/notebook/page.tsx(603,33): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+DeepTutor/DeepTutor-main/web/app/(utility)/notebook/page.tsx(626,27): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+DeepTutor/DeepTutor-main/web/app/(utility)/settings/page.tsx(26,37): error TS2307: Cannot find module '@/context/app-shell-storage' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(utility)/settings/page.tsx(27,36): error TS2307: Cannot find module '@/features/multi-user/components/ModelAccessSummary' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(utility)/settings/page.tsx(28,34): error TS2307: Cannot find module '@/features/multi-user/types' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(utility)/settings/page.tsx(29,34): error TS2307: Cannot find module '@/lib/api' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(utility)/settings/page.tsx(30,50): error TS2307: Cannot find module '@/lib/theme' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(utility)/space/chat-history/page.tsx(1,32): error TS2307: Cannot find module '@/components/space/ChatHistorySection' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(utility)/space/layout.tsx(1,26): error TS2307: Cannot find module '@/components/space/SpaceMiniNav' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(utility)/space/memory/page.tsx(1,27): error TS2307: Cannot find module '@/components/space/MemorySection' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(utility)/space/notebooks/page.tsx(1,30): error TS2307: Cannot find module '@/components/space/NotebooksSection' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(utility)/space/questions/page.tsx(1,33): error TS2307: Cannot find module '@/components/space/QuestionBankSection' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(utility)/space/skills/page.tsx(1,27): error TS2307: Cannot find module '@/components/space/SkillsSection' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/agents/[botId]/chat/page.tsx(8,31): error TS2307: Cannot find module '@/lib/api' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/agents/[botId]/chat/page.tsx(9,28): error TS2307: Cannot find module '@/lib/route-params' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/agents/[botId]/chat/page.tsx(10,31): error TS2307: Cannot find module '@/components/common/AssistantResponse' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/agents/[botId]/chat/page.tsx(11,37): error TS2307: Cannot find module '@/components/chat/home/SimpleComposerInput' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/agents/[botId]/chat/page.tsx(12,38): error TS2307: Cannot find module '@/lib/chat-export' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/agents/[botId]/chat/page.tsx(16,8): error TS2307: Cannot find module '@/lib/message-content' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/agents/[botId]/chat/page.tsx(17,34): error TS2307: Cannot find module '@/context/UnifiedChatContext' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/agents/[botId]/chat/page.tsx(21,8): error TS2307: Cannot find module '@/components/notebook/SaveToNotebookModal' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/agents/[botId]/chat/page.tsx(24,16): error TS2307: Cannot find module '@/components/notebook/SaveToNotebookModal' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/agents/[botId]/chat/page.tsx(388,9): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ open: boolean; payload: any; messages: NotebookSaveMessage[]; onClose: () => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'open' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ open: boolean; payload: any; messages: NotebookSaveMessage[]; onClose: () => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'open' does not exist on type 'IntrinsicAttributes'.
+DeepTutor/DeepTutor-main/web/app/(workspace)/agents/page.tsx(24,34): error TS2307: Cannot find module '@/lib/api' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/agents/page.tsx(25,27): error TS2307: Cannot find module '@/components/chat/home/ModelSelector' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/agents/page.tsx(30,8): error TS2307: Cannot find module '@/lib/llm-options' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/agents/page.tsx(31,35): error TS2307: Cannot find module '@/lib/unified-ws' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/agents/page.tsx(34,16): error TS2307: Cannot find module '@/components/common/MarkdownRenderer' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/agents/page.tsx(1278,30): error TS7006: Parameter 'selection' implicitly has an 'any' type.
+DeepTutor/DeepTutor-main/web/app/(workspace)/agents/page.tsx(1743,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: string; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: string; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/AnimationBlock.tsx(6,30): error TS2307: Cannot find module '@/components/common/MarkdownRenderer' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/AnimationBlock.tsx(7,24): error TS2307: Cannot find module '@/lib/api' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/AnimationBlock.tsx(8,28): error TS2307: Cannot find module '@/lib/book-types' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/BlockRenderer.tsx(14,39): error TS2307: Cannot find module '@/lib/book-types' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/BlockRenderer.tsx(15,30): error TS2307: Cannot find module '@/components/common/MarkdownRenderer' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/CalloutBlock.tsx(9,28): error TS2307: Cannot find module '@/lib/book-types' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/CodeBlock.tsx(3,30): error TS2307: Cannot find module '@/components/common/MarkdownRenderer' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/CodeBlock.tsx(4,28): error TS2307: Cannot find module '@/lib/book-types' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/ConceptGraphBlock.tsx(8,30): error TS2307: Cannot find module '@/components/common/MarkdownRenderer' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/ConceptGraphBlock.tsx(9,42): error TS2307: Cannot find module '@/lib/book-types' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/ConceptGraphBlock.tsx(79,45): error TS7006: Parameter 'n' implicitly has an 'any' type.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/DeepDiveBlock.tsx(6,28): error TS2307: Cannot find module '@/lib/book-types' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/FigureBlock.tsx(3,33): error TS2307: Cannot find module '@/components/visualize/VisualizationViewer' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/FigureBlock.tsx(4,30): error TS2307: Cannot find module '@/components/common/MarkdownRenderer' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/FigureBlock.tsx(6,28): error TS2307: Cannot find module '@/lib/book-types' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/FigureBlock.tsx(10,8): error TS2307: Cannot find module '@/lib/visualize-types' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/FlashCardsBlock.tsx(6,28): error TS2307: Cannot find module '@/lib/book-types' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/InteractiveBlock.tsx(3,33): error TS2307: Cannot find module '@/components/visualize/VisualizationViewer' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/InteractiveBlock.tsx(4,30): error TS2307: Cannot find module '@/components/common/MarkdownRenderer' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/InteractiveBlock.tsx(6,28): error TS2307: Cannot find module '@/lib/book-types' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/InteractiveBlock.tsx(7,38): error TS2307: Cannot find module '@/lib/visualize-types' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/PlaceholderBlock.tsx(5,28): error TS2307: Cannot find module '@/lib/book-types' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/QuizBlock.tsx(7,30): error TS2307: Cannot find module '@/components/common/MarkdownRenderer' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/QuizBlock.tsx(8,28): error TS2307: Cannot find module '@/lib/book-types' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/QuizBlock.tsx(13,8): error TS2307: Cannot find module '@/lib/quiz-question-type' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/SectionBlock.tsx(5,30): error TS2307: Cannot find module '@/components/common/MarkdownRenderer' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/SectionBlock.tsx(6,28): error TS2307: Cannot find module '@/lib/book-types' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/TextBlock.tsx(3,30): error TS2307: Cannot find module '@/components/common/MarkdownRenderer' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/TextBlock.tsx(4,28): error TS2307: Cannot find module '@/lib/book-types' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/TimelineBlock.tsx(3,28): error TS2307: Cannot find module '@/lib/book-types' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/UserNoteBlock.tsx(5,30): error TS2307: Cannot find module '@/components/common/MarkdownRenderer' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/blocks/UserNoteBlock.tsx(6,28): error TS2307: Cannot find module '@/lib/book-types' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookChatPanel.tsx(19,31): error TS2307: Cannot find module '@/components/common/AssistantResponse' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookChatPanel.tsx(20,29): error TS2307: Cannot find module '@/context/AppShellContext' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookChatPanel.tsx(21,28): error TS2307: Cannot find module '@/lib/session-api' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookChatPanel.tsx(28,8): error TS2307: Cannot find module '@/lib/doc-attachments' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookChatPanel.tsx(32,8): error TS2307: Cannot find module '@/lib/file-attachments' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookChatPanel.tsx(33,37): error TS2307: Cannot find module '@/lib/composer-keyboard' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookChatPanel.tsx(34,42): error TS2307: Cannot find module '@/lib/stream' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookChatPanel.tsx(39,8): error TS2307: Cannot find module '@/lib/unified-ws' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookChatPanel.tsx(40,40): error TS2307: Cannot find module '@/context/UnifiedChatContext' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookChatPanel.tsx(41,33): error TS2307: Cannot find module '@/lib/book-types' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookChatPanel.tsx(155,14): error TS7006: Parameter 'session' implicitly has an 'any' type.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookChatPanel.tsx(158,20): error TS7006: Parameter 'm' implicitly has an 'any' type.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookChatPanel.tsx(159,17): error TS7006: Parameter 'm' implicitly has an 'any' type.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookCreator.tsx(18,29): error TS2307: Cannot find module '@/context/AppShellContext' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookCreator.tsx(19,35): error TS2307: Cannot find module '@/lib/book-types' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookCreator.tsx(23,8): error TS2307: Cannot find module '@/lib/knowledge-api' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookCreator.tsx(33,8): error TS2307: Cannot find module '@/lib/notebook-api' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookCreator.tsx(39,8): error TS2307: Cannot find module '@/lib/session-api' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookHealthBanner.tsx(6,25): error TS2307: Cannot find module '@/lib/book-api' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookLibrary.tsx(19,39): error TS2307: Cannot find module '@/lib/book-types' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookProgressTimeline.tsx(15,55): error TS2307: Cannot find module '@/lib/book-progress' or its corresponding type declarations.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookProgressTimeline.tsx(181,19): error TS7006: Parameter 'id' implicitly has an 'any' type.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookProgressTimeline.tsx(211,25): error TS7006: Parameter 'id' implicitly has an 'any' type.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookProgressTimeline.tsx(213,26): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ readonly pending: { readonly fg: "text-[var(--muted-foreground)]"; readonly bg: "bg-[var(--muted)]/40"; readonly ring: "ring-[var(--border)]"; readonly bar: "bg-[var(--border)]"; }; readonly running: { ...; }; readonly completed: { ...; }; readonly error: { ...; }; }'.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookProgressTimeline.tsx(251,25): error TS7006: Parameter 'id' implicitly has an 'any' type.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookProgressTimeline.tsx(253,26): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ readonly pending: { readonly fg: "text-[var(--muted-foreground)]"; readonly bg: "bg-[var(--muted)]/40"; readonly ring: "ring-[var(--border)]"; readonly bar: "bg-[var(--border)]"; }; readonly running: { ...; }; readonly completed: { ...; }; readonly error: { ...; }; }'.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookProgressTimeline.tsx(329,25): error TS7006: Parameter 'id' implicitly has an 'any' type.
+DeepTutor/DeepTutor-main/web/app/(workspace)/book/components/BookProgressTimeline.tsx(331,26): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ readonly pending: { readonly fg: "text-[var(--muted-foreground)]"; readonly bg: "bg-[var(--muted)]/40"; readonly ring: "ring-[var(--border)]"; readonly bar: "bg-[var(--border)]"; }; readonly running: { ...; }
+
+[… truncated 224000 chars …]

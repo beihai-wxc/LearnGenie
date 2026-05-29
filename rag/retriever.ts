@@ -88,6 +88,8 @@ export type SearchKnowledgeResult = {
 const EMPTY_FILE_CONTENT = '[]\n';
 
 let retrieverState: KnowledgeRetrieverState | null = null;
+/** Promise-based lock to prevent concurrent index builds */
+let retrieverStatePromise: Promise<KnowledgeRetrieverState> | null = null;
 
 type MarkdownKnowledgeSource = {
   titleKey: string;
@@ -279,7 +281,7 @@ async function readDocumentFile(
     );
   }
 
-  return parsed.map((doc) => ({
+  return (parsed as KnowledgeDocument[]).map((doc) => ({
     ...doc,
     sourceType,
     sourceLabel:
@@ -575,7 +577,13 @@ async function ensureRetrieverState(options: BuildKnowledgeIndexOptions = {}) {
     return retrieverState;
   }
 
-  await ensureKnowledgeAssets();
+  // Prevent concurrent index builds: if a build is already in-flight, await it
+  if (retrieverStatePromise && !options.force) {
+    return retrieverStatePromise;
+  }
+
+  retrieverStatePromise = (async () => {
+    await ensureKnowledgeAssets();
 
   const documents = await loadDocumentsFromStore();
   const sourceSignature = computeSourceSignature(documents);
@@ -604,16 +612,19 @@ async function ensureRetrieverState(options: BuildKnowledgeIndexOptions = {}) {
     }
   }
 
-  const chunks = documents.flatMap((document) => chunkDocument(document));
-  const metadata = await writeIndexFiles(documents, chunks);
-  retrieverState = {
-    documents,
-    chunks,
-    documentMap: new Map(documents.map((doc) => [doc.docId, doc])),
-    chunksByDocId: buildChunkMap(chunks),
-    metadata,
-  };
-  return retrieverState;
+    const chunks = documents.flatMap((document) => chunkDocument(document));
+    const metadata = await writeIndexFiles(documents, chunks);
+    retrieverState = {
+      documents,
+      chunks,
+      documentMap: new Map(documents.map((doc) => [doc.docId, doc])),
+      chunksByDocId: buildChunkMap(chunks),
+      metadata,
+    };
+    return retrieverState;
+  })();
+
+  return retrieverStatePromise;
 }
 
 function overlapScore(left: string[], right: string[]) {
@@ -685,7 +696,7 @@ export async function searchKnowledgeIndex(query: string, topK = 5): Promise<Sea
     return [];
   }
 
-  return state.documents
+  const results: (SearchKnowledgeResult | null)[] = state.documents
     .map((doc) => {
       const normalizedTitle = normalizeText(doc.title);
       const titleMatch =
@@ -763,6 +774,7 @@ export async function searchKnowledgeIndex(query: string, topK = 5): Promise<Sea
         topChunks,
       };
     })
+  return results
     .filter((result): result is SearchKnowledgeResult => result !== null)
     .sort((a, b) => b.score - a.score)
     .slice(0, topK);

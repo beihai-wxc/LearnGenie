@@ -905,6 +905,27 @@ export const TTS_PROVIDERS: Record<BuiltInTTSProviderId, TTSProviderConfig> = {
     speedRange: { min: 0.7, max: 1.2, default: 1.0 },
   },
 
+  'voxcpm-tts': {
+    id: 'voxcpm-tts',
+    name: 'VoxCPM2',
+    requiresApiKey: false,
+    defaultBaseUrl: 'http://localhost:8000/v1',
+    icon: '/logos/voxcpm-icon.png',
+    models: [{ id: 'voxcpm2', name: 'VoxCPM2' }],
+    defaultModelId: 'voxcpm2',
+    voices: [
+      {
+        id: 'voxcpm:auto',
+        name: 'Auto Voice',
+        language: 'multi',
+        gender: 'neutral',
+        description: 'AI-generated voice from agent persona at synthesis time',
+      },
+    ],
+    supportedFormats: ['wav'],
+    speedRange: { min: 0.5, max: 2.0, default: 1.0 },
+  },
+
   'browser-native-tts': {
     id: 'browser-native-tts',
     name: '浏览器原生 (Web Speech API)',
@@ -1133,6 +1154,7 @@ export const DEFAULT_TTS_VOICES: Record<BuiltInTTSProviderId, string> = {
   'doubao-tts': 'zh_female_vv_uranus_bigtts',
   'elevenlabs-tts': 'EXAVITQu4vr4xnSDxMaL',
   'minimax-tts': 'female-yujie',
+  'voxcpm-tts': 'voxcpm:auto',
   'browser-native-tts': 'default',
 };
 
@@ -1144,6 +1166,7 @@ export const DEFAULT_TTS_MODELS: Record<BuiltInTTSProviderId, string> = {
   'doubao-tts': '',
   'elevenlabs-tts': 'eleven_multilingual_v2',
   'minimax-tts': 'speech-2.8-hd',
+  'voxcpm-tts': 'voxcpm2',
   'browser-native-tts': '',
 };
 

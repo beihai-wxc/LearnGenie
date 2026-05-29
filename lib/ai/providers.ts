@@ -34,6 +34,12 @@ import type {
   ModelConfig,
   ThinkingConfig,
 } from '@/lib/types/provider';
+import { applyModelMetadata, getCatalogThinkingCapability } from './model-metadata';
+import {
+  getDefaultThinkingConfig,
+  getThinkingMode,
+  pickThinkingBudget,
+} from './thinking-config';
 import { createLogger } from '@/lib/logger';
 // NOTE: Do NOT import thinking-context.ts here — it uses node:async_hooks
 // which is server-only, and this file is also used on the client via
@@ -60,6 +66,28 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
     requiresApiKey: true,
     icon: '/logos/openai.svg',
     models: [
+      {
+        id: 'gpt-5.5',
+        name: 'GPT-5.5',
+        contextWindow: 400000,
+        outputWindow: 128000,
+        capabilities: {
+          streaming: true,
+          tools: true,
+          vision: true,
+        },
+      },
+      {
+        id: 'gpt-5.4-pro',
+        name: 'GPT-5.4 Pro',
+        contextWindow: 400000,
+        outputWindow: 128000,
+        capabilities: {
+          streaming: true,
+          tools: true,
+          vision: true,
+        },
+      },
       {
         id: 'gpt-5.4',
         name: 'GPT-5.4',
@@ -286,6 +314,17 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
     icon: '/logos/claude.svg',
     models: [
       {
+        id: 'claude-opus-4-7',
+        name: 'Claude Opus 4.7',
+        contextWindow: 200000,
+        outputWindow: 128000,
+        capabilities: {
+          streaming: true,
+          tools: true,
+          vision: true,
+        },
+      },
+      {
         id: 'claude-opus-4-6',
         name: 'Claude Opus 4.6',
         contextWindow: 200000,
@@ -360,6 +399,17 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
     defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
     icon: '/logos/gemini.svg',
     models: [
+      {
+        id: 'gemini-3.5-flash',
+        name: 'Gemini 3.5 Flash',
+        contextWindow: 1048576,
+        outputWindow: 65536,
+        capabilities: {
+          streaming: true,
+          tools: true,
+          vision: true,
+        },
+      },
       {
         id: 'gemini-3.1-pro-preview',
         name: 'Gemini 3.1 Pro Preview',
@@ -563,6 +613,34 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
     icon: '/logos/qwen.svg',
     models: [
       {
+        id: 'qwen3.6-max-preview',
+        name: 'Qwen3.6 Max Preview',
+        contextWindow: 262144,
+        outputWindow: 65536,
+        capabilities: { streaming: true, tools: true, vision: false },
+      },
+      {
+        id: 'qwen3.6-plus',
+        name: 'Qwen3.6 Plus',
+        contextWindow: 1000000,
+        outputWindow: 65536,
+        capabilities: { streaming: true, tools: true, vision: true },
+      },
+      {
+        id: 'qwen3.6-flash',
+        name: 'Qwen3.6 Flash',
+        contextWindow: 1000000,
+        outputWindow: 65536,
+        capabilities: { streaming: true, tools: true, vision: true },
+      },
+      {
+        id: 'qwen3.6-35b-a3b',
+        name: 'Qwen3.6 35B-A3B',
+        contextWindow: 1000000,
+        outputWindow: 65536,
+        capabilities: { streaming: true, tools: true, vision: true },
+      },
+      {
         id: 'qwen3.5-flash',
         name: 'Qwen3.5 Flash',
         contextWindow: 1000000,
@@ -601,6 +679,28 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
     requiresApiKey: true,
     icon: '/logos/deepseek.svg',
     models: [
+      {
+        id: 'deepseek-v4-pro',
+        name: 'DeepSeek-V4 Pro',
+        contextWindow: 200000,
+        outputWindow: 128000,
+        capabilities: {
+          streaming: true,
+          tools: true,
+          vision: false,
+        },
+      },
+      {
+        id: 'deepseek-v4-flash',
+        name: 'DeepSeek-V4 Flash',
+        contextWindow: 200000,
+        outputWindow: 128000,
+        capabilities: {
+          streaming: true,
+          tools: true,
+          vision: false,
+        },
+      },
       {
         id: 'deepseek-chat',
         name: 'DeepSeek-Chat',
@@ -648,6 +748,18 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
     requiresApiKey: true,
     icon: '/logos/kimi.png',
     models: [
+      // K2.6 Series (2026)
+      {
+        id: 'kimi-k2.6',
+        name: 'Kimi K2.6',
+        contextWindow: 256000,
+        outputWindow: 8192,
+        capabilities: {
+          streaming: true,
+          tools: true,
+          vision: true,
+        },
+      },
       // K2.5 Series (2026) - 1T MoE, 32B active parameters
       {
         id: 'kimi-k2.5',
@@ -1030,6 +1142,162 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
     ],
   },
 
+  openrouter: {
+    id: 'openrouter',
+    name: 'OpenRouter',
+    type: 'openai',
+    defaultBaseUrl: 'https://openrouter.ai/api/v1',
+    requiresApiKey: true,
+    icon: '/logos/openrouter.svg',
+    models: [
+      {
+        id: 'deepseek/deepseek-v4-pro',
+        name: 'DeepSeek V4 Pro (OpenRouter)',
+        contextWindow: 200000,
+        outputWindow: 128000,
+        capabilities: { streaming: true, tools: true, vision: false },
+      },
+      {
+        id: 'deepseek/deepseek-v4-flash',
+        name: 'DeepSeek V4 Flash (OpenRouter)',
+        contextWindow: 200000,
+        outputWindow: 128000,
+        capabilities: { streaming: true, tools: true, vision: false },
+      },
+      {
+        id: 'anthropic/claude-sonnet-4-6',
+        name: 'Claude Sonnet 4.6 (OpenRouter)',
+        contextWindow: 200000,
+        outputWindow: 128000,
+        capabilities: { streaming: true, tools: true, vision: true },
+      },
+      {
+        id: 'openai/gpt-5.5',
+        name: 'GPT-5.5 (OpenRouter)',
+        contextWindow: 400000,
+        outputWindow: 128000,
+        capabilities: { streaming: true, tools: true, vision: true },
+      },
+      {
+        id: 'google/gemini-3-flash-preview',
+        name: 'Gemini 3 Flash (OpenRouter)',
+        contextWindow: 1048576,
+        outputWindow: 65536,
+        capabilities: { streaming: true, tools: true, vision: true },
+      },
+    ],
+  },
+
+  'tencent-hunyuan': {
+    id: 'tencent-hunyuan',
+    name: 'Tencent Hunyuan',
+    type: 'openai',
+    defaultBaseUrl: 'https://api.hunyuan.cloud.tencent.com/v1',
+    requiresApiKey: true,
+    icon: '/logos/hunyuan.svg',
+    models: [
+      {
+        id: 'hy3-preview',
+        name: 'Hunyuan HY3 Preview',
+        contextWindow: 200000,
+        outputWindow: 65536,
+        capabilities: { streaming: true, tools: true, vision: false },
+      },
+      {
+        id: 'hunyuan-2.0-instruct-20251111',
+        name: 'Hunyuan 2.0 Instruct',
+        contextWindow: 200000,
+        outputWindow: 65536,
+        capabilities: { streaming: true, tools: true, vision: false },
+      },
+    ],
+  },
+
+  xiaomi: {
+    id: 'xiaomi',
+    name: 'Xiaomi MiMo',
+    type: 'openai',
+    defaultBaseUrl: 'https://api.xiaomimimo.com/v1',
+    requiresApiKey: true,
+    icon: '/logos/xiaomi.svg',
+    models: [
+      {
+        id: 'mimo-v2.5-pro',
+        name: 'MiMo V2.5 Pro',
+        contextWindow: 256000,
+        outputWindow: 16384,
+        capabilities: { streaming: true, tools: true, vision: true },
+      },
+      {
+        id: 'mimo-v2-pro',
+        name: 'MiMo V2 Pro',
+        contextWindow: 256000,
+        outputWindow: 16384,
+        capabilities: { streaming: true, tools: true, vision: true },
+      },
+      {
+        id: 'mimo-v2.5',
+        name: 'MiMo V2.5',
+        contextWindow: 256000,
+        outputWindow: 16384,
+        capabilities: { streaming: true, tools: true, vision: false },
+      },
+      {
+        id: 'mimo-v2-omni',
+        name: 'MiMo V2 Omni',
+        contextWindow: 256000,
+        outputWindow: 16384,
+        capabilities: { streaming: true, tools: true, vision: true },
+      },
+      {
+        id: 'mimo-v2-flash',
+        name: 'MiMo V2 Flash',
+        contextWindow: 256000,
+        outputWindow: 16384,
+        capabilities: { streaming: true, tools: true, vision: false },
+      },
+    ],
+  },
+
+  lemonade: {
+    id: 'lemonade',
+    name: 'Lemonade',
+    type: 'openai',
+    defaultBaseUrl: 'http://localhost:13305/v1',
+    requiresApiKey: false,
+    icon: '/logos/lemonade.svg',
+    models: [
+      {
+        id: 'Qwen3-4B-GGUF',
+        name: 'Qwen3 4B GGUF',
+        contextWindow: 32768,
+        outputWindow: 4096,
+        capabilities: { streaming: true, tools: true, vision: false },
+      },
+      {
+        id: 'Qwen3.5-4B-GGUF',
+        name: 'Qwen3.5 4B GGUF',
+        contextWindow: 32768,
+        outputWindow: 4096,
+        capabilities: { streaming: true, tools: true, vision: false },
+      },
+      {
+        id: 'gpt-oss-20b',
+        name: 'GPT-OSS 20B',
+        contextWindow: 32768,
+        outputWindow: 4096,
+        capabilities: { streaming: true, tools: true, vision: false },
+      },
+      {
+        id: 'GPT-OSS-20B-GGUF',
+        name: 'GPT-OSS 20B GGUF',
+        contextWindow: 32768,
+        outputWindow: 4096,
+        capabilities: { streaming: true, tools: true, vision: false },
+      },
+    ],
+  },
+
   ollama: {
     id: 'ollama',
     name: 'Ollama',
@@ -1098,6 +1366,11 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
   },
 };
 
+// Apply thinking capability metadata from model-metadata.ts to all provider models.
+// This runs at module load time and annotates each model.capabilities.thinking
+// with the full ThinkingCapability (control, requestAdapter, effort values, etc.).
+applyModelMetadata(PROVIDERS);
+
 /**
  * Get provider config (from built-in or unified config in localStorage)
  */
@@ -1148,37 +1421,119 @@ export interface ModelWithInfo {
  */
 function getCompatThinkingBodyParams(
   providerId: ProviderId,
+  modelId: string,
   config: ThinkingConfig,
 ): Record<string, unknown> | undefined {
-  if (config.enabled === false) {
-    switch (providerId) {
-      // Kimi / DeepSeek / GLM use { thinking: { type: "disabled" } }
-      case 'kimi':
-      case 'deepseek':
-      case 'glm':
+  const capability = getCatalogThinkingCapability(providerId, modelId);
+  if (!capability || capability.control === 'none') return undefined;
+
+  const mode = getThinkingMode(config);
+  const budget = pickThinkingBudget(capability, config);
+
+  switch (capability.requestAdapter) {
+    case 'kimi':
+    case 'glm':
+    case 'xiaomi':
+      if (mode === 'disabled') return { thinking: { type: 'disabled' } };
+      if (mode === 'enabled') return { thinking: { type: 'enabled' } };
+      return undefined;
+
+    case 'deepseek': {
+      if (mode === 'disabled' || config.effort === 'none') {
         return { thinking: { type: 'disabled' } };
-      // Qwen / SiliconFlow use { enable_thinking: false }
-      case 'qwen':
-      case 'siliconflow':
-        return { enable_thinking: false };
-      default:
-        return undefined;
+      }
+
+      const effort = config.effort === 'max' || config.effort === 'xhigh' ? 'max' : 'high';
+      return {
+        thinking: { type: 'enabled' },
+        reasoning_effort: effort,
+      };
     }
-  }
-  if (config.enabled === true) {
-    switch (providerId) {
-      case 'kimi':
-      case 'deepseek':
-      case 'glm':
-        return { thinking: { type: 'enabled' } };
-      case 'qwen':
-      case 'siliconflow':
-        return { enable_thinking: true };
-      default:
-        return undefined;
+
+    case 'qwen': {
+      if (mode === 'disabled') return { enable_thinking: false };
+      const body: Record<string, unknown> = {};
+      if (mode === 'enabled') body.enable_thinking = true;
+      if (budget !== undefined) body.thinking_budget = budget;
+      return Object.keys(body).length > 0 ? body : undefined;
     }
+
+    case 'siliconflow': {
+      const body: Record<string, unknown> = {};
+      if (capability.control === 'toggle-budget') {
+        if (mode === 'disabled') body.enable_thinking = false;
+        if (mode === 'enabled') body.enable_thinking = true;
+      }
+      if (budget !== undefined) body.thinking_budget = budget;
+      return Object.keys(body).length > 0 ? body : undefined;
+    }
+
+    case 'doubao': {
+      if (capability.control === 'effort') {
+        const effort =
+          mode === 'disabled'
+            ? 'minimal'
+            : config.effort && capability.effortValues?.includes(config.effort)
+              ? config.effort
+              : mode === 'enabled'
+                ? capability.defaultEffort
+                : undefined;
+        return effort ? { reasoning_effort: effort } : undefined;
+      }
+      if (mode === 'auto') return { thinking: { type: 'auto' } };
+      if (mode === 'disabled') return { thinking: { type: 'disabled' } };
+      if (mode === 'enabled') return { thinking: { type: 'enabled' } };
+      return undefined;
+    }
+
+    case 'openrouter': {
+      const reasoning: Record<string, unknown> = {};
+      if (mode === 'disabled') reasoning.enabled = false;
+      if (mode === 'enabled') reasoning.enabled = true;
+      if (config.effort) reasoning.effort = config.effort;
+      if (budget !== undefined) reasoning.max_tokens = budget;
+      if (typeof config.excludeReasoningOutput === 'boolean') {
+        reasoning.exclude = config.excludeReasoningOutput;
+      }
+      return Object.keys(reasoning).length > 0 ? { reasoning } : undefined;
+    }
+
+    case 'hunyuan': {
+      let reasoningEffort: 'no_think' | 'low' | 'high' | undefined;
+      if (mode === 'disabled' || config.effort === 'none') {
+        reasoningEffort = 'no_think';
+      } else if (config.effort === 'high' || config.effort === 'max' || config.effort === 'xhigh') {
+        reasoningEffort = 'high';
+      } else if (
+        config.effort === 'low' ||
+        config.effort === 'medium' ||
+        config.effort === 'minimal'
+      ) {
+        reasoningEffort = 'low';
+      } else if (mode === 'enabled') {
+        reasoningEffort = capability.defaultEffort === 'high' ? 'high' : 'low';
+      }
+      return reasoningEffort
+        ? { chat_template_kwargs: { reasoning_effort: reasoningEffort } }
+        : undefined;
+    }
+
+    case 'lemonade': {
+      const chatTemplateKwargs: Record<string, unknown> = {};
+      if (mode === 'enabled') {
+        chatTemplateKwargs.enable_thinking = true;
+      } else {
+        chatTemplateKwargs.enable_thinking = false;
+      }
+      if (mode === 'enabled' && budget !== undefined) {
+        chatTemplateKwargs.thinking_budget = budget;
+      }
+      return { chat_template_kwargs: chatTemplateKwargs };
+    }
+
+    default:
+      return undefined;
   }
-  return undefined;
 }
 
 function normalizeMiniMaxAnthropicBaseUrl(
@@ -1251,17 +1606,26 @@ export function getModel(config: ModelConfig): ModelWithInfo {
       // callLLM / streamLLM at call time.
       if (config.providerId !== 'openai') {
         const providerId = config.providerId;
-        openaiOptions.fetch = async (url: RequestInfo | URL, init?: RequestInit) => {
+        const modelId = config.modelId;
+        const compatFetch = async (url: RequestInfo | URL, init?: RequestInit) => {
           // Read thinking config from globalThis (set by thinking-context.ts)
           const thinkingCtx = (globalThis as Record<string, unknown>).__thinkingContext as
             | { getStore?: () => unknown }
             | undefined;
-          const thinking = thinkingCtx?.getStore?.() as ThinkingConfig | undefined;
+          const thinkingFromContext = thinkingCtx?.getStore?.() as ThinkingConfig | undefined;
+          const thinking =
+            thinkingFromContext ??
+            (providerId === 'lemonade'
+              ? getDefaultThinkingConfig(getCatalogThinkingCapability(providerId, modelId))
+              : undefined);
           if (thinking && init?.body && typeof init.body === 'string') {
-            const extra = getCompatThinkingBodyParams(providerId, thinking);
+            const extra = getCompatThinkingBodyParams(providerId, modelId, thinking);
             if (extra) {
               try {
                 const body = JSON.parse(init.body);
+                if (providerId === 'lemonade' && 'stream_options' in body) {
+                  delete body.stream_options;
+                }
                 Object.assign(body, extra);
                 init = { ...init, body: JSON.stringify(body) };
               } catch {
@@ -1269,8 +1633,35 @@ export function getModel(config: ModelConfig): ModelWithInfo {
               }
             }
           }
-          return globalThis.fetch(url, init);
+          const response = await globalThis.fetch(url, init);
+
+          if (providerId !== 'lemonade') {
+            return response;
+          }
+
+          const contentType = response.headers.get('content-type') || '';
+          let isStreamingRequest = false;
+          if (init?.body && typeof init.body === 'string') {
+            try {
+              const body = JSON.parse(init.body);
+              isStreamingRequest = !!body.stream || !!body.stream_options;
+            } catch {
+              /* ignore */
+            }
+          }
+
+          if (
+            !response.ok &&
+            isStreamingRequest &&
+            (contentType.includes('text/plain') || contentType.includes('text/html'))
+          ) {
+            const errorText = await response.text().catch(() => 'Unknown error');
+            throw new Error(`Lemonade API error (${response.status}): ${errorText.slice(0, 500)}`);
+          }
+
+          return response;
         };
+        openaiOptions.fetch = compatFetch as typeof fetch;
       }
 
       const openai = createOpenAI(openaiOptions);

@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     const body = requestSchema.parse(await req.json());
     const result = runEvaluationAgent({
       currentProfile: body.currentProfile as never,
-      evaluation: body.evaluation,
+      evaluation: body.evaluation as never,
     });
     return apiSuccess({ result });
   } catch (error) {

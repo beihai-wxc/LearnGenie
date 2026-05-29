@@ -40,7 +40,7 @@ const requestSchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     const body = requestSchema.parse(await req.json());
-    const result = await matchUploadedKnowledge(body.text, body.title, body.profileContext);
+    const result = await matchUploadedKnowledge(body.text, body.title, body.profileContext as never);
     return apiSuccess({ ...result });
   } catch (error) {
     log.error('Upload match failed:', error);

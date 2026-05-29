@@ -14,6 +14,23 @@ import { buildVirtualWhiteboardContext } from './summarizers/whiteboard-ledger';
 import { buildPeerContextSection } from './summarizers/peer-context';
 import { buildPrompt, PROMPT_IDS } from '@/lib/prompts';
 
+// ─── Input Sanitization ──────────────────────────────────────────
+
+/** Maximum characters allowed for user-provided prompt values */
+const MAX_PROMPT_VALUE_LENGTH = 200;
+
+/**
+ * Sanitize a user-provided value before embedding it in an LLM system prompt.
+ * Strips newlines, collapses whitespace, and truncates to prevent prompt injection.
+ */
+function sanitizePromptValue(value: string): string {
+  return value
+    .replace(/[\n\r\t]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, MAX_PROMPT_VALUE_LENGTH);
+}
+
 // ==================== Role Guidelines ====================
 
 const ROLE_GUIDELINES: Record<string, string> = {
@@ -90,13 +107,15 @@ function buildStudentProfileSection(
 
   let section = `\n# Student Profile\n`;
   if (userProfile?.nickname) {
-    section += `You are teaching ${userProfile.nickname}.\n`;
+    const safeNickname = sanitizePromptValue(userProfile.nickname);
+    section += `You are teaching ${safeNickname}.\n`;
   } else {
     section += `You are teaching a student.\n`;
   }
 
   if (userProfile?.bio) {
-    section += `Their background: ${userProfile.bio}\n`;
+    const safeBio = sanitizePromptValue(userProfile.bio);
+    section += `Their background: ${safeBio}\n`;
   }
 
   if (hasProfile && userProfile.learningProfile) {

@@ -1,0 +1,570 @@
+  Type '{ name: string; id?: number | undefined; }' is not assignable to type '{ id: number; name: string; }'.
+    Types of property 'id' are incompatible.
+      Type 'number | undefined' is not assignable to type 'number'.
+        Type 'undefined' is not assignable to type 'number'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: string; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: string; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ open: boolean; payload: any; messages: NotebookSaveMessage[]; onClose: () => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'open' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ open: boolean; payload: any; messages: NotebookSaveMessage[]; onClose: () => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'open' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: string; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: string; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ open: boolean; onClose: () => void; onApply: (records: SelectedRecord[]) => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'open' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ open: boolean; onClose: () => void; onApply: (records: SelectedRecord[]) => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'open' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ open: boolean; initialReferences: SelectedBookReference[]; onClose: () => void; onApply: (references: SelectedBookReference[]) => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'open' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ open: boolean; initialReferences: SelectedBookReference[]; onClose: () => void; onApply: (references: SelectedBookReference[]) => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'open' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ open: boolean; onClose: () => void; onApply: (sessions: SelectedHistorySession[]) => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'open' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ open: boolean; onClose: () => void; onApply: (sessions: SelectedHistorySession[]) => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'open' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ open: boolean; onClose: () => void; onApply: (entries: SelectedQuestionEntry[]) => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'open' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ open: boolean; onClose: () => void; onApply: (entries: SelectedQuestionEntry[]) => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'open' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ open: boolean; initialAuto: boolean; initialSkills: string[]; onClose: () => void; onApply: (selection: { auto: boolean; skills: string[]; }) => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'open' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ open: boolean; initialAuto: boolean; initialSkills: string[]; onClose: () => void; onApply: (selection: { auto: boolean; skills: string[]; }) => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'open' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ open: boolean; initialFiles: SpaceMemoryFile[]; onClose: () => void; onApply: (files: SpaceMemoryFile[]) => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'open' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ open: boolean; initialFiles: SpaceMemoryFile[]; onClose: () => void; onApply: (files: SpaceMemoryFile[]) => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'open' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ open: boolean; payload: { recordType: "chat"; title: any; userQuery: string; output: string; metadata: { source: string; capability: any; ui_language: any; session_id: any; total_message_count: any; }; } | null; messages: any; onClose: () => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'open' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ open: boolean; payload: { recordType: "chat"; title: any; userQuery: string; output: string; metadata: { source: string; capability: any; ui_language: any; session_id: any; total_message_count: any; }; } | null; messages: any; onClose: () => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'open' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: string; variant: string; trackSourceLines: true; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: string; variant: string; trackSourceLines: true; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: string; variant: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: string; variant: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: string; variant: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: string; variant: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: string; variant: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: string; variant: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ value: DeepQuestionFormConfig; onChange: (next: DeepQuestionFormConfig) => void; uploadedPdf: File | null; onUploadPdf: (file: File | null) => void; collapsed: boolean; onToggleCollapsed: () => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'value' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ value: DeepQuestionFormConfig; onChange: (next: DeepQuestionFormConfig) => void; uploadedPdf: File | null; onUploadPdf: (file: File | null) => void; collapsed: boolean; onToggleCollapsed: () => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'value' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ value: MathAnimatorFormConfig; onChange: (next: MathAnimatorFormConfig) => void; collapsed: boolean; onToggleCollapsed: () => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'value' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ value: MathAnimatorFormConfig; onChange: (next: MathAnimatorFormConfig) => void; collapsed: boolean; onToggleCollapsed: () => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'value' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ value: VisualizeFormConfig; onChange: (next: VisualizeFormConfig) => void; collapsed: boolean; onToggleCollapsed: () => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'value' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ value: VisualizeFormConfig; onChange: (next: VisualizeFormConfig) => void; collapsed: boolean; onToggleCollapsed: () => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'value' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ value: DeepResearchFormConfig; errors: Record<string, string>; collapsed: boolean; onChange: (next: DeepResearchFormConfig) => void; onToggleCollapsed: () => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'value' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ value: DeepResearchFormConfig; errors: Record<string, string>; collapsed: boolean; onChange: (next: DeepResearchFormConfig) => void; onToggleCollapsed: () => void; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'value' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ outline: { title: string; overview: string; }[]; topic: string; onConfirm: (items: any) => void | undefined; status: "done" | "researching" | "editing" | undefined; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'outline' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ outline: { title: string; overview: string; }[]; topic: string; onConfirm: (items: any) => void | undefined; status: "done" | "researching" | "editing" | undefined; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'outline' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ result: any; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'result' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ result: any; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'result' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ result: any; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'result' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ result: any; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'result' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ questions: any; sessionId: string | null | undefined; language: string | undefined; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'questions' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ questions: any; sessionId: string | null | undefined; language: string | undefined; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'questions' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ raw: string; lang: any; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'raw' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ raw: string; lang: any; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'raw' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ chart: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'chart' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ chart: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'chart' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ logs: any; executing: any; title: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'logs' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ logs: any; executing: any; title: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'logs' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ filename: any; url: null; reason: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'filename' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ filename: any; url: null; reason: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'filename' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ filename: any; extractedText: any; url: any; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'filename' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ filename: any; extractedText: any; url: any; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'filename' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ url: any; filename: any; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'url' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ url: any; filename: any; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'url' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ url: any; filename: any; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'url' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ url: any; filename: any; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'url' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ url: any; filename: any; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'url' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ url: any; filename: any; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'url' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ url: any; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'url' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ url: any; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'url' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ url: any; filename: any; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'url' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ url: any; filename: any; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'url' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ filename: any; url: any; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'filename' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ filename: any; url: any; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'filename' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ logs: any; executing: any; title: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'logs' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ logs: any; executing: any; title: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'logs' does not exist on type 'IntrinsicAttributes'.
+  The file is in the program because:
+    Imported via '@/components/ui/tooltip' from file 'E:/MY_Project/LearnGenie/components/canvas/canvas-toolbar.tsx'
+    Imported via '@/components/ui/tooltip' from file 'E:/MY_Project/LearnGenie/components/agent/agent-bar.tsx'
+    Imported via '@/components/ui/tooltip' from file 'E:/MY_Project/LearnGenie/components/audio/speech-button.tsx'
+    Imported via '@/components/ui/tooltip' from file 'E:/MY_Project/LearnGenie/components/ai-elements/message.tsx'
+    Imported via '@/components/ui/tooltip' from file 'E:/MY_Project/LearnGenie/components/sidebar/sidebar.tsx'
+    Imported via '@/components/ui/tooltip' from file 'E:/MY_Project/LearnGenie/components/bookshelf/bookshelf-card.tsx'
+    Imported via '@/components/ui/tooltip' from file 'E:/MY_Project/LearnGenie/components/home/home-prompt-bar.tsx'
+    Imported via '@/components/ui/tooltip' from file 'E:/MY_Project/LearnGenie/app/generation-preview/page.tsx'
+    Imported via '@/components/ui/tooltip' from file 'E:/MY_Project/LearnGenie/components/ai-elements/artifact.tsx'
+    Imported via '@/components/ui/tooltip' from file 'E:/MY_Project/LearnGenie/components/ai-elements/checkpoint.tsx'
+    Imported via '@/components/ui/tooltip' from file 'E:/MY_Project/LearnGenie/components/ai-elements/web-preview.tsx'
+    Imported via '@/components/ui/tooltip' from file 'E:/MY_Project/LearnGenie/components/audio/tts-config-popover.tsx'
+    Imported via '@/components/ui/tooltip' from file 'E:/MY_Project/LearnGenie/components/home/home-classroom-showcase.tsx'
+    Matched by include pattern '**/*.tsx' in 'E:/MY_Project/LearnGenie/tsconfig.json'
+  Property 'label' does not exist on type 'IntrinsicAttributes & TooltipProps'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: string; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: string; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: string; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: string; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Type '{ name: string; id?: number | undefined; }' is not assignable to type '{ id: number; name: string; }'.
+    Types of property 'id' are incompatible.
+      Type 'number | undefined' is not assignable to type 'number'.
+        Type 'undefined' is not assignable to type 'number'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: string; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: string; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 1 of 2, '(props: {}, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Overload 2 of 2, '(props: {}): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...> | null | undefined', gave the following error.
+    Type '{ content: any; variant: string; className: string; }' is not assignable to type 'IntrinsicAttributes'.
+      Property 'content' does not exist on type 'IntrinsicAttributes'.
+  Property 'alwaysReview' does not exist on type 'IntrinsicAttributes & OutlinesEditorProps'.
+  Property 'initialSection' does not exist on type 'IntrinsicAttributes & SettingsDialogProps'.
+  Property 'webSearch' does not exist on type 'IntrinsicAttributes & GenerationToolbarProps'.
+  Property 'isCourseComplete' does not exist on type 'IntrinsicAttributes & CanvasAreaProps'.
+    Types of property 'status' are incompatible.
+        Type '"error"' is not assignable to type 'SessionStatus'.
+  Types of property 'elements' are incompatible.
+        Type 'PPTShapeElement' is not assignable to type 'PPTElement'.
+            Types of property 'pathFormula' are incompatible.
+                Type 'ShapePathFormulasKeys.ROUND_RECT' is not assignable to type 'ShapePathFormulasKeys | undefined'. Did you mean 'ShapePathFormulasKeys.CUT_ROUND_RECT'?
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'boolean'.
+  Type 'undefined' is not assignable to type 'CHART_NAME'.
+  Type 'undefined' is not assignable to type 'string | number'.
+  Type 'undefined' is not assignable to type 'string | ShapeFillProps | ShapeLineProps'.
+  Type 'undefined' is not assignable to type 'string | number'.
+  Type 'undefined' is not assignable to type 'string | ShapeFillProps | ShapeLineProps'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string | number'.
+  Type 'undefined' is not assignable to type 'ChartLineCap'.
+  Type 'null' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string | number'.
+  Type 'undefined' is not assignable to type 'ChartLineCap'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'ShadowProps'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'ShadowProps'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string | number'.
+  Type 'undefined' is not assignable to type 'ChartLineCap'.
+  Type 'undefined' is not assignable to type 'ShadowProps'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'ShadowProps'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string | number'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string | number'.
+  Type 'undefined' is not assignable to type 'ShadowProps'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'ShadowProps'.
+  Type 'undefined' is not assignable to type 'string | number'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'ShadowProps'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'OptsChartGridLine'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+  No index signature with a parameter of type 'string' was found on type 'IChartOptsLib'.
+  No index signature with a parameter of type 'string' was found on type 'IChartOptsLib'.
+  No index signature with a parameter of type 'string' was found on type 'IChartOptsLib'.
+  No index signature with a parameter of type 'string' was found on type 'IChartOptsLib'.
+  Type 'undefined' is not assignable to type 'OptsChartGridLine'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'OptsChartGridLine'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+  No index signature with a parameter of type 'string' was found on type 'IChartOptsLib'.
+  No index signature with a parameter of type 'string' was found on type 'IChartOptsLib'.
+  No index signature with a parameter of type 'string' was found on type 'IChartOptsLib'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string | number'.
+  Type 'undefined' is not assignable to type 'string | number'.
+  Type 'undefined' is not assignable to type 'string | number'.
+  Type 'undefined' is not assignable to type 'ChartLineCap'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+  Overload 1 of 3, '(path: PathOrFileDescriptor, options?: { encoding?: null | undefined; flag?: string | undefined; } | null | undefined): NonSharedBuffer', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'PathOrFileDescriptor'.
+      Type 'undefined' is not assignable to type 'PathOrFileDescriptor'.
+  Overload 2 of 3, '(path: PathOrFileDescriptor, options?: BufferEncoding | (ObjectEncodingOptions & { flag?: string | undefined; }) | null | undefined): string | NonSharedBuffer', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'PathOrFileDescriptor'.
+      Type 'undefined' is not assignable to type 'PathOrFileDescriptor'.
+  Overload 1 of 2, '(options: string | URL | RequestOptions, callback?: ((res: IncomingMessage) => void) | undefined): ClientRequest', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | URL | RequestOptions'.
+      Type 'undefined' is not assignable to type 'string | URL | RequestOptions'.
+  Overload 2 of 2, '(url: string | URL, options: RequestOptions, callback?: ((res: IncomingMessage) => void) | undefined): ClientRequest', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | URL'.
+      Type 'undefined' is not assignable to type 'string | URL'.
+  Type 'undefined' is not assignable to type 'string | URL'.
+  No index signature with a parameter of type 'string' was found on type 'typeof MASTER_OBJECTS'.
+  Property 'chart' does not exist on type '{ chart: IChartOpts; } | { image: ImageProps; } | { line: ShapeProps; } | { rect: ShapeProps; } | { text: TextProps; } | { placeholder: { ...; }; }'.
+  Property 'chart' does not exist on type '{ chart: IChartOpts; } | { image: ImageProps; } | { line: ShapeProps; } | { rect: ShapeProps; } | { text: TextProps; } | { placeholder: { ...; }; }'.
+  Property 'chart' does not exist on type '{ chart: IChartOpts; } | { image: ImageProps; } | { line: ShapeProps; } | { rect: ShapeProps; } | { text: TextProps; } | { placeholder: { ...; }; }'.
+  No index signature with a parameter of type 'string' was found on type 'typeof MASTER_OBJECTS'.
+  Property 'image' does not exist on type '{ chart: IChartOpts; } | { image: ImageProps; } | { line: ShapeProps; } | { rect: ShapeProps; } | { text: TextProps; } | { placeholder: { ...; }; }'.
+  No index signature with a parameter of type 'string' was found on type 'typeof MASTER_OBJECTS'.
+  Property 'line' does not exist on type '{ chart: IChartOpts; } | { image: ImageProps; } | { line: ShapeProps; } | { rect: ShapeProps; } | { text: TextProps; } | { placeholder: { ...; }; }'.
+  No index signature with a parameter of type 'string' was found on type 'typeof MASTER_OBJECTS'.
+  Property 'rect' does not exist on type '{ chart: IChartOpts; } | { image: ImageProps; } | { line: ShapeProps; } | { rect: ShapeProps; } | { text: TextProps; } | { placeholder: { ...; }; }'.
+  No index signature with a parameter of type 'string' was found on type 'typeof MASTER_OBJECTS'.
+  Property 'text' does not exist on type '{ chart: IChartOpts; } | { image: ImageProps; } | { line: ShapeProps; } | { rect: ShapeProps; } | { text: TextProps; } | { placeholder: { ...; }; }'.
+  Property 'text' does not exist on type '{ chart: IChartOpts; } | { image: ImageProps; } | { line: ShapeProps; } | { rect: ShapeProps; } | { text: TextProps; } | { placeholder: { ...; }; }'.
+  No index signature with a parameter of type 'string' was found on type 'typeof MASTER_OBJECTS'.
+  Property 'placeholder' does not exist on type '{ chart: IChartOpts; } | { image: ImageProps; } | { line: ShapeProps; } | { rect: ShapeProps; } | { text: TextProps; } | { placeholder: { ...; }; }'.
+  Property 'placeholder' does not exist on type '{ chart: IChartOpts; } | { image: ImageProps; } | { line: ShapeProps; } | { rect: ShapeProps; } | { text: TextProps; } | { placeholder: { ...; }; }'.
+  Property 'placeholder' does not exist on type '{ chart: IChartOpts; } | { image: ImageProps; } | { line: ShapeProps; } | { rect: ShapeProps; } | { text: TextProps; } | { placeholder: { ...; }; }'.
+  Property 'placeholder' does not exist on type '{ chart: IChartOpts; } | { image: ImageProps; } | { line: ShapeProps; } | { rect: ShapeProps; } | { text: TextProps; } | { placeholder: { ...; }; }'.
+  Property 'placeholder' does not exist on type '{ chart: IChartOpts; } | { image: ImageProps; } | { line: ShapeProps; } | { rect: ShapeProps; } | { text: TextProps; } | { placeholder: { ...; }; }'.
+  Property 'placeholder' does not exist on type '{ chart: IChartOpts; } | { image: ImageProps; } | { line: ShapeProps; } | { rect: ShapeProps; } | { text: TextProps; } | { placeholder: { ...; }; }'.
+  Property 'placeholder' does not exist on type '{ chart: IChartOpts; } | { image: ImageProps; } | { line: ShapeProps; } | { rect: ShapeProps; } | { text: TextProps; } | { placeholder: { ...; }; }'.
+  Property 'placeholder' does not exist on type '{ chart: IChartOpts; } | { image: ImageProps; } | { line: ShapeProps; } | { rect: ShapeProps; } | { text: TextProps; } | { placeholder: { ...; }; }'.
+  Property 'placeholder' does not exist on type '{ chart: IChartOpts; } | { image: ImageProps; } | { line: ShapeProps; } | { rect: ShapeProps; } | { text: TextProps; } | { placeholder: { ...; }; }'.
+  Type 'IOptsChartData[]' is not assignable to type 'IChartOptsLib'.
+    Types of property 'fill' are incompatible.
+      Type '(value: IOptsChartData, start?: number | undefined, end?: number | undefined) => IOptsChartData[]' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+  No index signature with a parameter of type 'string' was found on type 'PositionProps'.
+  No index signature with a parameter of type 'string' was found on type 'PositionProps'.
+  Type 'undefined' is not assignable to type 'ShadowProps'.
+  Type 'undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+  Type 'null' is not assignable to type 'number | undefined'.
+  Type 'null' is not assignable to type 'BorderProps | undefined'.
+  Type 'null' is not assignable to type 'BorderProps | undefined'.
+  Type '{ color: null; transparency: null; }' is not assignable to type 'ShapeFillProps'.
+    Types of property 'color' are incompatible.
+      Type 'null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'BorderProps | undefined'.
+  Type 'null' is not assignable to type 'BorderProps | undefined'.
+  Type 'null' is not assignable to type 'number | undefined'.
+  Types of property '_type' are incompatible.
+    Type 'null' is not assignable to type 'SLIDE_OBJECT_TYPES'.
+  Type 'null' is not assignable to type '{ type: "cover" | "contain" | "crop"; w: Coord; h: Coord; x?: Coord | undefined; y?: Coord | undefined; } | undefined'.
+  Type 'undefined' is not assignable to type 'ShadowProps'.
+  Type 'undefined' is not assignable to type 'Coord'.
+  Type 'undefined' is not assignable to type 'Coord'.
+  Type 'null' is not assignable to type '"none" | "triangle" | "arrow" | "diamond" | "oval" | "stealth" | undefined'.
+  Type 'null' is not assignable to type '"none" | "triangle" | "arrow" | "diamond" | "oval" | "stealth" | undefined'.
+  Property '0' does not exist on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  Property '0' does not exist on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  Property '1' does not exist on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  Property '1' does not exist on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  Property '2' does not exist on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  Property '2' does not exist on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  Property '3' does not exist on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  Property '3' does not exist on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  No index signature with a parameter of type 'number' was found on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  No index signature with a parameter of type 'number' was found on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  No index signature with a parameter of type 'number' was found on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  No index signature with a parameter of type 'number' was found on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  No index signature with a parameter of type 'number' was found on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  No index signature with a parameter of type 'number' was found on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  No index signature with a parameter of type 'number' was found on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  No index signature with a parameter of type 'number' was found on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  No index signature with a parameter of type 'number' was found on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  No index signature with a parameter of type 'number' was found on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  Type 'null' is not assignable to type 'string | undefined'.
+  Type '{ text: string; options: null; }[]' is not assignable to type 'TextProps[]'.
+    Type '{ text: string; options: null; }' is not assignable to type 'TextProps'.
+      Types of property 'options' are incompatible.
+        Type 'null' is not assignable to type 'TextPropsOptions | undefined'.
+  Type 'null' is not assignable to type '"none" | "triangle" | "arrow" | "diamond" | "oval" | "stealth" | undefined'.
+  Type 'null' is not assignable to type '"none" | "triangle" | "arrow" | "diamond" | "oval" | "stealth" | undefined'.
+  Type 'null' is not assignable to type 'number | undefined'.
+  Type 'null' is not assignable to type 'number | undefined'.
+  Type 'null' is not assignable to type 'TEXT_VALIGN | undefined'.
+  Type 'null' is not assignable to type '"eaVert" | "horz" | "mongolianVert" | "vert" | "vert270" | "wordArtVert" | "wordArtVertRtl" | undefined'.
+  Type 'undefined' is not assignable to type 'ShadowProps'.
+  Type 'undefined' is not assignable to type 'ObjectOptions'.
+  Type 'undefined' is not assignable to type 'TextPropsOptions'.
+  Type 'null' is not assignable to type 'string | ArrayBuffer | undefined'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'Coord'.
+  Type 'undefined' is not assignable to type 'Coord'.
+  Type 'undefined' is not assignable to type 'Coord'.
+  Type 'undefined' is not assignable to type 'Coord'.
+  Property '0' does not exist on type 'Margin'.
+  Property '0' does not exist on type 'Margin'.
+  Property '0' does not exist on type 'Margin'.
+  Property '0' does not exist on type 'Margin'.
+  Property '0' does not exist on type 'Margin'.
+  Property '0' does not exist on type 'Margin'.
+  Property '0' does not exist on type 'Margin'.
+  Property '2' does not exist on type 'Margin'.
+  Property '2' does not exist on type 'Margin'.
+  Property '2' does not exist on type 'Margin'.
+  Property '2' does not exist on type 'Margin'.
+  Property '2' does not exist on type 'Margin'.
+  Property '2' does not exist on type 'Margin'.
+  Property '0' does not exist on type 'Margin'.
+  Property '0' does not exist on type 'Margin'.
+  Property '0' does not exist on type 'Margin'.
+  Property '0' does not exist on type 'Margin'.
+  Property '0' does not exist on type 'Margin'.
+  Property '0' does not exist on type 'Margin'.
+  Property '2' does not exist on type 'Margin'.
+  Property '2' does not exist on type 'Margin'.
+  Property '2' does not exist on type 'Margin'.
+  Property '2' does not exist on type 'Margin'.
+  Property '2' does not exist on type 'Margin'.
+  Property '2' does not exist on type 'Margin'.
+  Type 'null' is not assignable to type 'number | undefined'.
+  No index signature with a parameter of type 'number' was found on type 'number | number[]'.
+  Type 'undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'TableCell[]'.
+  Type 'null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'number | undefined'.
+  Type 'null' is not assignable to type 'number | undefined'.
+  Type 'null' is not assignable to type 'HAlign | undefined'.
+  Type 'null' is not assignable to type 'VAlign | undefined'.
+  No index signature with a parameter of type 'number' was found on type 'Margin'.
+  No index signature with a parameter of type 'number' was found on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  Type 'TableCell[] | undefined' is not assignable to type 'TableRow'.
+    Type 'undefined' is not assignable to type 'TableCell[]'.
+  Type 'undefined' is not assignable to type 'TableCell[]'.
+  Type 'undefined' is not assignable to type 'TableCell[]'.
+  Type 'undefined' is not assignable to type 'TableCell[]'.
+  Type 'null' is not assignable to type 'string | undefined'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'TableCell[][]'.
+  Type 'null' is not assignable to type 'TableCellProps'.
+  No index signature with a parameter of type 'string' was found on type '{ rowSpan: number | undefined; gridSpan: number | undefined; vMerge: number | undefined; hMerge: number | undefined; }'.
+  No index signature with a parameter of type 'string' was found on type 'ObjectOptions'.
+  No index signature with a parameter of type 'string' was found on type 'TableCellProps'.
+  No index signature with a parameter of type 'string' was found on type 'TableCellProps'.
+  No index signature with a parameter of type 'string' was found on type 'TableCellProps'.
+  No index signature with a parameter of type 'string' was found on type 'ObjectOptions'.
+  No index signature with a parameter of type 'number' was found on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  No index signature with a parameter of type 'number' was found on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  No index signature with a parameter of type 'number' was found on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  No index signature with a parameter of type 'number' was found on type 'BorderProps | [BorderProps, BorderProps, BorderProps, BorderProps]'.
+  Type 'undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'Coord'.
+  Type 'undefined' is not assignable to type 'Coord'.
+  Type 'undefined' is not assignable to type 'TextPropsOptions | ObjectOptions'.
+  Type 'undefined' is not assignable to type 'TextPropsOptions | ObjectOptions'.
+  No index signature with a parameter of type 'string' was found on type 'TextPropsOptions'.
+  No index signature with a parameter of type 'string' was found on type 'TextPropsOptions'.
+  Property 'pic' does not exist on type 'typeof PLACEHOLDER_TYPES'.
+  Property 'pic' does not exist on type 'typeof PLACEHOLDER_TYPES'.
+  No index signature with a parameter of type 'string' was found on type 'typeof PLACEHOLDER_TYPES'.
+  Type 'null' is not assignable to type 'string | undefined'.
+  Overload 1 of 4, '(path: string, data: null, options?: (JSZipFileOptions & { dir: true; }) | undefined): JSZip', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'null'.
+      Type 'undefined' is not assignable to type 'null'.
+  Overload 2 of 4, '(path: string, data: string | number[] | ArrayBuffer | Uint8Array<ArrayBufferLike> | Blob | ReadableStream | Promise<...>, options?: JSZipFileOptions | undefined): JSZip', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number[] | ArrayBuffer | Uint8Array<ArrayBufferLike> | Blob | ReadableStream | Promise<string | number[] | ArrayBuffer | Uint8Array<...> | Blob | ReadableStream>'.
+      Type 'undefined' is not assignable to type 'string | number[] | ArrayBuffer | Uint8Array<ArrayBufferLike> | Blob | ReadableStream | Promise<string | number[] | ArrayBuffer | Uint8Array<...> | Blob | ReadableStream>'.
+  Type 'null' is not assignable to type 'WRITE_OUTPUT_TYPE | undefined'.
+  Type 'null' is not assignable to type 'WRITE_OUTPUT_TYPE | undefined'.
+  Type 'null' is not assignable to type 'SlideLayout | undefined'.
+  Type 'null' is not assignable to type 'SlideLayout'.
+  Type 'null' is not assignable to type 'SlideNumberProps'.
+  Type 'undefined' is not assignable to type 'IChartOptsLib'.
+  Type 'undefined' is not assignable to type 'ShapeProps'.
+  Type 'undefined' is not assignable to type 'TableProps'.
+  Type 'undefined' is not assignable to type 'TextPropsOptions'.

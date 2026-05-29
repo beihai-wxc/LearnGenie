@@ -101,8 +101,9 @@ async function directorNode(
   state: OrchestratorStateType,
   config: LangGraphRunnableConfig,
 ): Promise<Partial<OrchestratorStateType>> {
-  const rawWrite = config.writer as (chunk: StatelessEvent) => void;
+  const rawWrite = config.writer as ((chunk: StatelessEvent) => void) | undefined;
   const write = (chunk: StatelessEvent) => {
+    if (!rawWrite) return; // Non-streaming invocation — silently skip
     try {
       rawWrite(chunk);
     } catch {
@@ -189,8 +190,19 @@ async function directorNode(
 
     const decision = parseDirectorDecision(content);
 
+    if (decision.parseError) {
+      write({
+        type: 'error',
+        data: {
+          message: 'Director failed to parse LLM response — ending discussion',
+          code: 'DIRECTOR_PARSE_ERROR',
+          recoverable: false,
+        },
+      });
+    }
+
     if (decision.shouldEnd || !decision.nextAgentId) {
-      log.info('[Director] Decision: END');
+      log.info('[Director] Decision: END' + (decision.parseError ? ' (parse error)' : ''));
       return { shouldEnd: true };
     }
 
@@ -221,6 +233,14 @@ async function directorNode(
     };
   } catch (error) {
     log.error('[Director] Error:', error);
+    write({
+      type: 'error',
+      data: {
+        message: error instanceof Error ? error.message : 'Director LLM call failed',
+        code: 'DIRECTOR_ERROR',
+        recoverable: false,
+      },
+    });
     return { shouldEnd: true };
   }
 }
@@ -249,8 +269,9 @@ async function runAgentGeneration(
     throw new Error(`Agent not found: ${agentId}`);
   }
 
-  const rawWrite = config.writer as (chunk: StatelessEvent) => void;
+  const rawWrite = config.writer as ((chunk: StatelessEvent) => void) | undefined;
   const write = (chunk: StatelessEvent) => {
+    if (!rawWrite) return; // Non-streaming invocation — silently skip
     try {
       rawWrite(chunk);
     } catch (e) {

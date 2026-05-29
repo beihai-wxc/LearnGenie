@@ -41,7 +41,7 @@ const requestSchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     const body = requestSchema.parse(await req.json());
-    const result = await searchKnowledgeBase(body.query, body.topK, body.profileContext);
+    const result = await searchKnowledgeBase(body.query, body.topK, body.profileContext as never);
     return apiSuccess({ ...result });
   } catch (error) {
     log.error('Knowledge search failed:', error);

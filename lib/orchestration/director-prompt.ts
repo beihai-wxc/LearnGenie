@@ -12,6 +12,16 @@ import type { WhiteboardActionRecord, AgentTurnSummary } from './types';
 
 const log = createLogger('DirectorPrompt');
 
+const MAX_PROMPT_STRING_LENGTH = 200;
+
+function sanitizePromptString(value: string): string {
+  return value
+    .replace(/[\n\r\t]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, MAX_PROMPT_STRING_LENGTH);
+}
+
 /**
  * Build the system prompt for the director agent
  *
@@ -62,8 +72,8 @@ This is a student-initiated discussion, not a Q&A session.\n`
     userProfile?.nickname || userProfile?.bio
       ? `
 # Student Profile
-Student name: ${userProfile.nickname || 'Unknown'}
-${userProfile.bio ? `Background: ${userProfile.bio}` : ''}
+Student name: ${sanitizePromptString(userProfile.nickname || 'Unknown')}
+${userProfile.bio ? `Background: ${sanitizePromptString(userProfile.bio)}` : ''}
 `
       : '';
 
@@ -216,6 +226,7 @@ Contributors: ${contributors.length > 0 ? contributors.join(', ') : 'none'}${cro
 export function parseDirectorDecision(content: string): {
   nextAgentId: string | null;
   shouldEnd: boolean;
+  parseError: boolean;
 } {
   try {
     // Try to extract JSON from the response
@@ -225,15 +236,19 @@ export function parseDirectorDecision(content: string): {
       const nextAgent = parsed.next_agent;
 
       if (!nextAgent || nextAgent === 'END') {
-        return { nextAgentId: null, shouldEnd: true };
+        return { nextAgentId: null, shouldEnd: true, parseError: false };
       }
 
-      return { nextAgentId: nextAgent, shouldEnd: false };
+      // Validate nextAgent is a string and not an object
+      if (typeof nextAgent === 'string') {
+        return { nextAgentId: nextAgent, shouldEnd: false, parseError: false };
+      }
+      log.warn('[Director] next_agent is not a string:', typeof nextAgent);
     }
   } catch (_e) {
     log.warn('[Director] Failed to parse decision:', content.slice(0, 200));
   }
 
-  // Default: end the round if we can't parse
-  return { nextAgentId: null, shouldEnd: true };
+  // Failed to parse — end the round
+  return { nextAgentId: null, shouldEnd: true, parseError: true };
 }

@@ -136,7 +136,23 @@ export function tryParseJson<T>(jsonStr: string): T | null {
     // Fix 3: Try to fix truncated JSON arrays/objects
     const trimmed = fixed.trim();
     if (trimmed.startsWith('[') && !trimmed.endsWith(']')) {
-      const lastCompleteObj = fixed.lastIndexOf('}');
+      // String-aware last '}' search to avoid matching braces inside string values
+      let depth = 0;
+      let lastCompleteObj = -1;
+      let inString = false;
+      let escape = false;
+      for (let i = 0; i < fixed.length; i++) {
+        const ch = fixed[i];
+        if (escape) { escape = false; continue; }
+        if (ch === '\\' && inString) { escape = true; continue; }
+        if (ch === '"') { inString = !inString; continue; }
+        if (inString) continue;
+        if (ch === '{') depth++;
+        else if (ch === '}') {
+          depth--;
+          if (depth === 0) lastCompleteObj = i;
+        }
+      }
       if (lastCompleteObj > 0) {
         fixed = fixed.substring(0, lastCompleteObj + 1) + ']';
         log.warn('Fixed truncated JSON array');

@@ -145,7 +145,23 @@ export function parseStructuredChunk(chunk: string, state: ParserState): ParseRe
     return result;
   }
 
+  const MAX_BUFFER_SIZE = 500_000; // 500KB — safety cap
   state.buffer += chunk;
+  if (state.buffer.length > MAX_BUFFER_SIZE) {
+    // Truncate oldest content to prevent unbounded growth
+    state.buffer = state.buffer.slice(-MAX_BUFFER_SIZE);
+    if (!state.jsonStarted) {
+      const bracketIndex = state.buffer.indexOf('[');
+      if (bracketIndex >= 0) {
+        state.buffer = state.buffer.slice(bracketIndex);
+        state.jsonStarted = true;
+      } else {
+        // Still no bracket after truncation — discard buffer and start over
+        state.buffer = '';
+        return result;
+      }
+    }
+  }
 
   // Step 1: Find the opening `[` if not yet found
   if (!state.jsonStarted) {

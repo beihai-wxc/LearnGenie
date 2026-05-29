@@ -287,14 +287,21 @@ export class StreamBuffer {
     this.timer = setInterval(() => this.tick(), this.tickMs);
   }
 
-  /** Instantly pause — tick becomes a no-op. */
+  /** Instantly pause — tick becomes a no-op. Clear timer if no drain waiter to prevent leak. */
   pause(): void {
     this._paused = true;
+    if (!this._drainResolve && this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
   }
 
-  /** Resume from exactly where we left off. */
+  /** Resume from exactly where we left off. Restart timer if cleared. */
   resume(): void {
     this._paused = false;
+    if (!this.timer && !this._disposed) {
+      this.timer = setInterval(() => this._tick(), this.tickMs);
+    }
   }
 
   /**

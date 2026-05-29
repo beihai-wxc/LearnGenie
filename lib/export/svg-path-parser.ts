@@ -33,10 +33,25 @@ export type SvgPath = ReturnType<typeof parseSvgPath>;
  * 解析SVG路径，并将圆弧（A）类型的路径转为三次贝塞尔（C）类型的路径
  * @param d SVG path d属性
  */
+interface PathPoint {
+  x?: number;
+  y?: number;
+  relative?: boolean;
+  type: string;
+  curve?: {
+    type: 'cubic' | 'quadratic';
+    x1: number;
+    y1: number;
+    x2?: number;
+    y2?: number;
+  };
+  close?: boolean;
+}
+
 export const toPoints = (d: string) => {
   const pathData = new SVGPathData(d);
 
-  const points = [];
+  const points: PathPoint[] = [];
   for (const item of pathData.commands) {
     const type = typeMap[item.type];
 

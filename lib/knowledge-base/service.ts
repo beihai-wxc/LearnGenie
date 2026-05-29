@@ -390,7 +390,7 @@ async function buildRecommendedLearningPath(
       chapterTitle: chapter.title,
       learningStage: chapter.learningStage,
       reason: '先补足前置知识，建立进入当前主题所需的概念基础',
-      recommendedResources: ['lecture', 'mindmap', 'quiz'] as const,
+      recommendedResources: ['lecture', 'mindmap', 'quiz'],
     })),
     {
       chapterId: targetChapter.chapterId,
@@ -408,7 +408,7 @@ async function buildRecommendedLearningPath(
             chapterTitle: nextChapter.title,
             learningStage: nextChapter.learningStage,
             reason: '完成当前主题后继续衔接下一章，形成连续学习路径',
-            recommendedResources: ['reading', 'quiz', 'project'] as const,
+            recommendedResources: ['reading', 'quiz', 'project'],
           },
         ]
       : []),
@@ -418,13 +418,12 @@ async function buildRecommendedLearningPath(
     title: `推荐学习路径：${topResult.title}`,
     summary: `已结合知识命中结果${personalizedFor.length ? '与学习画像' : ''}，生成一条从前置知识到目标章节的学习路径。`,
     personalizedFor,
-    steps,
+    steps: steps as import('@/lib/knowledge-base/types').KnowledgeLearningPathStep[],
   };
 }
 
-function toSearchResult(
-  result: Awaited<ReturnType<typeof lexicalSearch>>[number] | Awaited<ReturnType<typeof vectorSearch>>[number],
-): KnowledgeSearchResult {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toSearchResult(result: any): KnowledgeSearchResult {
   return {
     docId: result.docId,
     title: result.title,
@@ -437,11 +436,11 @@ function toSearchResult(
     reasons: buildReasons(result),
     pdfUrl: `/api/knowledge/document/${result.docId}`,
     previewText: result.previewText,
-    matchedChunks: result.topChunks.map((chunk) => ({
+    matchedChunks: result.topChunks.map((chunk: any) => ({
       chunkId: chunk.chunkId,
       section: chunk.section,
-      text: chunk.text.slice(0, 220),
-      score: Number(chunk.score.toFixed(4)),
+      text: (chunk.text ?? '').slice(0, 220),
+      score: Number((chunk.score ?? 0).toFixed(4)),
     })),
     pdfAvailable: true,
     sourceType: result.sourceType,
@@ -450,7 +449,7 @@ function toSearchResult(
     resourceTypes: result.resourceTypes,
     estimatedStudyTimeMinutes: result.estimatedStudyTimeMinutes,
     recommendedTeachingGoals: result.recommendedTeachingGoals,
-    matchedBy: result.matchedBy,
+    matchedBy: result.matchedBy as KnowledgeSearchResult['matchedBy'],
     conceptMatches: result.conceptMatches,
     confidenceLevel: getConfidenceLevel(Number(result.score.toFixed(4))),
   };
@@ -594,7 +593,6 @@ export async function searchKnowledgeBase(
       const lexResults = await lexicalSearch(query, topK);
       results = lexResults.map((r) => ({
         ...r,
-        matchedBy: r.matchedBy as 'vector' | 'hybrid',
         topChunks: r.topChunks.map((c) => ({ ...c, score: c.score })),
       }));
     }
@@ -602,7 +600,6 @@ export async function searchKnowledgeBase(
     const lexResults = await lexicalSearch(query, topK);
     results = lexResults.map((r) => ({
       ...r,
-      matchedBy: r.matchedBy as 'vector' | 'hybrid',
       topChunks: r.topChunks.map((c) => ({ ...c, score: c.score })),
     }));
   }
