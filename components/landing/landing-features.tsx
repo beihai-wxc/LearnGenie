@@ -1,131 +1,141 @@
 'use client';
 
-import { useRef, useEffect, useState, useCallback } from 'react';
-import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'motion/react';
-import { Users, Library, Presentation, TrendingUp, CalendarCheck } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { motion, useInView } from 'motion/react';
+import { Users, Library, Presentation, TrendingUp, CalendarCheck, BookOpen, Lightbulb, Sparkles, Brain, FileText } from 'lucide-react';
+import { FloatingOrb, FloatingIcon, FloatingDot, FloatingStar, FloatingPlus } from './floating-elements';
 
 const FEATURES = [
-  { icon: <Users className="size-6" />, title: 'AI 多智能体课堂', description: '多个 AI 智能体协同教学——教师讲解、助教答疑、同学讨论，让学习不再孤单。', iconBg: 'bg-[#f4ebff] text-[#9552e0]' },
-  { icon: <Library className="size-6" />, title: '知识库驱动学习', description: '上传文档或接入知识库，AI 自动提取要点，生成个性化的、有据可依的课程内容。', iconBg: 'bg-[#e5f6ff] text-[#0069e0]' },
-  { icon: <Presentation className="size-6" />, title: '互动式课件生成', description: '从一段描述或一份 PDF 出发，一键生成包含幻灯片、测验和白板的完整课堂。', iconBg: 'bg-[#fff9e0] text-[#bb9915]' },
-  { icon: <TrendingUp className="size-6" />, title: '学习画像与追踪', description: '每一次学习都会更新你的专属学习画像，让 AI 越来越懂你，课程越来越精准。', iconBg: 'bg-[#fff2eb] text-[#f26110]' },
-  { icon: <CalendarCheck className="size-6" />, title: '个性化学习规划', description: 'AI 根据你的学习画像和薄弱环节，自动生成专属学习路径和每日任务，循序渐进达成目标。', iconBg: 'bg-[#d3f6e3] text-[#0d9e6b]' },
+  { icon: <Users className="size-6" />, title: 'AI 多智能体课堂', description: '多个 AI 智能体协同教学 — 讲师授课、助教答疑、同学讨论，让学习不再孤单。', iconColor: 'text-[#7c3aed]', cardBg: 'bg-white/70' },
+  { icon: <Library className="size-6" />, title: '知识驱动学习', description: '上传文档或连接知识库，AI 自动提取重点并生成个性化、有据可依的课程内容。', iconColor: 'text-[#6366f1]', cardBg: 'bg-white/70' },
+  { icon: <Presentation className="size-6" />, title: '互动式课件', description: '从一段描述或一份 PDF 开始，一键生成包含幻灯片、测验和白板的完整课堂。', iconColor: 'text-[#f59e0b]', cardBg: 'bg-white/70' },
+  { icon: <TrendingUp className="size-6" />, title: '学习档案与追踪', description: '每次学习都会更新你的专属学习画像，让 AI 更懂你，课程更精准。', iconColor: 'text-[#f97316]', cardBg: 'bg-white/70' },
+  { icon: <CalendarCheck className="size-6" />, title: '个性化学习计划', description: 'AI 根据你的画像和薄弱点生成专属学习路径和每日任务，逐步达成目标。', iconColor: 'text-[#10b981]', cardBg: 'bg-white/70' },
 ];
 
-const CARD_W = 340;
-const GAP = 24;
-const TOTAL_X = (FEATURES.length - 1) * (CARD_W + GAP);
-const AUTO_PX_PER_SEC = 50; // slow auto-scroll
-
 export function LandingFeatures() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const autoRef = useRef(0);      // current auto-scroll position
-  const lastTime = useRef(0);
-  const [isInView, setIsInView] = useState(false);
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { once: true, margin: '-40px' });
+  const [animPhase, setAnimPhase] = useState<'idle' | 'row1' | 'row2'>('idle');
 
-  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] });
-  const titleOp = useTransform(scrollYProgress, [0, 0.85], [1, 0]);
-
-  // Scroll progress maps to -TOTAL_X range
-  const scrollX = useTransform(scrollYProgress, [0, 1], [0, -TOTAL_X]);
-
-  // Auto-scroll motion value
-  const autoX = useMotionValue(0);
-
-  // Combined: go as far as the further of scroll-driven or auto-scroll
-  const combinedX = useMotionValue(0);
   useEffect(() => {
-    const unsub1 = scrollX.on('change', (v) => {
-      const cur = autoX.get();
-      combinedX.set(Math.min(v, -cur));
-    });
-    const unsub2 = autoX.on('change', (cur) => {
-      const sv = scrollX.get();
-      combinedX.set(Math.min(sv, -cur));
-    });
-    return () => { unsub1(); unsub2(); };
-  }, [scrollX, autoX, combinedX]);
-
-  // Spring smooths the combined position
-  const x = useSpring(combinedX, { stiffness: 50, damping: 25 });
-
-  // Auto-scroll loop when section is in view
-  useEffect(() => {
-    if (!isInView) return;
-    let raf: number;
-    const tick = (t: number) => {
-      if (lastTime.current === 0) lastTime.current = t;
-      const dt = Math.min(t - lastTime.current, 200); // cap at 200ms
-      lastTime.current = t;
-      const current = autoX.get();
-      const next = Math.min(current + (AUTO_PX_PER_SEC * dt) / 1000, TOTAL_X);
-      autoX.set(next);
-      autoRef.current = next;
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(raf);
-      lastTime.current = 0;
-    };
-  }, [isInView, autoX]);
-
-  // Observe when section enters viewport
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([e]) => setIsInView(e.isIntersecting),
-      { threshold: 0.1 },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-
-  // Wheel accelerates auto-scroll beyond the scroll-driven position
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    const current = autoX.get();
-    const boost = e.deltaY * 1.2;
-    const next = Math.max(0, Math.min(current + boost, TOTAL_X));
-    autoX.set(next);
-  }, [autoX]);
+    if (isInView) {
+      setAnimPhase('row1');
+      const timer = setTimeout(() => setAnimPhase('row2'), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [isInView]);
 
   return (
-    <section ref={sectionRef} className="relative bg-white" style={{ height: '300vh' }}>
-      <div
-        className="sticky top-0 flex flex-col items-center justify-center overflow-hidden h-screen"
-        onWheel={handleWheel}
-      >
-        <motion.div style={{ opacity: titleOp }} className="text-center mb-8 shrink-0">
-          <h2 className="text-[32px] font-medium leading-[1.17] -tracking-[0.02em] text-[#0a0d12] md:text-[48px] md:leading-[1.11]">
-            为什么选择 LearnGenie
+    <section id="features" ref={sectionRef} className="relative bg-white px-4 py-28 md:px-8 overflow-hidden">
+      <div className="absolute inset-0 opacity-40">
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-violet-100/50 to-fuchsia-100/30 blur-3xl" />
+      </div>
+
+      {/* Floating decorations - Learning themed */}
+      <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
+        <FloatingOrb className="left-[5%] top-[15%] w-[180px] h-[180px] bg-gradient-to-br from-violet-300/35 to-fuchsia-300/25" animation={{ y: [0, -30, 0], x: [0, 15, 0] }} duration={8} />
+        <FloatingOrb className="right-[5%] bottom-[20%] w-[160px] h-[160px] bg-gradient-to-br from-amber-300/30 to-orange-300/20" animation={{ y: [0, -25, 0], x: [0, -12, 0] }} duration={10} delay={2} />
+        <FloatingOrb className="left-[25%] bottom-[10%] w-[140px] h-[140px] bg-gradient-to-br from-indigo-300/25 to-violet-300/15" animation={{ y: [0, -35, 0], scale: [1, 1.05, 1] }} duration={12} delay={1} />
+
+        <FloatingIcon className="left-[10%] top-[20%] hidden md:block" delay={0} duration={6}>
+          <div className="size-12 rounded-2xl bg-white/80 backdrop-blur-md p-2.5 text-violet-500 shadow-[0_12px_32px_rgba(124,58,237,0.15),0_0_0_1px_rgba(255,255,255,0.7)]">
+            <BookOpen className="size-full" />
+          </div>
+        </FloatingIcon>
+
+        <FloatingIcon className="right-[10%] top-[25%] hidden md:block" delay={0.6} duration={5.5}>
+          <div className="size-11 rounded-2xl bg-white/80 backdrop-blur-md p-2.5 text-amber-500 shadow-[0_12px_32px_rgba(245,158,11,0.15),0_0_0_1px_rgba(255,255,255,0.7)]">
+            <Lightbulb className="size-full" />
+          </div>
+        </FloatingIcon>
+
+        <FloatingIcon className="left-[18%] bottom-[30%] hidden lg:block" delay={1} duration={6}>
+          <div className="size-9 rounded-xl bg-white/75 backdrop-blur-md p-2 text-emerald-500 shadow-[0_10px_24px_rgba(16,185,129,0.12),0_0_0_1px_rgba(255,255,255,0.6)]">
+            <Sparkles className="size-full" />
+          </div>
+        </FloatingIcon>
+
+        <FloatingIcon className="right-[18%] bottom-[25%] hidden lg:block" delay={0.4} duration={5}>
+          <div className="size-8 rounded-xl bg-white/75 backdrop-blur-md p-2 text-indigo-400 shadow-[0_10px_24px_rgba(99,102,241,0.12),0_0_0_1px_rgba(255,255,255,0.6)]">
+            <Brain className="size-full" />
+          </div>
+        </FloatingIcon>
+
+        <FloatingIcon className="left-[42%] top-[12%] hidden xl:block" delay={1.2} duration={6.5}>
+          <div className="size-7 rounded-xl bg-white/70 backdrop-blur-md p-1.5 text-fuchsia-400 shadow-[0_8px_20px_rgba(168,85,247,0.1),0_0_0_1px_rgba(255,255,255,0.5)]">
+            <FileText className="size-full" />
+          </div>
+        </FloatingIcon>
+
+        <FloatingDot className="left-[28%] top-[35%] size-4 bg-gradient-to-br from-violet-400/60 to-fuchsia-400/50 shadow-lg" animation={{ y: [0, -20, 0], scale: [1, 1.15, 1] }} duration={5} />
+        <FloatingDot className="right-[30%] top-[40%] size-3.5 bg-gradient-to-br from-amber-400/55 to-orange-400/45 shadow-lg" animation={{ y: [0, -18, 0], scale: [1, 1.2, 1] }} duration={6} delay={1} />
+        <FloatingDot className="left-[62%] bottom-[35%] size-3 bg-gradient-to-br from-emerald-400/50 to-teal-400/40 shadow-lg" animation={{ y: [0, -22, 0] }} duration={7} delay={2} />
+        <FloatingDot className="right-[48%] bottom-[30%] size-4 bg-gradient-to-br from-pink-400/55 to-rose-400/45 shadow-lg" animation={{ y: [0, -16, 0], scale: [1, 1.1, 1] }} duration={5.5} delay={0.5} />
+
+        <FloatingStar className="left-[35%] top-[40%] hidden md:block" delay={0} duration={5} color="text-violet-400/60" size={16} />
+        <FloatingStar className="right-[38%] bottom-[40%] hidden md:block" delay={0.9} duration={6} color="text-amber-400/55" size={14} />
+
+        <FloatingPlus className="left-[52%] top-[18%] text-violet-300/50 text-2xl" duration={8} />
+        <FloatingPlus className="right-[22%] bottom-[35%] text-amber-300/45 text-xl" duration={9} delay={1.5} />
+      </div>
+
+      <div className="relative mx-auto max-w-6xl">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="mb-18 text-center"
+        >
+          <span className="inline-block rounded-full bg-violet-50 px-4 py-1.5 text-[12px] font-bold tracking-widest uppercase text-[#7c3aed] mb-4">为什么选择 LearnGenie</span>
+          <h2 className="text-[clamp(2rem,4vw,3rem)] font-bold leading-[1.1] -tracking-[0.025em] text-[#1a1a2e]">
+            重新定义你的学习方式
           </h2>
-          <p className="mt-3 text-[16px] leading-[1.5] text-[#535862]">
-            不只是内容生成，而是完整的互动学习体验
+          <p className="mt-4 text-[16px] leading-[1.6] text-[#6b6b80] max-w-xl mx-auto">
+            不只是内容生成，而是完整的沉浸式互动学习体验
           </p>
         </motion.div>
 
-        <div className="relative w-full overflow-hidden">
-          <motion.div style={{ x }} className="flex gap-6 px-[calc(50vw-170px)]">
-            {FEATURES.map((f) => (
+        {/* 第一行 - 从左侧滑入 */}
+        <div className="overflow-hidden">
+          <motion.div
+            className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
+            animate={animPhase === 'row1' || animPhase === 'row2' ? { opacity: 1, x: 0 } : { opacity: 0, x: '-100%' }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {FEATURES.slice(0, 3).map((f) => (
               <div
                 key={f.title}
-                className="group shrink-0 rounded-[32px] bg-[#fafdff] p-10 transition-all duration-300 hover:-translate-y-1"
-                style={{ width: CARD_W, boxShadow: 'rgba(4, 69, 144, 0.08) 0px 14px 20px 4px' }}
+                className={`group relative rounded-2xl p-7 transition-all duration-300 hover:-translate-y-1.5 ${f.cardBg} backdrop-blur-sm border border-[#f0eef5] hover:border-violet-200/60 hover:shadow-[0_12px_32px_rgba(124,58,237,0.08)]`}
               >
-                <div className={`mb-6 inline-flex size-12 items-center justify-center rounded-[16px] ${f.iconBg}`}>{f.icon}</div>
-                <h3 className="mb-3 text-[18px] font-medium leading-[1.25] -tracking-[0.02em] text-[#0a0d12]">{f.title}</h3>
-                <p className="text-[14px] leading-[1.5] text-[#535862]">{f.description}</p>
+                <div className={`mb-5 inline-flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-violet-50 to-fuchsia-50 ${f.iconColor} shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:shadow-md`}>{f.icon}</div>
+                <h3 className="mb-2.5 text-[16px] font-bold leading-[1.3] -tracking-[0.01em] text-[#1a1a2e]">{f.title}</h3>
+                <p className="text-[13.5px] leading-[1.6] text-[#6b6b80]">{f.description}</p>
               </div>
             ))}
           </motion.div>
         </div>
 
-        <motion.div style={{ opacity: titleOp }} className="mt-8 flex items-center gap-2 text-sm text-[#93979f]">
-          <span>滚动查看更多</span>
-          <svg className="size-4 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 9l7 7 7-7" /></svg>
-        </motion.div>
+        {/* 第二行 - 从右侧滑入 */}
+        <div className="mt-5 overflow-hidden">
+          <motion.div
+            className="flex flex-wrap justify-center gap-5"
+            animate={animPhase === 'row2' ? { opacity: 1, x: 0 } : { opacity: 0, x: '100%' }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {FEATURES.slice(3).map((f) => (
+              <div
+                key={f.title}
+                className={`w-full sm:w-[calc(50%-10px)] lg:w-[calc(33.333%-14px)] group relative rounded-2xl p-7 transition-all duration-300 hover:-translate-y-1.5 ${f.cardBg} backdrop-blur-sm border border-[#f0eef5] hover:border-violet-200/60 hover:shadow-[0_12px_32px_rgba(124,58,237,0.08)]`}
+              >
+                <div className={`mb-5 inline-flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-violet-50 to-fuchsia-50 ${f.iconColor} shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:shadow-md`}>{f.icon}</div>
+                <h3 className="mb-2.5 text-[16px] font-bold leading-[1.3] -tracking-[0.01em] text-[#1a1a2e]">{f.title}</h3>
+                <p className="text-[13.5px] leading-[1.6] text-[#6b6b80]">{f.description}</p>
+              </div>
+            ))}
+          </motion.div>
+        </div>
       </div>
     </section>
   );

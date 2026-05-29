@@ -240,11 +240,8 @@ export async function POST(req: NextRequest) {
         const startHeartbeat = () => {
           stopHeartbeat();
           heartbeatTimer = setInterval(() => {
-            try {
-              controller.enqueue(encoder.encode(`:heartbeat\n\n`));
-            } catch {
-              stopHeartbeat();
-            }
+            safeEnqueue(`:heartbeat\n\n`);
+            if (controllerClosed) stopHeartbeat();
           }, HEARTBEAT_INTERVAL_MS);
         };
         const stopHeartbeat = () => {
@@ -255,6 +252,17 @@ export async function POST(req: NextRequest) {
         };
 
         const MAX_STREAM_RETRIES = 2;
+
+        // Helper: safely enqueue to controller (controller may be closed if client disconnects)
+        let controllerClosed = false;
+        const safeEnqueue = (data: string) => {
+          if (controllerClosed) return;
+          try {
+            controller.enqueue(encoder.encode(data));
+          } catch {
+            controllerClosed = true;
+          }
+        };
 
         try {
           startHeartbeat();
@@ -301,7 +309,7 @@ export async function POST(req: NextRequest) {
                       type: 'languageDirective',
                       data: languageDirective,
                     });
-                    controller.enqueue(encoder.encode(`data: ${ldEvent}\n\n`));
+                    safeEnqueue(`data: ${ldEvent}\n\n`);
                   }
                 }
 
@@ -321,7 +329,7 @@ export async function POST(req: NextRequest) {
                     data: enriched,
                     index: parsedOutlines.length - 1,
                   });
-                  controller.enqueue(encoder.encode(`data: ${event}\n\n`));
+                  safeEnqueue(`data: ${event}\n\n`);
                 }
               }
 
@@ -343,7 +351,7 @@ export async function POST(req: NextRequest) {
                   attempt,
                   maxAttempts: MAX_STREAM_RETRIES + 1,
                 });
-                controller.enqueue(encoder.encode(`data: ${retryEvent}\n\n`));
+                safeEnqueue(`data: ${retryEvent}\n\n`);
               }
             } catch (error) {
               lastError = error instanceof Error ? error.message : String(error);
@@ -358,7 +366,7 @@ export async function POST(req: NextRequest) {
                   attempt,
                   maxAttempts: MAX_STREAM_RETRIES + 1,
                 });
-                controller.enqueue(encoder.encode(`data: ${retryEvent}\n\n`));
+                safeEnqueue(`data: ${retryEvent}\n\n`);
                 continue;
               }
             }
@@ -374,7 +382,7 @@ export async function POST(req: NextRequest) {
               languageDirective:
                 languageDirective || 'Teach in the language that matches the user requirement.',
             });
-            controller.enqueue(encoder.encode(`data: ${doneEvent}\n\n`));
+            safeEnqueue(`data: ${doneEvent}\n\n`);
           } else {
             // All retries exhausted, no outlines produced
             log.error(
@@ -384,14 +392,14 @@ export async function POST(req: NextRequest) {
               type: 'error',
               error: lastError || 'Failed to generate outlines',
             });
-            controller.enqueue(encoder.encode(`data: ${errorEvent}\n\n`));
+            safeEnqueue(`data: ${errorEvent}\n\n`);
           }
         } catch (error) {
           const errorEvent = JSON.stringify({
             type: 'error',
             error: error instanceof Error ? error.message : String(error),
           });
-          controller.enqueue(encoder.encode(`data: ${errorEvent}\n\n`));
+          safeEnqueue(`data: ${errorEvent}\n\n`);
         } finally {
           stopHeartbeat();
           controller.close();

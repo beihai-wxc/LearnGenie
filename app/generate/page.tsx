@@ -24,7 +24,7 @@ import type { AgentWorkflowSnapshot } from '@/lib/agents/types';
 import { listStages } from '@/lib/utils/stage-storage';import { HomeHero } from '@/components/home/home-hero';
 import { KnowledgeSearchResults } from '@/components/knowledge/knowledge-search-results';
 import { Sidebar } from '@/components/sidebar/sidebar';
-import { ProtectedRoute } from '@/components/auth/protected-route';
+import ProtectedRoute from '@/components/auth/protected-route';
 
 const log = createLogger('GeneratePage');
 
@@ -55,6 +55,7 @@ interface KnowledgeResultPanelState {
   title: string;
   query: string;
   results: KnowledgeSearchResult[];
+  matched: boolean;
   autoContextSources?: string[];
   recommendedPath?: KnowledgeLearningPath | null;
   safetyNote?: string;
@@ -322,25 +323,24 @@ function GenerateContent() {
           },
         };
 
-        if (uploadMatchJson.matched && uploadMatchJson.results?.length > 0) {
-          setKnowledgePanel({
-            title: '发现相似的人工智能课程资料',
-            query: form.pdfFile.name,
-            results: uploadMatchJson.results as KnowledgeSearchResult[],
-            autoContextSources: uploadMatchJson.autoContext?.sourceTitles,
-            recommendedPath: uploadMatchJson.recommendedPath,
-            safetyNote: uploadMatchJson.safetyNote,
-            agentWorkflow: workflowJson.workflow as AgentWorkflowSnapshot,
-            fallbackSession,
-            fallbackLabel: '开始智能生成课堂',
-            fallbackHint:
-              '系统会保留你的原始主题与上传内容，并在后台自动结合最相关的知识库片段来辅助生成课堂。你可以先浏览这些资料，但不需要手动选择。',
-          });
-          setKnowledgeDialogOpen(true);
-          return;
-        }
-
-        await createGenerationSession(fallbackSession);
+        setKnowledgePanel({
+          title: uploadMatchJson.matched
+            ? '发现相似的人工智能课程资料'
+            : '未找到相关知识库资料',
+          query: form.pdfFile.name,
+          results: (uploadMatchJson.results as KnowledgeSearchResult[]) ?? [],
+          matched: uploadMatchJson.matched,
+          autoContextSources: uploadMatchJson.autoContext?.sourceTitles,
+          recommendedPath: uploadMatchJson.recommendedPath,
+          safetyNote: uploadMatchJson.safetyNote,
+          agentWorkflow: workflowJson.workflow as AgentWorkflowSnapshot,
+          fallbackSession,
+          fallbackLabel: uploadMatchJson.matched ? '开始智能生成课堂' : '直接生成课堂',
+          fallbackHint: uploadMatchJson.matched
+            ? '系统会保留你的原始主题与上传内容，并在后台自动结合最相关的知识库片段来辅助生成课堂。你可以先浏览这些资料，但不需要手动选择。'
+            : '当前知识库未找到与上传资料足够匹配的内容，系统将基于上传资料主题进行通用生成。',
+        });
+        setKnowledgeDialogOpen(true);
         return;
       }
 
@@ -385,25 +385,25 @@ function GenerateContent() {
         agentWorkflow: workflowJson.workflow as AgentWorkflowSnapshot,
       };
 
-      if (knowledgeJson.matched && knowledgeJson.results?.length > 0) {
-        setKnowledgePanel({
-          title: '发现相关的人工智能课程知识',
-          query: baseRequirements.requirement,
-          results: knowledgeJson.results as KnowledgeSearchResult[],
-          autoContextSources: knowledgeJson.autoContext?.sourceTitles,
-          recommendedPath: knowledgeJson.recommendedPath,
-          safetyNote: knowledgeJson.safetyNote,
-          agentWorkflow: workflowJson.workflow as AgentWorkflowSnapshot,
-          fallbackSession,
-          fallbackLabel: '开始智能生成课堂',
-          fallbackHint:
-            '系统不会完全照搬知识库内容，也不会只做通用生成，而是保留你的原始主题，在后台自动带入最相关的知识片段来辅助生成课堂。',
-        });
-        setKnowledgeDialogOpen(true);
-        return;
-      }
-
-      await createGenerationSession(fallbackSession);
+      setKnowledgePanel({
+        title: knowledgeJson.matched
+          ? '发现相关的人工智能课程知识'
+          : '未找到相关知识库资料',
+        query: baseRequirements.requirement,
+        results: (knowledgeJson.results as KnowledgeSearchResult[]) ?? [],
+        matched: knowledgeJson.matched,
+        autoContextSources: knowledgeJson.autoContext?.sourceTitles,
+        recommendedPath: knowledgeJson.recommendedPath,
+        safetyNote: knowledgeJson.safetyNote,
+        agentWorkflow: workflowJson.workflow as AgentWorkflowSnapshot,
+        fallbackSession,
+        fallbackLabel: knowledgeJson.matched ? '开始智能生成课堂' : '直接生成课堂',
+        fallbackHint: knowledgeJson.matched
+          ? '系统不会完全照搬知识库内容，也不会只做通用生成，而是保留你的原始主题，在后台自动带入最相关的知识片段来辅助生成课堂。'
+          : '当前知识库未找到足够强的命中，系统将基于主题进行通用生成。你可以返回修改主题描述，或直接继续生成。',
+      });
+      setKnowledgeDialogOpen(true);
+      return;
     } catch (generationError) {
       log.error('Error preparing generation', generationError);
       setError(
@@ -427,10 +427,8 @@ function GenerateContent() {
     <>
       <Sidebar />
       <div className="ml-52 home-page flex min-h-[100dvh] flex-col overflow-x-hidden pb-10">
-        <div className="home-bg-mesh" />
         <div className="home-bg-glow home-bg-glow-left" />
         <div className="home-bg-glow home-bg-glow-right" />
-        <div className="home-bg-grid" />
 
         <main className="relative z-10 flex-1 px-4 md:px-8">
           <div className="mx-auto max-w-7xl">
@@ -458,6 +456,7 @@ function GenerateContent() {
                 title={knowledgePanel.title}
                 query={knowledgePanel.query}
                 results={knowledgePanel.results}
+                matched={knowledgePanel.matched}
                 autoContextSources={knowledgePanel.autoContextSources}
                 recommendedPath={knowledgePanel.recommendedPath}
                 safetyNote={knowledgePanel.safetyNote}

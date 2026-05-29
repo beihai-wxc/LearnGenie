@@ -3,6 +3,7 @@
  *
  * Manages multiple stage data in IndexedDB
  * Each stage has its own storage key based on stageId
+ * All queries are scoped to the current authenticated user via userId.
  */
 
 import { Stage, Scene } from '../types/stage';
@@ -10,6 +11,7 @@ import { ChatSession } from '../types/chat';
 import { db } from './database';
 import { saveChatSessions, loadChatSessions, deleteChatSessions } from './chat-storage';
 import { clearPlaybackState } from './playback-storage';
+import { getCurrentUserId } from './user-context';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('StageStorage');
@@ -30,16 +32,24 @@ export interface StageListItem {
   updatedAt: number;
 }
 
+function requireUserId(): string {
+  const userId = getCurrentUserId();
+  if (!userId) throw new Error('User not authenticated');
+  return userId;
+}
+
 /**
  * Save stage data to IndexedDB
  */
 export async function saveStageData(stageId: string, data: StageStoreData): Promise<void> {
+  const userId = requireUserId();
   try {
     const now = Date.now();
 
     // Save to stages table
     await db.stages.put({
       id: stageId,
+      userId,
       name: data.stage.name || 'Untitled Stage',
       description: data.stage.description,
       createdAt: data.stage.createdAt || now,
@@ -51,13 +61,14 @@ export async function saveStageData(stageId: string, data: StageStoreData): Prom
     });
 
     // Delete old scenes first to avoid orphaned data
-    await db.scenes.where('stageId').equals(stageId).delete();
+    await db.scenes.where({ userId, stageId }).delete();
 
     // Save new scenes
     if (data.scenes && data.scenes.length > 0) {
       await db.scenes.bulkPut(
         data.scenes.map((scene, index) => ({
           ...scene,
+          userId,
           stageId,
           order: scene.order ?? index,
           createdAt: scene.createdAt || now,
@@ -68,7 +79,7 @@ export async function saveStageData(stageId: string, data: StageStoreData): Prom
 
     // Save chat sessions to independent table
     if (data.chats) {
-      await saveChatSessions(stageId, data.chats);
+      await saveChatSessions(userId, stageId, data.chats);
     }
 
     log.info(`Saved stage: ${stageId}`);
@@ -82,6 +93,7 @@ export async function saveStageData(stageId: string, data: StageStoreData): Prom
  * Load stage data from IndexedDB
  */
 export async function loadStageData(stageId: string): Promise<StageStoreData | null> {
+  const userId = getCurrentUserId();
   try {
     // Load stage
     const stage = await db.stages.get(stageId);
@@ -89,11 +101,16 @@ export async function loadStageData(stageId: string): Promise<StageStoreData | n
       log.info(`Stage not found: ${stageId}`);
       return null;
     }
+    // Verify ownership — ignore stages from other accounts
+    if (userId && stage.userId && stage.userId !== userId) {
+      log.info(`Stage ${stageId} belongs to ${stage.userId}, not current user ${userId}`);
+      return null;
+    }
 
     // Load scenes
-    const scenes = await db.scenes.where('stageId').equals(stageId).sortBy('order');
+    const scenes = await db.scenes.where({ stageId }).sortBy('order');
 
-    // Load chat sessions from independent table
+    // Load chat sessions
     const chats = await loadChatSessions(stageId);
 
     log.info(`Loaded stage: ${stageId}, scenes: ${scenes.length}, chats: ${chats.length}`);
@@ -114,12 +131,22 @@ export async function loadStageData(stageId: string): Promise<StageStoreData | n
  * Delete stage and all related data
  */
 export async function deleteStageData(stageId: string): Promise<void> {
+  const userId = getCurrentUserId();
   try {
+    // Verify ownership before deleting
+    if (userId) {
+      const stage = await db.stages.get(stageId);
+      if (stage && stage.userId && stage.userId !== userId) {
+        log.warn(`Refusing to delete stage ${stageId} owned by ${stage.userId}`);
+        return;
+      }
+    }
+
     // Delete stage
     await db.stages.delete(stageId);
 
     // Delete scenes
-    await db.scenes.where('stageId').equals(stageId).delete();
+    await db.scenes.where({ stageId }).delete();
 
     // Delete chat sessions and playback state
     await deleteChatSessions(stageId);
@@ -133,15 +160,22 @@ export async function deleteStageData(stageId: string): Promise<void> {
 }
 
 /**
- * List all stages
+ * List all stages for the current user
  */
 export async function listStages(): Promise<StageListItem[]> {
+  const userId = getCurrentUserId();
+  if (!userId) return [];
+
   try {
-    const stages = await db.stages.orderBy('updatedAt').reverse().toArray();
+    const stages = await db.stages
+      .where('userId')
+      .equals(userId)
+      .reverse()
+      .sortBy('updatedAt');
 
     const stageList: StageListItem[] = await Promise.all(
       stages.map(async (stage) => {
-        const sceneCount = await db.scenes.where('stageId').equals(stage.id).count();
+        const sceneCount = await db.scenes.where({ stageId: stage.id }).count();
 
         return {
           id: stage.id,
@@ -162,11 +196,15 @@ export async function listStages(): Promise<StageListItem[]> {
 }
 
 /**
- * Get multiple stages by their IDs. Returns only the ones that exist.
+ * Get multiple stages by their IDs. Returns only the ones that exist
+ * and belong to the current user.
  */
 export async function getStagesByIds(ids: string[]): Promise<StageListItem[]> {
+  const userId = getCurrentUserId();
+  if (!userId) return [];
+
   try {
-    const allStages = await db.stages.toArray();
+    const allStages = await db.stages.where('userId').equals(userId).toArray();
     const idSet = new Set(ids);
     return allStages
       .filter((s) => idSet.has(s.id))
@@ -192,11 +230,14 @@ export async function getStagesByIds(ids: string[]): Promise<StageListItem[]> {
 export async function getFirstSlideByStages(
   stageIds: string[],
 ): Promise<Record<string, import('../types/slides').Slide>> {
+  const userId = getCurrentUserId();
   const result: Record<string, import('../types/slides').Slide> = {};
+  if (!userId) return result;
+
   try {
     await Promise.all(
       stageIds.map(async (stageId) => {
-        const scenes = await db.scenes.where('stageId').equals(stageId).sortBy('order');
+        const scenes = await db.scenes.where({ stageId }).sortBy('order');
         const firstSlide = scenes.find((s) => s.content?.type === 'slide');
         if (firstSlide && firstSlide.content.type === 'slide') {
           const slide = structuredClone(firstSlide.content.canvas);
@@ -207,7 +248,7 @@ export async function getFirstSlideByStages(
             (el: any) => el.type === 'image' && /^gen_(img|vid)_[\w-]+$/i.test(el.src as string),
           );
           if (placeholderEls.length > 0) {
-            const mediaRecords = await db.mediaFiles.where('stageId').equals(stageId).toArray();
+            const mediaRecords = await db.mediaFiles.where({ stageId }).toArray();
             const mediaMap = new Map(
               mediaRecords.map((r) => {
                 // Key format: stageId:elementId → extract elementId
@@ -220,8 +261,6 @@ export async function getFirstSlideByStages(
               if (blob) {
                 el.src = URL.createObjectURL(blob);
               } else {
-                // Clear unresolved placeholder so BaseImageElement won't subscribe
-                // to the global media store (which may have stale data from another course)
                 el.src = '';
               }
             }
@@ -241,7 +280,16 @@ export async function getFirstSlideByStages(
  * Rename a stage (updates only the name field in IndexedDB)
  */
 export async function renameStage(stageId: string, newName: string): Promise<void> {
+  const userId = getCurrentUserId();
   try {
+    // Verify ownership
+    if (userId) {
+      const stage = await db.stages.get(stageId);
+      if (stage && stage.userId && stage.userId !== userId) {
+        log.warn(`Refusing to rename stage ${stageId} owned by ${stage.userId}`);
+        return;
+      }
+    }
     await db.stages.update(stageId, { name: newName, updatedAt: Date.now() });
     log.info(`Renamed stage ${stageId} to "${newName}"`);
   } catch (error) {
@@ -251,12 +299,15 @@ export async function renameStage(stageId: string, newName: string): Promise<voi
 }
 
 /**
- * Check if stage exists
+ * Check if stage exists and belongs to the current user
  */
 export async function stageExists(stageId: string): Promise<boolean> {
+  const userId = getCurrentUserId();
   try {
     const stage = await db.stages.get(stageId);
-    return !!stage;
+    if (!stage) return false;
+    if (userId && stage.userId && stage.userId !== userId) return false;
+    return true;
   } catch (error) {
     log.error('Failed to check stage existence:', error);
     return false;

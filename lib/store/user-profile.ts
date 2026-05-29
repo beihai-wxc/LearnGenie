@@ -5,6 +5,23 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { useAuthStore } from '@/lib/store/auth';
+
+const getUserId = () => useAuthStore.getState().user?.email ?? 'anonymous';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const userScopedStorage: any = {
+  getItem: (name: string) => {
+    const raw = localStorage.getItem(`${name}-${getUserId()}`);
+    return raw ? JSON.parse(raw) : null;
+  },
+  setItem: (name: string, value: unknown) => {
+    localStorage.setItem(`${name}-${getUserId()}`, JSON.stringify(value));
+  },
+  removeItem: (name: string) => {
+    localStorage.removeItem(`${name}-${getUserId()}`);
+  },
+};
 import {
   createDefaultProfileDimensions,
   createDefaultLearningSummary,
@@ -101,6 +118,7 @@ export const useUserProfileStore = create<UserProfileState>()(
     }),
     {
       name: 'user-profile-storage',
+      storage: userScopedStorage,
       version: 3,
       migrate: (persistedState: unknown, version: number) => {
         const persisted = persistedState as Record<string, unknown>;

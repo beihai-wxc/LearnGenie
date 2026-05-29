@@ -61,14 +61,14 @@ function ScrollingDescription() {
   return (
     <div className="relative overflow-hidden">
       <motion.p
-        className="whitespace-nowrap text-lg text-slate-600 dark:text-slate-300"
+        className="whitespace-nowrap text-lg text-[#535862] dark:text-[#93979f]"
         initial={{ x: '100%' }}
         animate={controls1}
       >
         {t('home.heroDescriptionPart1')}
       </motion.p>
       <motion.p
-        className="whitespace-nowrap text-lg text-slate-600 dark:text-slate-300"
+        className="whitespace-nowrap text-lg text-[#535862] dark:text-[#93979f]"
         initial={{ x: '100%' }}
         animate={controls2}
       >
@@ -107,23 +107,23 @@ export function HomeHero(props: HomeHeroProps) {
           className="flex flex-col items-center gap-6"
         >
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/70 px-4 py-2 text-sm text-slate-600 shadow-[0_18px_44px_rgba(159,172,195,0.16)] backdrop-blur-md dark:border-white/10 dark:bg-slate-900/65 dark:text-slate-300">
-              <BookOpenText className="size-4 text-sky-500" />
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#eef0f1] bg-white/70 px-4 py-2 text-sm text-[#535862] shadow-sm backdrop-blur-md dark:border-white/[0.08] dark:bg-[#131720]/65 dark:text-[#93979f]">
+              <BookOpenText className="size-4 text-blue-600" />
               {t('home.heroEyebrow')}
             </span>
           </div>
 
           <div className="relative max-w-4xl px-4">
-            <div className="home-watermark pointer-events-none absolute left-1/2 top-[38%] h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl" />
+            <div className="pointer-events-none absolute left-1/2 top-[38%] h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(187,180,255,0.3),transparent_72%)] blur-2xl" />
             <h1
-              className="relative z-10 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[clamp(3.6rem,9vw,7.5rem)] font-medium leading-[0.95] tracking-[-0.06em] text-slate-900 dark:text-slate-50"
+              className="relative z-10 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[clamp(3.6rem,9vw,7.5rem)] font-medium leading-[0.95] tracking-[-0.06em] text-[#0a0d12] dark:text-[#fafdff]"
               style={{
                 fontFamily:
                   '"Iowan Old Style","Palatino Linotype","Noto Serif SC","Source Han Serif SC","Songti SC","STSong",serif',
               }}
             >
               <span>{t('home.heroTitleBefore')}</span>
-              <span className="home-highlight-orb relative inline-flex h-[1.2em] w-[1.2em] items-center justify-center rounded-full text-sky-500 dark:text-sky-300">
+              <span className="relative inline-flex h-[1.2em] w-[1.2em] items-center justify-center rounded-full bg-[radial-gradient(circle_at_35%_32%,rgba(255,255,255,0.95),rgba(236,242,255,0.88)_46%,rgba(199,218,255,0.55)_100%)] text-blue-600 shadow-[0_24px_60px_rgba(148,176,220,0.28),inset_0_1px_0_rgba(255,255,255,0.88)] dark:bg-[radial-gradient(circle_at_35%_32%,rgba(32,55,86,0.95),rgba(21,40,68,0.92)_46%,rgba(19,28,50,0.85)_100%)] dark:text-blue-300 dark:shadow-[0_24px_60px_rgba(28,54,99,0.34),inset_0_1px_0_rgba(255,255,255,0.04)]">
                 {t('home.heroTitleHighlight')}
               </span>
               <span>{t('home.heroTitleAfter')}</span>

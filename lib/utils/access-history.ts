@@ -3,11 +3,13 @@
  *
  * Records all user visits to classrooms, knowledge docs, and uploaded documents.
  * Provides unified history tracking with access counts and timestamps.
+ * All queries are scoped to the current authenticated user via userId.
  */
 
 import { nanoid } from 'nanoid';
 import { db } from './database';
 import type { AccessHistoryRecord } from './database';
+import { getCurrentUserId } from './user-context';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('AccessHistory');
@@ -24,18 +26,25 @@ export interface AccessHistoryInput {
   thumbnailUrl?: string;
 }
 
+function requireUserId(): string {
+  const userId = getCurrentUserId();
+  if (!userId) throw new Error('User not authenticated');
+  return userId;
+}
+
 /**
  * Save a new access history record.
  * If a record with the same (type, targetId) already exists, it will be updated
  * instead of creating a duplicate.
  */
 export async function saveAccessHistory(input: AccessHistoryInput): Promise<void> {
+  const userId = requireUserId();
   try {
     const now = Date.now();
 
-    // Check for existing record by type + targetId
+    // Check for existing record by userId + type + targetId
     const existing = await db.accessHistory
-      .where({ type: input.type, targetId: input.targetId })
+      .where({ userId, type: input.type, targetId: input.targetId })
       .first();
 
     if (existing) {
@@ -51,6 +60,7 @@ export async function saveAccessHistory(input: AccessHistoryInput): Promise<void
     } else {
       const record: AccessHistoryRecord = {
         id: nanoid(),
+        userId,
         ...input,
         createdAt: now,
         updatedAt: now,
@@ -76,9 +86,12 @@ export async function touchAccessHistory(
   url?: string,
   subtitle?: string,
 ): Promise<void> {
+  const userId = getCurrentUserId();
+  if (!userId) return;
+
   try {
     const existing = await db.accessHistory
-      .where({ type, targetId })
+      .where({ userId, type, targetId })
       .first();
 
     if (existing) {
@@ -103,12 +116,15 @@ export async function listAccessHistory(
   type?: AccessHistoryType,
   limit = 100,
 ): Promise<AccessHistoryRecord[]> {
+  const userId = getCurrentUserId();
+  if (!userId) return [];
+
   try {
-    let query = db.accessHistory.orderBy('updatedAt').reverse();
+    let collection = db.accessHistory.where('userId').equals(userId);
     if (type) {
-      query = db.accessHistory.where('type').equals(type).reverse();
+      collection = collection.and((r) => r.type === type);
     }
-    return query.limit(limit).toArray();
+    return collection.reverse().sortBy('updatedAt').then((arr) => arr.slice(0, limit));
   } catch (error) {
     log.error('Failed to list access history:', error);
     return [];
@@ -119,7 +135,10 @@ export async function listAccessHistory(
  * Get a single access history record by its own id.
  */
 export async function getAccessHistory(id: string): Promise<AccessHistoryRecord | undefined> {
-  return db.accessHistory.get(id);
+  const userId = getCurrentUserId();
+  const record = await db.accessHistory.get(id);
+  if (record && userId && record.userId && record.userId !== userId) return undefined;
+  return record;
 }
 
 /**
@@ -129,14 +148,22 @@ export async function getAccessHistoryByTarget(
   type: AccessHistoryType,
   targetId: string,
 ): Promise<AccessHistoryRecord | undefined> {
-  return db.accessHistory.where({ type, targetId }).first();
+  const userId = getCurrentUserId();
+  if (!userId) return undefined;
+
+  return db.accessHistory.where({ userId, type, targetId }).first();
 }
 
 /**
  * Delete a single access history record.
  */
 export async function deleteAccessHistory(id: string): Promise<void> {
+  const userId = getCurrentUserId();
   try {
+    if (userId) {
+      const record = await db.accessHistory.get(id);
+      if (record && record.userId && record.userId !== userId) return;
+    }
     await db.accessHistory.delete(id);
     log.info(`Deleted access history: ${id}`);
   } catch (error) {
@@ -149,14 +176,19 @@ export async function deleteAccessHistory(id: string): Promise<void> {
  * Clear all access history, optionally filtered by type.
  */
 export async function clearAccessHistory(type?: AccessHistoryType): Promise<void> {
+  const userId = getCurrentUserId();
+  if (!userId) return;
+
   try {
+    const collection = db.accessHistory.where('userId').equals(userId);
     if (type) {
-      const ids = await db.accessHistory.where('type').equals(type).primaryKeys();
+      const ids = await collection.and((r) => r.type === type).primaryKeys();
       await db.accessHistory.bulkDelete(ids);
       log.info(`Cleared access history for type: ${type}`);
     } else {
-      await db.accessHistory.clear();
-      log.info('Cleared all access history');
+      const ids = await collection.primaryKeys();
+      await db.accessHistory.bulkDelete(ids);
+      log.info('Cleared all access history for current user');
     }
   } catch (error) {
     log.error('Failed to clear access history:', error);
@@ -169,8 +201,11 @@ export async function clearAccessHistory(type?: AccessHistoryType): Promise<void
  * Call once at app startup or when bookshelf is first loaded.
  */
 export async function migrateStagesToAccessHistory(): Promise<void> {
+  const userId = getCurrentUserId();
+  if (!userId) return;
+
   try {
-    const stages = await db.stages.toArray();
+    const stages = await db.stages.where('userId').equals(userId).toArray();
     for (const stage of stages) {
       const existing = await getAccessHistoryByTarget('classroom', stage.id);
       if (!existing) {

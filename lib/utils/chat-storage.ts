@@ -3,11 +3,13 @@
  *
  * Independent from stage/scene storage cycle.
  * Handles serialization, truncation, and batch writes.
+ * All queries are scoped to the current authenticated user via userId.
  */
 
 import type { ChatSession, ChatMessageMetadata, SessionStatus } from '@/lib/types/chat';
 import type { UIMessage } from 'ai';
 import { db, type ChatSessionRecord } from './database';
+import { getCurrentUserId } from './user-context';
 
 /** Maximum messages per session to avoid IndexedDB bloat */
 const MAX_MESSAGES_PER_SESSION = 200;
@@ -18,15 +20,20 @@ const MAX_MESSAGES_PER_SESSION = 200;
  * - pendingToolCalls are cleared (runtime-only state)
  * - Messages are truncated to MAX_MESSAGES_PER_SESSION
  */
-export async function saveChatSessions(stageId: string, sessions: ChatSession[]): Promise<void> {
+export async function saveChatSessions(
+  userId: string,
+  stageId: string,
+  sessions: ChatSession[],
+): Promise<void> {
   if (!sessions || sessions.length === 0) {
     // Delete all sessions for this stage if empty
-    await db.chatSessions.where('stageId').equals(stageId).delete();
+    await db.chatSessions.where({ stageId }).delete();
     return;
   }
 
   const records: ChatSessionRecord[] = sessions.map((session) => ({
     id: session.id,
+    userId,
     stageId,
     type: session.type,
     title: session.title,
@@ -45,7 +52,7 @@ export async function saveChatSessions(stageId: string, sessions: ChatSession[])
 
   await db.transaction('rw', db.chatSessions, async () => {
     // Delete old sessions for this stage, then bulk insert new ones
-    await db.chatSessions.where('stageId').equals(stageId).delete();
+    await db.chatSessions.where({ stageId }).delete();
     await db.chatSessions.bulkPut(records);
   });
 }
@@ -55,7 +62,10 @@ export async function saveChatSessions(stageId: string, sessions: ChatSession[])
  * Returns sessions sorted by createdAt.
  */
 export async function loadChatSessions(stageId: string): Promise<ChatSession[]> {
-  const records = await db.chatSessions.where('stageId').equals(stageId).sortBy('createdAt');
+  const userId = getCurrentUserId();
+  const records = userId
+    ? await db.chatSessions.where({ userId, stageId }).sortBy('createdAt')
+    : await db.chatSessions.where({ stageId }).sortBy('createdAt');
 
   return records.map((record) => ({
     id: record.id,
@@ -77,5 +87,5 @@ export async function loadChatSessions(stageId: string): Promise<ChatSession[]> 
  * Delete all chat sessions for a stage.
  */
 export async function deleteChatSessions(stageId: string): Promise<void> {
-  await db.chatSessions.where('stageId').equals(stageId).delete();
+  await db.chatSessions.where({ stageId }).delete();
 }

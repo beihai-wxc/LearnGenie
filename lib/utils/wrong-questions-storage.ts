@@ -3,10 +3,12 @@
  *
  * Manages wrong-question collection records in IndexedDB.
  * Deduplicates by stageId + sceneId + questionId.
+ * All queries are scoped to the current authenticated user via userId.
  */
 
 import { nanoid } from 'nanoid';
 import { db, type WrongQuestionRecord } from './database';
+import { getCurrentUserId } from './user-context';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('WrongQuestionsStorage');
@@ -29,17 +31,24 @@ export interface SaveWrongQuestionInput {
   originUrl: string;
 }
 
+function requireUserId(): string {
+  const userId = getCurrentUserId();
+  if (!userId) throw new Error('User not authenticated');
+  return userId;
+}
+
 /**
  * Save or update a wrong-question record.
  * If a record with the same stageId + sceneId + questionId already exists,
  * updates wrongCount and metadata instead of creating a duplicate.
  */
 export async function saveWrongQuestion(input: SaveWrongQuestionInput): Promise<void> {
+  const userId = requireUserId();
   try {
     const now = Date.now();
 
     const existing = await db.wrongQuestions
-      .where({ stageId: input.stageId, sceneId: input.sceneId })
+      .where({ userId, stageId: input.stageId, sceneId: input.sceneId })
       .and((record) => record.questionId === input.questionId)
       .first();
 
@@ -61,6 +70,7 @@ export async function saveWrongQuestion(input: SaveWrongQuestionInput): Promise<
     } else {
       const record: WrongQuestionRecord = {
         id: nanoid(),
+        userId,
         ...input,
         wrongCount: 1,
         lastAnsweredAt: now,
@@ -80,7 +90,13 @@ export async function saveWrongQuestion(input: SaveWrongQuestionInput): Promise<
  * Delete a wrong-question record by id.
  */
 export async function deleteWrongQuestion(id: string): Promise<void> {
+  const userId = getCurrentUserId();
   try {
+    // Verify ownership
+    if (userId) {
+      const record = await db.wrongQuestions.get(id);
+      if (record && record.userId && record.userId !== userId) return;
+    }
     await db.wrongQuestions.delete(id);
     log.info(`Deleted wrong question: ${id}`);
   } catch (error) {
@@ -90,11 +106,18 @@ export async function deleteWrongQuestion(id: string): Promise<void> {
 }
 
 /**
- * List all wrong-question records, ordered by most recent first.
+ * List all wrong-question records for the current user, ordered by most recent first.
  */
 export async function listWrongQuestions(): Promise<WrongQuestionRecord[]> {
+  const userId = getCurrentUserId();
+  if (!userId) return [];
+
   try {
-    return db.wrongQuestions.orderBy('createdAt').reverse().toArray();
+    return db.wrongQuestions
+      .where('userId')
+      .equals(userId)
+      .reverse()
+      .sortBy('createdAt');
   } catch (error) {
     log.error('Failed to list wrong questions:', error);
     return [];
@@ -128,9 +151,12 @@ export async function isQuestionCollected(
   sceneId: string,
   questionId: string,
 ): Promise<boolean> {
+  const userId = getCurrentUserId();
+  if (!userId) return false;
+
   try {
     const record = await db.wrongQuestions
-      .where({ stageId, sceneId })
+      .where({ userId, stageId, sceneId })
       .and((r) => r.questionId === questionId)
       .first();
     return !!record;
@@ -147,9 +173,12 @@ export async function getWrongQuestionByKey(
   sceneId: string,
   questionId: string,
 ): Promise<WrongQuestionRecord | undefined> {
+  const userId = getCurrentUserId();
+  if (!userId) return undefined;
+
   try {
     return db.wrongQuestions
-      .where({ stageId, sceneId })
+      .where({ userId, stageId, sceneId })
       .and((r) => r.questionId === questionId)
       .first();
   } catch {
@@ -165,9 +194,12 @@ export async function deleteWrongQuestionByKey(
   sceneId: string,
   questionId: string,
 ): Promise<void> {
+  const userId = getCurrentUserId();
+  if (!userId) return;
+
   try {
     const record = await db.wrongQuestions
-      .where({ stageId, sceneId })
+      .where({ userId, stageId, sceneId })
       .and((r) => r.questionId === questionId)
       .first();
     if (record) {

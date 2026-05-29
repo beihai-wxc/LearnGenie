@@ -97,7 +97,7 @@ export function Header({ currentSceneTitle }: HeaderProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 bg-white/60 dark:bg-gray-800/60 backdrop-blur-md px-2 py-1.5 rounded-full border border-gray-100/50 dark:border-gray-700/50 shadow-sm shrink-0">
+        <div className="flex items-center gap-4 bg-white/60 dark:bg-[#1a1f2b]/60 backdrop-blur-md px-2 py-1.5 rounded-2xl border border-[#eef0f1] dark:border-white/[0.08] shadow-sm shrink-0">
           {/* Language Selector */}
           <LanguageSwitcher onOpen={() => setThemeOpen(false)} />
 
@@ -125,7 +125,7 @@ export function Header({ currentSceneTitle }: HeaderProps) {
                   className={cn(
                     'w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2',
                     theme === 'light' &&
-                      'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
+                      'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400',
                   )}
                 >
                   <Sun className="w-4 h-4" />
@@ -139,7 +139,7 @@ export function Header({ currentSceneTitle }: HeaderProps) {
                   className={cn(
                     'w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2',
                     theme === 'dark' &&
-                      'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
+                      'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400',
                   )}
                 >
                   <Moon className="w-4 h-4" />
@@ -153,7 +153,7 @@ export function Header({ currentSceneTitle }: HeaderProps) {
                   className={cn(
                     'w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2',
                     theme === 'system' &&
-                      'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
+                      'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400',
                   )}
                 >
                   <Monitor className="w-4 h-4" />

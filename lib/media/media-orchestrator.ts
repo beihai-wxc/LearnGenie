@@ -9,6 +9,7 @@
 import { useMediaGenerationStore } from '@/lib/store/media-generation';
 import { useSettingsStore } from '@/lib/store/settings';
 import { db, mediaFileKey } from '@/lib/utils/database';
+import { getCurrentUserId } from '@/lib/utils/user-context';
 import type { SceneOutline } from '@/lib/types/generation';
 import type { MediaGenerationRequest } from '@/lib/media/types';
 import { createLogger } from '@/lib/logger';
@@ -134,6 +135,7 @@ async function generateSingleMedia(
     // Store in IndexedDB
     await db.mediaFiles.put({
       id: mediaFileKey(stageId, req.elementId),
+      userId: getCurrentUserId() ?? '',
       stageId,
       type: req.type,
       blob,
@@ -164,6 +166,7 @@ async function generateSingleMedia(
       await db.mediaFiles
         .put({
           id: mediaFileKey(stageId, req.elementId),
+          userId: getCurrentUserId() ?? '',
           stageId,
           type: req.type,
           blob: new Blob(), // empty placeholder

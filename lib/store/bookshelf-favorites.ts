@@ -1,9 +1,11 @@
 /**
  * 课堂收藏存储 — 使用 IndexedDB bookshelf 表
+ * All queries are scoped to the current authenticated user via userId.
  */
 
 import { nanoid } from 'nanoid';
 import { db, type BookshelfRecord } from '@/lib/utils/database';
+import { getCurrentUserId } from '@/lib/utils/user-context';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('BookshelfFavorites');
@@ -17,9 +19,18 @@ export interface FavoriteItem {
   createdAt: number;
 }
 
+function requireUserId(): string {
+  const userId = getCurrentUserId();
+  if (!userId) throw new Error('User not authenticated');
+  return userId;
+}
+
 export async function getFavorites(): Promise<FavoriteItem[]> {
+  const userId = getCurrentUserId();
+  if (!userId) return [];
+
   const records = await db.bookshelf
-    .where('type').equals('classroom')
+    .where({ userId, type: 'classroom' as const })
     .toArray();
   return records.map((r) => ({
     id: r.id,
@@ -31,8 +42,11 @@ export async function getFavorites(): Promise<FavoriteItem[]> {
 }
 
 export async function getFavoriteByStageId(stageId: string): Promise<FavoriteItem | undefined> {
+  const userId = getCurrentUserId();
+  if (!userId) return undefined;
+
   const records = await db.bookshelf
-    .where('type').equals('classroom')
+    .where({ userId, type: 'classroom' as const })
     .toArray();
   return records
     .filter((r) => r.stageId === stageId)
@@ -46,11 +60,13 @@ export async function getFavoriteByStageId(stageId: string): Promise<FavoriteIte
 }
 
 export async function addFavorite(stageId: string, stageName: string, group?: string): Promise<void> {
+  const userId = requireUserId();
   const existing = await getFavoriteByStageId(stageId);
   if (existing) return;
   const now = Date.now();
   const record: BookshelfRecord = {
     id: nanoid(),
+    userId,
     title: stageName,
     type: 'classroom',
     stageId,
@@ -62,8 +78,11 @@ export async function addFavorite(stageId: string, stageName: string, group?: st
 }
 
 export async function removeFavorite(stageId: string): Promise<void> {
+  const userId = getCurrentUserId();
+  if (!userId) return;
+
   const records = await db.bookshelf
-    .where('type').equals('classroom')
+    .where({ userId, type: 'classroom' as const })
     .toArray();
   const found = records.find((r) => r.stageId === stageId);
   if (found) {
@@ -77,8 +96,11 @@ export async function isFavorited(stageId: string): Promise<boolean> {
 }
 
 export async function changeFavoriteGroup(stageId: string, newGroup: string): Promise<void> {
+  const userId = getCurrentUserId();
+  if (!userId) return;
+
   const records = await db.bookshelf
-    .where('type').equals('classroom')
+    .where({ userId, type: 'classroom' as const })
     .toArray();
   const found = records.find((r) => r.stageId === stageId);
   if (found) {
@@ -89,7 +111,10 @@ export async function changeFavoriteGroup(stageId: string, newGroup: string): Pr
 }
 
 export async function getGroups(): Promise<string[]> {
-  const cats = await db.categories.orderBy('id').toArray();
+  const userId = getCurrentUserId();
+  if (!userId) return [];
+
+  const cats = await db.categories.where('userId').equals(userId).sortBy('id');
   const names = cats.map((c) => c.name);
   if (!names.includes(DEFAULT_GROUP)) {
     names.unshift(DEFAULT_GROUP);
@@ -98,10 +123,14 @@ export async function getGroups(): Promise<string[]> {
 }
 
 export async function ensureDefaultGroup(): Promise<void> {
-  const exists = await db.categories.get(DEFAULT_GROUP);
-  if (!exists) {
+  const userId = getCurrentUserId();
+  if (!userId) return;
+
+  const existing = await db.categories.get(DEFAULT_GROUP);
+  if (!existing) {
     await db.categories.put({
       id: DEFAULT_GROUP,
+      userId,
       name: DEFAULT_GROUP,
       createdAt: Date.now(),
     });
@@ -109,10 +138,12 @@ export async function ensureDefaultGroup(): Promise<void> {
 }
 
 export async function addGroup(name: string): Promise<void> {
+  const userId = requireUserId();
   const exists = await db.categories.get(name);
   if (!exists) {
     await db.categories.put({
       id: name,
+      userId,
       name,
       createdAt: Date.now(),
     });

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { db, type VoiceProfileRecord } from '@/lib/utils/database';
+import { getCurrentUserId } from '@/lib/utils/user-context';
 import type { TTSVoiceInfo } from '@/lib/audio/types';
 import {
   VOXCPM_AUTO_VOICE,
@@ -29,6 +30,12 @@ function createId(): string {
     return crypto.randomUUID();
   }
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function requireUserId(): string {
+  const userId = getCurrentUserId();
+  if (!userId) throw new Error('User not authenticated');
+  return userId;
 }
 
 async function blobToBase64(blob: Blob): Promise<string> {
@@ -189,9 +196,14 @@ export function useVoxCPMVoiceProfiles() {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
+      const userId = getCurrentUserId();
+      if (!userId) {
+        setProfiles([]);
+        return;
+      }
       const rows = await db.voiceProfiles
-        .where('providerId')
-        .equals(VOXCPM_TTS_PROVIDER_ID)
+        .where('[userId+providerId]')
+        .equals([userId, VOXCPM_TTS_PROVIDER_ID])
         .toArray();
       rows.sort((a, b) => b.updatedAt - a.updatedAt);
       setProfiles(rows);
@@ -208,10 +220,12 @@ export function useVoxCPMVoiceProfiles() {
 
   const addPromptVoice = useCallback(
     async (input: { name: string; voicePrompt: string }) => {
+      const userId = requireUserId();
       const now = Date.now();
       const id = createId();
       await db.voiceProfiles.put({
         id,
+        userId,
         providerId: VOXCPM_TTS_PROVIDER_ID,
         kind: 'prompt',
         name: input.name.trim(),
@@ -235,6 +249,7 @@ export function useVoxCPMVoiceProfiles() {
       promptText?: string;
       voicePrompt?: string;
     }) => {
+      const userId = requireUserId();
       const now = Date.now();
       const id = createId();
       const referenceAudio = await normalizeVoxCPMReferenceAudio(
@@ -243,6 +258,7 @@ export function useVoxCPMVoiceProfiles() {
       );
       await db.voiceProfiles.put({
         id,
+        userId,
         providerId: VOXCPM_TTS_PROVIDER_ID,
         kind: 'clone',
         name: input.name.trim(),
@@ -263,6 +279,13 @@ export function useVoxCPMVoiceProfiles() {
 
   const deleteVoice = useCallback(
     async (id: string) => {
+      const userId = getCurrentUserId();
+      if (userId) {
+        const record = await db.voiceProfiles.get(id);
+        if (record && record.userId && record.userId !== userId) {
+          return;
+        }
+      }
       await db.voiceProfiles.delete(id);
       await refresh();
       notifyVoiceProfilesChanged();
@@ -293,7 +316,8 @@ export async function getVoxCPMProviderOptions(
   }
 
   const profile = await db.voiceProfiles.get(profileId);
-  if (!profile) {
+  const userId = getCurrentUserId();
+  if (!profile || (userId && profile.userId && profile.userId !== userId)) {
     return {
       voiceMode: 'auto',
       voicePrompt: buildAutoVoxCPMVoicePrompt(context),

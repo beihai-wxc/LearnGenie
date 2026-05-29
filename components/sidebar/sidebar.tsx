@@ -65,7 +65,7 @@ export function Sidebar() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <aside className="fixed left-0 top-0 z-40 flex h-screen w-52 flex-col items-center gap-4 border-r border-slate-200/50 bg-white/80 backdrop-blur-xl py-6 dark:border-white/10 dark:bg-slate-950/80">
+      <aside className="fixed left-0 top-0 z-40 flex h-screen w-52 flex-col items-center gap-4 border-r border-[#eef0f1] bg-white/80 backdrop-blur-xl py-6 dark:border-white/[0.08] dark:bg-[#0d1117]/80">
         <div className="mb-2 flex w-full shrink-0 items-center justify-center">
           <img src="/logo-horizontal.png" alt="LearnGenie" className="h-8 w-auto" />
         </div>
@@ -78,11 +78,11 @@ export function Sidebar() {
                   type="button"
                   onClick={() => handleClick(item)}
                   className={cn(
-                    'flex h-12 w-full items-center gap-3 px-4 rounded-xl transition-all duration-200',
-                    'hover:scale-[1.02] hover:bg-sky-50 hover:shadow-lg hover:shadow-sky-500/10',
-                    'dark:hover:bg-sky-500/10 dark:hover:shadow-sky-500/20',
-                    isActive(item) && 'bg-sky-100 text-sky-600 shadow-md dark:bg-sky-500/20 dark:text-sky-300',
-                    !isActive(item) && 'text-slate-500 hover:text-sky-600 dark:text-slate-400 dark:hover:text-sky-300',
+                    'flex h-12 w-full items-center gap-3 px-4 rounded-2xl transition-all duration-200',
+                    'hover:scale-[1.02] hover:bg-sky-50 hover:shadow-sm',
+                    'dark:hover:bg-sky-500/10',
+                    isActive(item) && 'bg-blue-50 text-blue-600 shadow-sm dark:bg-blue-500/20 dark:text-blue-300',
+                    !isActive(item) && 'text-[#535862] hover:text-blue-600 dark:text-[#93979f] dark:hover:text-blue-300',
                   )}
                 >
                   {item.icon}

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/lib/store/auth';
-import { AuthDecoration } from './auth-decoration';
+import { CharacterAnimation } from './character-animation';
 
 export function RegisterForm() {
   const router = useRouter();
@@ -22,9 +22,9 @@ export function RegisterForm() {
 
   const validate = () => {
     const next: Record<string, string> = {};
-    if (!email.trim() || !email.includes('@')) next.email = '请输入有效的邮箱地址';
-    if (!password || password.length < 6) next.password = '密码至少 6 位';
-    if (password !== confirmPassword) next.confirmPassword = '两次密码输入不一致';
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) next.email = '请输入有效的邮箱地址';
+    if (!password || password.length < 6) next.password = '密码至少需要 6 个字符';
+    if (password !== confirmPassword) next.confirmPassword = '两次输入的密码不一致';
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -34,7 +34,7 @@ export function RegisterForm() {
     if (!validate()) return;
     try {
       await register(email.trim(), password, nickname.trim() || undefined);
-      toast.success('注册成功，请登录');
+      toast.success('注册成功');
       router.push('/login');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '注册失败');
@@ -42,121 +42,122 @@ export function RegisterForm() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#ebf5ff]">
-      {/* Left - decoration */}
-      <div className="hidden lg:block w-1/2">
-        <AuthDecoration />
+    <div className="flex min-h-screen bg-gradient-to-br from-[#f5f0ff] via-[#f0f0ff] to-[#fff0f5]">
+      {/* Left - animated illustration */}
+      <div className="hidden lg:block w-1/2 relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute left-[15%] top-[10%] w-80 h-80 rounded-full bg-gradient-to-br from-violet-200/30 to-fuchsia-200/20 blur-3xl" style={{ animation: 'float-orb 12s ease-in-out infinite' }} />
+          <div className="absolute right-[20%] bottom-[15%] w-64 h-64 rounded-full bg-gradient-to-br from-amber-200/20 to-orange-200/15 blur-3xl" style={{ animation: 'float-orb 15s ease-in-out infinite 3s' }} />
+          <div className="absolute left-[40%] top-[50%] w-48 h-48 rounded-full bg-gradient-to-br from-indigo-200/20 to-violet-200/15 blur-3xl" style={{ animation: 'float-orb 10s ease-in-out infinite 1s' }} />
+        </div>
+        <CharacterAnimation />
       </div>
 
       {/* Right - form */}
-      <div className="relative flex w-full lg:w-1/2 items-center justify-center px-8 bg-white">
+      <div className="relative flex w-full lg:w-1/2 items-center justify-center px-6">
         <button
           onClick={() => router.push('/')}
-          className="fixed left-6 top-6 z-10 flex items-center gap-1.5 rounded-full border border-[#cce7ff] bg-white/70 px-4 py-2 text-sm font-medium text-[#535862] backdrop-blur-sm transition-colors hover:border-[#0069e0] hover:text-[#0a0d12]"
+          className="fixed left-6 top-6 z-10 flex items-center gap-2 rounded-xl bg-white/70 backdrop-blur-md px-5 py-3 text-[14px] font-semibold text-[#4a4a6a] border border-violet-100/40 shadow-[0_2px_10px_rgba(0,0,0,0.04)] transition-all duration-200 hover:bg-white/90 hover:border-violet-200/60"
         >
-          <ArrowLeft className="size-4" />
-          返回
+          <ArrowLeft className="size-4.5" />
+          返回首页
         </button>
 
-        <div className="w-full max-w-[380px]">
-          <div className="mb-10 text-center">
-            <img src="/logo-horizontal.png" alt="LearnGenie" className="mx-auto h-7 w-auto" />
-            <p className="mt-3 text-sm text-[#535862]">开启你的 AI 互动学习之旅</p>
-          </div>
+        {/* Mobile logo */}
+        <div className="lg:hidden absolute top-6 left-1/2 -translate-x-1/2">
+          <img src="/logo-horizontal.png" alt="LearnGenie" className="h-8 w-auto" />
+        </div>
 
-          <div
-            className="rounded-[32px] bg-[#fafdff] p-10"
-            style={{ boxShadow: 'rgba(4, 69, 144, 0.08) 0px 14px 20px 4px' }}
-          >
-            <h1 className="mb-2 text-[24px] font-medium leading-[1.2] -tracking-[0.02em] text-[#0a0d12]">
+        <div className="w-full max-w-[500px]">
+          {/* Header */}
+          <div className="mb-10">
+            <h1 className="text-[40px] font-bold leading-[1.15] -tracking-[0.025em] text-[#1a1a2e]">
               创建账号
             </h1>
-            <p className="mb-8 text-[14px] leading-[1.5] text-[#535862]">注册后即可使用全部功能</p>
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <label className="mb-2 block text-[14px] font-medium text-[#0a0d12]">邮箱</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="请输入邮箱"
-                  className="w-full rounded-[16px] border border-[#cce7ff] bg-white px-4 py-3 text-[14px] text-[#0a0d12] placeholder:text-[#93979f] outline-none transition-colors focus:border-[#0069e0] focus:ring-2 focus:ring-[#0069e0]/10"
-                />
-                {errors.email && <p className="mt-1.5 text-[13px] text-red-500">{errors.email}</p>}
-              </div>
-
-              <div>
-                <label className="mb-2 block text-[14px] font-medium text-[#0a0d12]">昵称</label>
-                <input
-                  type="text"
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
-                  placeholder="给自己起个名字吧"
-                  className="w-full rounded-[16px] border border-[#cce7ff] bg-white px-4 py-3 text-[14px] text-[#0a0d12] placeholder:text-[#93979f] outline-none transition-colors focus:border-[#0069e0] focus:ring-2 focus:ring-[#0069e0]/10"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-[14px] font-medium text-[#0a0d12]">密码</label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="至少 6 位密码"
-                    className="w-full rounded-[16px] border border-[#cce7ff] bg-white px-4 py-3 pr-10 text-[14px] text-[#0a0d12] placeholder:text-[#93979f] outline-none transition-colors focus:border-[#0069e0] focus:ring-2 focus:ring-[#0069e0]/10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#93979f] hover:text-[#535862]"
-                  >
-                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                  </button>
-                </div>
-                {errors.password && <p className="mt-1.5 text-[13px] text-red-500">{errors.password}</p>}
-              </div>
-
-              <div>
-                <label className="mb-2 block text-[14px] font-medium text-[#0a0d12]">确认密码</label>
-                <div className="relative">
-                  <input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="再次输入密码"
-                    className="w-full rounded-[16px] border border-[#cce7ff] bg-white px-4 py-3 pr-10 text-[14px] text-[#0a0d12] placeholder:text-[#93979f] outline-none transition-colors focus:border-[#0069e0] focus:ring-2 focus:ring-[#0069e0]/10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#93979f] hover:text-[#535862]"
-                  >
-                    {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                  </button>
-                </div>
-                {errors.confirmPassword && <p className="mt-1.5 text-[13px] text-red-500">{errors.confirmPassword}</p>}
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full rounded-[32px] bg-[#181d27] py-3 text-[14px] font-medium text-white transition-all hover:bg-[#0a0d12] disabled:opacity-60"
-                style={{ boxShadow: 'rgba(10, 13, 18, 0.08) 0px 1px 2px 0px, rgb(10, 13, 18) 0px 0px 0px 1px' }}
-              >
-                {isLoading ? <Loader2 className="mr-2 inline size-4 animate-spin" /> : null}
-                注册
-              </button>
-            </form>
-
-            <p className="mt-6 text-center text-[14px] text-[#535862]">
-              已有账号？
-              <a href="/login" className="ml-1 font-medium text-[#0099ff] hover:underline">
-                立即登录
-              </a>
-            </p>
+            <p className="mt-3.5 text-[18px] leading-[1.6] text-[#6b6b80]">注册以解锁全部功能</p>
           </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="mb-2.5 block text-[16px] font-semibold text-[#3a3a50]">邮箱</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com"
+                className="w-full rounded-2xl border border-violet-100/60 bg-white/80 backdrop-blur-sm px-5 py-4 text-[16px] text-[#1a1a2e] placeholder:text-[#a0a0b8] outline-none transition-all duration-200 focus:border-violet-300 focus:ring-3 focus:ring-violet-100/50 focus:bg-white"
+              />
+              {errors.email && <p className="mt-2 text-[14px] text-red-500 font-medium">{errors.email}</p>}
+            </div>
+
+            <div>
+              <label className="mb-2.5 block text-[16px] font-semibold text-[#3a3a50]">昵称</label>
+              <input
+                type="text"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder="取一个昵称"
+                className="w-full rounded-2xl border border-violet-100/60 bg-white/80 backdrop-blur-sm px-5 py-4 text-[16px] text-[#1a1a2e] placeholder:text-[#a0a0b8] outline-none transition-all duration-200 focus:border-violet-300 focus:ring-3 focus:ring-violet-100/50 focus:bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2.5 block text-[16px] font-semibold text-[#3a3a50]">密码</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="至少 6 个字符"
+                  className="w-full rounded-2xl border border-violet-100/60 bg-white/80 backdrop-blur-sm px-5 py-4 pr-12 text-[16px] text-[#1a1a2e] placeholder:text-[#a0a0b8] outline-none transition-all duration-200 focus:border-violet-300 focus:ring-3 focus:ring-violet-100/50 focus:bg-white"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#a0a0b8] hover:text-[#6b6b80] transition-colors p-1.5"
+                >
+                  {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+                </button>
+              </div>
+              {errors.password && <p className="mt-2 text-[14px] text-red-500 font-medium">{errors.password}</p>}
+            </div>
+
+            <div>
+              <label className="mb-2.5 block text-[16px] font-semibold text-[#3a3a50]">确认密码</label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="再次输入密码"
+                  className="w-full rounded-2xl border border-violet-100/60 bg-white/80 backdrop-blur-sm px-5 py-4 pr-12 text-[16px] text-[#1a1a2e] placeholder:text-[#a0a0b8] outline-none transition-all duration-200 focus:border-violet-300 focus:ring-3 focus:ring-violet-100/50 focus:bg-white"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#a0a0b8] hover:text-[#6b6b80] transition-colors p-1.5"
+                >
+                  {showConfirmPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+                </button>
+              </div>
+              {errors.confirmPassword && <p className="mt-2 text-[14px] text-red-500 font-medium">{errors.confirmPassword}</p>}
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full mt-6 rounded-2xl bg-gradient-to-r from-[#6c3bff] via-[#8b5cf6] to-[#a855f7] py-4.5 text-[16px] font-bold tracking-wide text-white shadow-[0_6px_20px_rgba(108,59,255,0.3)] transition-all duration-300 hover:shadow-[0_8px_24px_rgba(108,59,255,0.4)] hover:brightness-110 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isLoading ? <Loader2 className="inline size-5 animate-spin" /> : '注 册'}
+            </button>
+          </form>
+
+          <p className="mt-8 text-center text-[16px] text-[#6b6b80]">
+            已有账号？
+            <a href="/login" className="ml-1.5 font-bold text-[#7c3aed] hover:text-[#6c3bff] transition-colors">
+              立即登录
+            </a>
+          </p>
         </div>
       </div>
     </div>
