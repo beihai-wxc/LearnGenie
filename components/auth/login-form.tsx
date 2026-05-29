@@ -82,7 +82,7 @@ export function LoginForm() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="test@example.com"
+                placeholder="请输入邮箱地址"
                 className="w-full rounded-2xl border border-violet-100/60 bg-white/80 backdrop-blur-sm px-5 py-4 text-[16px] text-[#1a1a2e] placeholder:text-[#a0a0b8] outline-none transition-all duration-200 focus:border-violet-300 focus:ring-3 focus:ring-violet-100/50 focus:bg-white"
               />
               {errors.email && <p className="mt-2 text-[14px] text-red-500 font-medium">{errors.email}</p>}

@@ -11,15 +11,18 @@ LearnGenie 是一个基于 Next.js App Router 的 AI 互动课堂应用。
 ## 2. 技术栈与总体形态
 
 - 框架：Next.js 16 + React 19 + TypeScript
-- UI：自定义组件 + Radix/Base UI + motion + Tailwind 4
-- 状态管理：Zustand
-- 本地持久化：Dexie / IndexedDB
-- AI 调用：AI SDK + LangGraph + LangChain + 多 Provider 适配
+- UI：自定义组件 + Radix/Base UI + motion（framer-motion）+ Tailwind CSS v4（CSS-based 配置，无 tailwind.config.ts）+ animate.css
+- 状态管理：Zustand（10+ stores，含 persist 中间件）
+- 本地持久化：Dexie / IndexedDB（数据库名 `MAIC-Database`，v14 版本）
+- 主题：next-themes（light / dark / system）
+- AI 调用：Vercel AI SDK + LangGraph + LangChain + 多 Provider 适配（含 thinking context 支持）
 - 测试：Vitest + Playwright
-- 国际化：i18next
-- 认证：bcryptjs + Cookie 会话
+- 国际化：i18next + react-i18next（zh-CN / en-US / ja-JP / ru-RU / ar-SA，共 5 种语言，动态加载语言包）
+- 认证：bcryptjs + JWT（jose）+ httpOnly Cookie 会话 + 文件型用户存储（`.data/users.json`）
+- 包管理：pnpm v10 + workspace（monorepo）
 - 包结构：主应用 + `packages/` 下两个 workspace 包（mathml2omml, pptxgenjs）
 - 图表：ECharts
+- 富文本编辑：ProseMirror（幻灯片编辑器）
 
 这个项目不是前后端分离的双仓库，而是：
 
@@ -36,15 +39,17 @@ LearnGenie 是一个基于 Next.js App Router 的 AI 互动课堂应用。
 2. `ARCHITECTURE.md`
 3. `README.md`
 4. `package.json`
-5. `app/page.tsx`（首页 / Landing 入口）
-6. `app/layout.tsx`（根布局）
-7. `app/generation-preview/page.tsx`
-8. `app/api/generate-classroom/route.ts`
-9. `lib/server/classroom-generation.ts`
-10. `app/api/chat/route.ts`
-11. `lib/orchestration/director-graph.ts`
-12. `components/stage.tsx`
-13. `lib/store/stage.ts`
+5. `app/layout.tsx`（根布局 — 了解 Provider 层级、字体加载、全局 CSS）
+6. `app/page.tsx`（首页 / Landing 入口）
+7. `middleware.ts`（了解认证守卫 & 访问码保护）
+8. `app/generation-preview/page.tsx`
+9. `app/api/generate-classroom/route.ts`
+10. `lib/server/classroom-job-runner.ts`
+11. `app/api/chat/route.ts`
+12. `lib/orchestration/director-graph.ts`
+13. `components/stage.tsx`
+14. `lib/store/stage.ts`
+15. `.env.example`（了解所有支持的环境变量 / Provider）
 
 如果只想快速定位问题：
 
@@ -67,9 +72,9 @@ Next.js App Router 入口层。
 - `app/page.tsx`
   首页，负责收集课程需求、上传 PDF、触发知识库匹配、创建生成会话。
 - `app/layout.tsx`
-  根布局，集成根 Provider、认证守卫、语言切换等。
+  根布局，集成 ThemeProvider → I18nProvider → ServerProvidersInit → AuthProvider → Toaster 的 Provider 层级。
 - `app/login/` & `app/register/`
-  邮箱登录/注册页面。
+  邮箱登录/注册页面（动画装饰 + 左右分栏布局）。
 - `app/profile/`
   用户个人资料/画像页面。
 - `app/generation-preview/`
@@ -86,16 +91,24 @@ Next.js App Router 入口层。
   知识库文档列表与文档查看页。
 - `app/api/`
   服务端 API 层，主要是薄路由，真正业务多在 `lib/`。包含以下关键路由：
-  - `auth/` - 认证相关
-  - `chat/` - Agent 聊天
-  - `generate-classroom/` - 课程生成
-  - `classroom/` & `classroom-media/` - 课堂 CRUD 与媒体
-  - `knowledge/` - 知识库检索
-  - `profile/` - 用户画像
-  - `agent/` - Agent 配置
-  - `pbl/` - PBL 教学
-  - `verify-*` - 各类 Provider 验证
-  - `proxy-media/` - 媒体代理
+  - `auth/` - 登录、注册、登出、获取当前用户（JWT + bcrypt）
+  - `chat/` - Agent 聊天（无状态 SSE 流，每次传入完整 storeState）
+  - `generate-classroom/` - 课程生成（异步 job 模式，创建后后台执行、前端轮询）
+  - `generate/` - 场景大纲流式生成、场景内容生成、场景动作/讲稿生成、Agent 形象生成、图片/视频/TTS 生成
+  - `classroom/` & `classroom-media/` - 课堂 CRUD 与服务端媒体存取
+  - `knowledge/` - 知识库检索、上传匹配、入库、文档管理
+  - `profile/` - 用户画像抽取
+  - `agent/` - Agent 会话规划、画像抽取、评估、资源包生成
+  - `pbl/` - PBL 教学聊天
+  - `verify-*` - 各类 Provider 验证（model / image / video / pdf）
+  - `proxy-media/` - 媒体代理（带超时和 SSRF 防护）
+  - `server-providers/` - 获取服务端环境变量配置的 Provider 列表
+  - `access-code/` - 访问码验证
+  - `parse-pdf/` - PDF 解析
+  - `web-search/` - Web Search（Tavily）
+  - `quiz-grade/` - 测验批改
+  - `transcription/` - ASR 转录
+  - `health/` - 健康检查
 
 ### `components/`
 
@@ -106,7 +119,9 @@ Next.js App Router 入口层。
 - `components/landing/`
   Landing 页各区块（hero、features、how-it-works、FAQ、footer、use-cases、product-preview）。
 - `components/auth/`
-  登录/注册表单、认证守卫、认证 Provider。
+  登录/注册表单（login-form、register-form）、认证 Provider（auth-provider — 负责 mount 时拉取用户数据、切换账号时重置画像）、
+  认证守卫（protected-route — 客户端路由守卫，未认证重定向 /login）、动画装饰（auth-decoration — SVG 浮动书本）、
+  角色动画（character-animation — SVG 多状态动画：confused / studying / tablet）。
 - `components/settings/`
   模型、音频、图片、视频、PDF、Web Search、Agent 等配置界面。
 - `components/chat/`
@@ -120,11 +135,13 @@ Next.js App Router 入口层。
 - `components/scene-renderers/`
   按场景类型渲染互动内容，比如 quiz、PBL 等。PBL 下有独立的 chat-panel、issueboard-panel、workspace 等。
 - `components/slide-renderer/`
-  幻灯片/画布渲染编辑体系，体量很大，是渲染层复杂度最高的目录。含 Editor、Canvas、各类 Element。
+  幻灯片/画布渲染编辑体系，体量很大，是渲染层复杂度最高的目录。含 Editor（基于 ProseMirror 的富文本编辑）、
+  Canvas（拖拽/缩放/旋转操作）、各类 Element（Text / Image / Shape / Line / Table / Chart（ECharts）/ LaTeX / Code / Video）、
+  缩略图、辅助线、网格、标尺、框选、缩放包裹、激光/聚光灯/高亮覆盖层。
 - `components/whiteboard/`、`components/canvas/`
   白板和画布交互。
 - `components/bookshelf/`
-  书架和历史课堂内容管理 UI（card、tabs、wrong-question-card）。
+  书架和历史课堂内容管理 UI（card、tabs、wrong-question-card、wrong-questions-content）。
 - `components/roundtable/`
   圆桌讨论相关组件。
 - `components/sidebar/`
@@ -164,12 +181,15 @@ Next.js App Router 入口层。
   课程生成流水线，包含大纲生成、场景内容生成、动作生成、场景组装、JSON 修复。
 - `lib/orchestration/`
   Agent 编排层，尤其是聊天会话的 director graph、prompt 构建、状态总结、
-  registry（store/types）。
+  registry（store/types）。含 AI SDK 与 LangGraph 的适配层、无状态生成、工具 Schema 定义、
+  对话总结器（message-converter、peer-context、state-context、whiteboard-ledger）。
 - `lib/agents/`
   多 Agent 系统（orchestrator、evaluation-agent、path-planning-agent、profile-agent、
   resource-agents、retrieval-agent、review-agent）。
+  工作流阶段：profile → retrieval → planning → resource-generation → review → evaluation。
 - `lib/ai/`
-  模型与 Provider 适配。
+  模型与 Provider 适配（OpenAI / Anthropic / Google / GLM / Qwen / DeepSeek / Kimi / MiniMax /
+  SiliconFlow / Doubao / Grok / Ollama），含 thinking context 支持（AsyncLocalStorage 传递推理参数）。
 - `lib/media/`
   图片/视频生成 Provider 适配和编排，含 grok、kling、minimax、nano-banana、
   qwen、seedance、seedream、veo 等 adapter。
@@ -184,16 +204,17 @@ Next.js App Router 入口层。
 - `lib/action/`
   场景动作执行引擎。
 - `lib/store/`
-  Zustand 状态仓库，是前端行为的核心状态层：
-  - `stage.ts` - 课堂级核心 store
-  - `auth.ts` - 认证状态
-  - `settings.ts` - 全局设置
-  - `ui.ts` - UI 状态
+  Zustand 状态仓库，是前端行为的核心状态层。
+  所有 store 使用 `zustand/middleware/persist` 持久化：
+  - `stage.ts` - 课堂级核心 store（IndexedDB 持久化）
+  - `auth.ts` - 认证状态（localStorage 持久化，含 token/user/login/register/logout/fetchUser）
+  - `settings.ts` - 全局设置（localStorage 持久化，含 LLM/TTS/ASR/PDF/Image/Video/WebSearch/Embedding 等 Provider 配置）
+  - `ui.ts` - UI 状态（设置弹窗开关）
   - `snapshot.ts` - 快照/撤销
   - `canvas.ts` - 画布状态
   - `keyboard.ts` - 键盘快捷键
   - `media-generation.ts` - 媒体生成状态
-  - `user-profile.ts` - 用户画像
+  - `user-profile.ts` - 用户画像（按用户 scoped 的 localStorage）
   - `bookshelf-favorites.ts` - 书架收藏
   - `whiteboard-history.ts` - 白板历史
   - `widget-iframe.ts` - Widget iframe
@@ -208,7 +229,8 @@ Next.js App Router 入口层。
   跨层共享类型定义，含 stage.ts、generation.ts、chat.ts、action.ts、slides.ts、
   settings.ts、provider.ts、roundtable.ts、student-profile.ts、widgets.ts 等。
 - `lib/pbl/`
-  PBL 教学系统（generate-pbl、MCP 相关）。
+  PBL 教学系统（generate-pbl、MCP 工具集：agent-mcp / issueboard-mcp / mode-mcp / project-mcp、
+  agent 模板、PBL 系统提示词）。
 - `lib/export/`
   导出功能（classroom-zip、pptx、latex-to-omml、html-parser、svg 处理）。
 - `lib/import/`
@@ -218,7 +240,7 @@ Next.js App Router 入口层。
 - `lib/i18n/`
   国际化配置与语言包管理。
 - `lib/contexts/`
-  React Context 定义（media-stage-context、scene-context）。
+  React Context 定义（media-stage-context — 媒体生成阶段上下文、scene-context — 场景上下文）。
 - `lib/profile/`
   用户画像处理（auto-refresh、markdown-sync）。
 - `lib/storage/`
@@ -246,8 +268,13 @@ Next.js App Router 入口层。
   内部 workspace 包。
   - `mathml2omml`：公式导出相关
   - `pptxgenjs`：PPT 导出相关
+- `public/`
+  静态资源。
+  - `avatars/`：31+ Agent/学生/用户头像（SVG + PNG）
+  - `logos/`：21+ Provider Logo（Azure / Claude / DeepSeek / Gemini / GLM / Grok / Kimi / Kling / MiniMax / Ollama / OpenAI / Qwen 等）
+  - `logo-horizontal.png`：应用横版 Logo
 - `rag/`
-  本地知识库资源和索引数据。
+  本地知识库资源和索引数据（PDF 语料、索引 JSON、向量数据）。
 - `tests/`
   单元测试与服务测试。
 - `e2e/`
@@ -322,18 +349,20 @@ Next.js App Router 入口层。
 核心模块：
 
 - `lib/orchestration/stateless-generate.ts`
-- `lib/orchestration/director-graph.ts`
+- `lib/orchestration/director-graph.ts`（基于 LangGraph）
 - `lib/orchestration/director-prompt.ts`
-- `lib/orchestration/summarizers/`
+- `lib/orchestration/ai-sdk-adapter.ts`（AI SDK 与 LangGraph 适配）
+- `lib/orchestration/tool-schemas.ts`
+- `lib/orchestration/summarizers/`（conversation-summary / message-converter / peer-context / state-context / whiteboard-ledger）
 - `lib/agents/`（多 Agent 协作）
 
 特点：
 
 - 这是一个无状态 SSE 聊天接口。
 - 客户端把完整消息和当前 storeState 一次性传给后端。
-- 后端用 director graph 决定下一个 agent、何时 cue user、何时结束。
+- 后端用 director graph（LangGraph）决定下一个 agent、何时 cue user、何时结束。
 - 结果以 SSE 增量事件流回前端。
-- 多 Agent 系统（orchestrator、evaluation、path-planning、profile、resource、retrieval、review）协作完成复杂任务。
+- 多 Agent 系统按 6 阶段流水线（profile → retrieval → planning → resource-generation → review → evaluation）协作完成复杂任务。
 
 ## 6. 数据与状态怎么存
 
@@ -341,27 +370,35 @@ Next.js App Router 入口层。
 
 ### 前端运行时状态
 
-- 主要通过 Zustand 管理。
+- 主要通过 Zustand 管理（10+ stores，均使用 `zustand/middleware/persist`）。
 - 关键 store 在 `lib/store/`。
-- 其中 `lib/store/stage.ts` 是课堂级核心 store。
+- 其中 `lib/store/stage.ts` 是课堂级核心 store（IndexedDB 持久化）。
+- `lib/store/auth.ts` 是认证 store（localStorage 持久化）。
+- `lib/store/settings.ts` 是全局设置 store，涵盖 LLM/TTS/ASR/PDF/Image/Video/WebSearch/Embedding 等多类 Provider 配置。
 
 ### 本地持久化
 
 - 通过 Dexie/IndexedDB 存。
-- 入口定义在 `lib/utils/database.ts`。
+- 入口定义在 `lib/utils/database.ts`（数据库名 `MAIC-Database`，当前 v14 版本）。
 
 重要表包括：
 
 - `stages`
 - `scenes`
+- `audioFiles`
+- `imageFiles`
+- `snapshots`
 - `chatSessions`
-- `playbackStates`
+- `playbackState`
 - `stageOutlines`
 - `mediaFiles`
 - `generatedAgents`
 - `bookshelf`
+- `categories`
 - `accessHistory`
 - `wrongQuestions`
+
+所有用户数据表均含 `userId` 字段，实现多账号数据隔离。
 
 ### 课堂数据持久化
 
@@ -397,34 +434,43 @@ Next.js App Router 入口层。
 另外有一个简单访问保护：
 
 - `middleware.ts`
-- 当配置 `ACCESS_CODE` 时，会要求访问码 Cookie 才能正常访问 API。
+- 双重认证机制：
+  1. **JWT 认证**：验证 `auth_token` Cookie（jose HS256 签名，7 天过期），保护 `/generate`、`/profile`、`/bookshelf`、`/classroom`、`/knowledge`、`/wrong-questions` 及 `/api/*`（auth 端点除外）
+  2. **ACCESS_CODE**（可选）：当环境变量配置 `ACCESS_CODE` 时，验证 `openmaic_access` Cookie（HMAC 签名），否则重定向到 `/access-code`
+- 未认证请求重定向到 `/login`
 
 ## 8. 用户认证体系
 
 入口页面：
 
-- `app/login/page.tsx`
-- `app/register/page.tsx`
+- `app/login/page.tsx` — 左侧动画（character-animation）+ 右侧表单的布局
+- `app/register/page.tsx` — 同上布局，含昵称/邮箱/密码/确认密码字段
 
 服务端入口：
 
-- `app/api/auth/`
-- `lib/server/auth-utils.ts`
+- `app/api/auth/`（login、register、logout、me、avatar）
+- `lib/server/auth-utils.ts` — JWT 创建与验证（jose）、bcrypt 密码哈希
+- `lib/server/user-store.ts` — 文件型用户存储，读写 `.data/users.json`
 
 核心逻辑：
 
-- 邮箱 + 密码注册/登录（密码用 bcryptjs 哈希）
-- Cookie 会话管理
-- 前端认证状态在 `lib/store/auth.ts`
-- 认证守卫组件在 `components/auth/protected-route.tsx`
+- 邮箱 + 密码 + 昵称注册（密码用 bcryptjs 哈希）
+- 登录返回 JWT（`auth_token` httpOnly Cookie + JSON response body，前端存 localStorage）
+- 前端认证状态在 `lib/store/auth.ts`（persist 到 localStorage，含 token/user/login/register/logout/fetchUser）
+- `AuthProvider`（`components/auth/auth-provider.tsx`）在 mount 时调用 `fetchUser()` 恢复会话
+- 认证守卫组件在 `components/auth/protected-route.tsx`（客户端路由守卫）
+- `middleware.ts` 提供服务端层面的双层守卫（JWT + 可选的 ACCESS_CODE）
+- 切换账号时 AuthProvider 会重置用户画像
 
 ## 9. PBL 教学系统
 
-- `lib/pbl/generate-pbl.ts` - PBL 生成主逻辑
+- `lib/pbl/generate-pbl.ts` - PBL 生成主逻辑（异步 pipeline 生成 PBL 场景）
 - `lib/pbl/pbl-system-prompt.ts` - PBL 系统提示词
-- `lib/pbl/mcp/` - MCP 工具集（agent、issueboard、mode、project）
-- `app/api/pbl/` - PBL API 入口
-- `components/scene-renderers/pbl-renderer.tsx` - PBL 前端渲染器
+- `lib/pbl/mcp/` - MCP 工具集（agent-mcp / issueboard-mcp / mode-mcp / project-mcp）
+- `lib/pbl/templates/` - Agent 角色模板
+- `app/api/pbl/` - PBL API 入口（聊天 SSE 流）
+- `components/scene-renderers/pbl-renderer.tsx` - PBL 前端主渲染器
+- `components/scene-renderers/pbl/` - PBL 子组件（chat-panel / guide / issueboard-panel / role-selection / workspace）
 
 ## 10. 知识库 / RAG 体系
 
@@ -432,20 +478,21 @@ Next.js App Router 入口层。
 
 - `app/api/knowledge/*`
 - `lib/knowledge-base/`
-- `rag/`
+- `lib/rag/`
 
 核心能力：
 
 - 搜索现有知识库文档
-- 上传资料后做匹配
-- 需要时把上传资料真正写入知识库
+- 上传资料后做匹配和入库
 - 为知识库文档生成或补齐 PDF
-- 向量搜索（概念术语提取、分词）
+- 向量搜索（概念术语提取、分词、embedding）
+- Embedding Provider 适配（OpenAI / SiliconFlow / Ollama / DashScope / Jina / 自定义）
 
 注意：
 
 - `rag/` 目录里既有 PDF 语料，也有索引和 JSON 数据。
 - 这部分既像应用功能，也像项目资源库。
+- RAG 的 embedding 模型可在 `components/settings/` 中配置。
 
 ## 11. 渲染层复杂度最高的部分
 
@@ -507,12 +554,15 @@ Next.js App Router 入口层。
 - 课程生成和课堂聊天是两套不同但有关联的 AI 链路。
 - 本地 IndexedDB 持久化是产品体验的重要组成，不是边角功能。
 - `lib/types/stage.ts`、`lib/store/stage.ts`、`components/stage.tsx` 可以视为课堂域的核心三件套。
-- 认证系统基于邮箱 + 密码 + Cookie 会话，涉及 `app/login/`、`app/api/auth/`、`lib/store/auth.ts`。
-- 多 Agent 系统在 `lib/agents/`，通过 orchestrator 调度多个专业 agent 协作。
-- PBL 教学是独立子系统，有自己的 MCP 工具集和渲染器。
-- 国际化通过 i18next 实现，`components/language-switcher.tsx` 提供切换入口。
+- 认证系统基于 JWT（jose）+ bcrypt + httpOnly Cookie 会话，涉及 `middleware.ts`、`app/login/`、`app/api/auth/`、`lib/store/auth.ts`、`lib/server/auth-utils.ts`、`lib/server/user-store.ts`。
+- 多 Agent 系统在 `lib/agents/`，通过 orchestrator 按 profile → retrieval → planning → resource-generation → review → evaluation 流水线调度。
+- PBL 教学是独立子系统，有自己的 MCP 工具集和渲染器（含 chat-panel / issueboard / workspace）。
+- 国际化通过 i18next 实现（5 种语言动态加载），`components/language-switcher.tsx` 提供切换入口。
+- 主题系统通过 next-themes 实现（light / dark / system），`lib/hooks/use-theme.tsx` 提供主题 hook。
+- Tailwind CSS v4 使用 CSS-based 配置（`@theme inline` 在 `app/globals.css`），无独立 `tailwind.config.ts` 文件。
+- `lib/ai/` 的 thinking context（AsyncLocalStorage）是 LLM 调用的关键装饰，支持 OpenAI-compatible provider 的推理增强。
 
 ## 15. 一句话总结给新 AI
 
 把这个仓库理解成：
-"一个用 Next.js 承载的 AI 互动课堂系统，前端靠 Zustand + IndexedDB 管课堂状态，服务端靠 `lib/server` 和 `lib/orchestration` 跑课程生成与 Agent 编排，渲染核心集中在 `Stage`、scene renderers 和 slide renderer，多 Agent 系统在 `lib/agents/` 提供协作能力，PBL 教学在 `lib/pbl/` 提供项目式学习支持，邮箱认证在 `app/api/auth/` 提供用户体系。"
+"一个用 Next.js 16 App Router 承载的 AI 互动课堂系统（pnpm monorepo），前端靠 Zustand + IndexedDB（Dexie v14）管理课堂状态，服务端靠 `lib/server` 和 `lib/orchestration` 跑课程生成（异步 job + 轮询）与 Agent 编排（无状态 SSE + LangGraph director graph），渲染核心集中在 `Stage`、scene renderers（quiz/PBL/interactive）和 slide renderer（ProseMirror + ECharts），多 Agent 系统在 `lib/agents/` 按 6 阶段流水线协作，PBL 教学在 `lib/pbl/` 通过 MCP 工具集提供项目式学习支持，JWT 认证在 `middleware.ts` + `app/api/auth/` 提供用户体系，i18next 支持 5 种语言，next-themes 支持 light/dark/system 主题。"
