@@ -444,7 +444,7 @@ function GenerationPreviewContent() {
                             outlines: evt.outlines || collected,
                             languageDirective:
                               directive ||
-                              'Teach in the language that matches the user requirement.',
+                              'Teach in Chinese. Use standard Chinese terminology for the subject matter.',
                           });
                           return;
                         } else if (evt.type === 'error') {
@@ -461,7 +461,7 @@ function GenerationPreviewContent() {
                       resolve({
                         outlines: collected,
                         languageDirective:
-                          directive || 'Teach in the language that matches the user requirement.',
+                          directive || 'Teach in Chinese. Use standard Chinese terminology for the subject matter.',
                       });
                     } else {
                       reject(new Error(t('generation.outlineEmptyResponse')));

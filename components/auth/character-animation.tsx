@@ -323,7 +323,7 @@ export function CharacterAnimation() {
                   exit={noAnim ? {} : { scale: 0, opacity: 0, y: -10 }}
                   transition={
                     !noAnim
-                      ? { scale: { duration: 0.4, ease: 'easeOut' }, rotate: { duration: 1.2, ease: 'easeInOut', repeat: Infinity }, exit: { duration: 0.25 } }
+                      ? { scale: { duration: 0.4, ease: 'easeOut' }, rotate: { duration: 1.2, ease: 'easeInOut', repeat: Infinity } }
                       : {}
                   }
                 >
@@ -386,7 +386,7 @@ export function CharacterAnimation() {
                   exit={noAnim ? {} : { scale: 0, opacity: 0, y: -10 }}
                   transition={
                     !noAnim
-                      ? { type: 'spring', stiffness: 250, damping: 12, exit: { duration: 0.3 } }
+                      ? { type: 'spring', stiffness: 250, damping: 12 }
                       : {}
                   }
                 >
@@ -555,7 +555,7 @@ export function CharacterAnimation() {
       </div>
 
       {/* Logo + Tagline */}
-      <div className="absolute left-1/2 top-6 -translate-x-1/2 text-center">
+      <div className="fixed left-[50%] top-6 z-20 translate-x-[-50%] text-center">
         <img src="/logo-horizontal.png" alt="LearnGenie" className="h-7 w-auto" />
         <p className="mt-2 text-sm font-medium text-[#6b6b80]">
           你的

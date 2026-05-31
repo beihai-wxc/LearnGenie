@@ -300,7 +300,7 @@ export class StreamBuffer {
   resume(): void {
     this._paused = false;
     if (!this.timer && !this._disposed) {
-      this.timer = setInterval(() => this._tick(), this.tickMs);
+      this.timer = setInterval(() => this.tick(), this.tickMs);
     }
   }
 

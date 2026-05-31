@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import { MessageCircle, Presentation, PenTool, Layout, Monitor, MessageSquare, Pen, CheckCircle } from 'lucide-react';
 import { useReducedMotion } from '@/lib/hooks/use-reduced-motion';
 import { FloatingOrb, FloatingIcon, FloatingDot, FloatingStar, FloatingPlus } from './floating-elements';
+import { ImageCarousel } from './image-carousel';
 
 const SPRING_TRANSITION = { type: 'spring' as const, stiffness: 260, damping: 20 };
 
@@ -37,53 +38,6 @@ const previews = [
     bg: 'bg-gradient-to-br from-orange-50 to-amber-50',
   },
 ];
-
-function ClassroomMockup() {
-  const reducedMotion = useReducedMotion();
-
-  return (
-    <motion.div
-      className="overflow-hidden rounded-2xl bg-white/80 backdrop-blur-sm border border-[#f0eef5]"
-      style={{ boxShadow: '0 8px 32px rgba(124, 58, 237, 0.06)' }}
-      animate={!reducedMotion ? { y: [0, -6, 0] } : {}}
-      transition={!reducedMotion ? { duration: 3, repeat: Infinity, ease: 'easeInOut' } : {}}
-    >
-      <div className="flex items-center gap-2 border-b border-[#f0eef5] px-5 py-3 bg-white/50">
-        <div className="size-3 rounded-full bg-red-400/80" />
-        <div className="size-3 rounded-full bg-amber-400/80" />
-        <div className="size-3 rounded-full bg-emerald-400/80" />
-        <span className="ml-3 text-[12px] font-medium text-[#9090a8]">LearnGenie 课堂</span>
-      </div>
-      <div className="flex h-80">
-        <div className="flex w-14 flex-col items-center gap-3 border-r border-[#f0eef5] bg-gradient-to-b from-violet-50/40 to-white p-2.5">
-          <div className="mt-1 size-5 rounded-lg bg-violet-200/60" />
-          <div className="size-4 rounded-md bg-indigo-100/60" />
-          <div className="size-4 rounded-md bg-indigo-100/60" />
-          <div className="mt-auto mb-2 size-6 rounded-full bg-fuchsia-200/60" />
-        </div>
-        <div className="flex flex-1 flex-col bg-white p-5">
-          <div className="mb-3 h-4 w-2/3 rounded-lg bg-gradient-to-r from-violet-100/60 to-fuchsia-100/60" />
-          <div className="mb-6 h-3.5 w-full rounded-md bg-[#f8f5ff]" />
-          <div className="mb-3 h-3.5 w-5/6 rounded-md bg-[#f8f5ff]" />
-          <div className="mt-auto space-y-3">
-            <div className="flex items-start gap-2">
-              <div className="size-5 shrink-0 rounded-full bg-gradient-to-br from-violet-200 to-fuchsia-200" />
-              <div className="rounded-xl rounded-tl-[4px] bg-[#f8f5ff] px-3 py-2">
-                <div className="h-2.5 w-24 rounded bg-violet-100/60" />
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="size-5 shrink-0 rounded-full bg-gradient-to-br from-indigo-200 to-violet-200" />
-              <div className="rounded-xl rounded-tl-[4px] bg-[#f8f5ff] px-3 py-2">
-                <div className="h-2.5 w-32 rounded bg-indigo-100/60" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
 
 export function LandingProductPreview() {
   const reducedMotion = useReducedMotion();
@@ -157,7 +111,7 @@ export function LandingProductPreview() {
             viewport={{ once: true, margin: '-60px' }}
             transition={SPRING_TRANSITION}
           >
-            <ClassroomMockup />
+            <ImageCarousel />
           </motion.div>
 
           <motion.div

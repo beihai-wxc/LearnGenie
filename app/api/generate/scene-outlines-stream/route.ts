@@ -380,7 +380,7 @@ export async function POST(req: NextRequest) {
               type: 'done',
               outlines: uniquifiedOutlines,
               languageDirective:
-                languageDirective || 'Teach in the language that matches the user requirement.',
+                languageDirective || 'Teach in Chinese. Use standard Chinese terminology for the subject matter.',
             });
             safeEnqueue(`data: ${doneEvent}\n\n`);
           } else {
