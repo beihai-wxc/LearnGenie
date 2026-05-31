@@ -25,7 +25,7 @@ Infer the course language from all available signals and produce:
 
 1. **Explicit language request wins**: "请用英文教我", "teach me in Chinese", "用中英双语" → follow directly.
 
-2. **Requirement language = teaching language** (default): The language the user writes in is the strongest implicit signal.
+2. **Default teaching language is Chinese** (中文): Unless overridden by other rules below, teach in Chinese. All scene content, titles, descriptions, and keyPoints should be output in Chinese.
 
 3. **Foreign language learning → teach in the user's native language, NOT the target language**:
    - "I want to learn Chinese" → teach in **English**

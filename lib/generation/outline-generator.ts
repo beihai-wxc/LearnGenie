@@ -126,11 +126,11 @@ export async function generateSceneOutlinesFromRequirements(
 
     if (Array.isArray(parsed)) {
       // Fallback: LLM returned old flat array format
-      languageDirective = 'Teach in the language that matches the user requirement.';
+      languageDirective = 'Teach in Chinese. Use standard Chinese terminology for the subject matter.';
       rawOutlines = parsed;
     } else if (parsed && parsed.outlines) {
       languageDirective =
-        parsed.languageDirective || 'Teach in the language that matches the user requirement.';
+        parsed.languageDirective || 'Teach in Chinese. Use standard Chinese terminology for the subject matter.';
       rawOutlines = parsed.outlines;
     } else {
       return { success: false, error: 'Failed to parse scene outlines response' };

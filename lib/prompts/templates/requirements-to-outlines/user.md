@@ -13,7 +13,7 @@ Please generate scene outlines based on the following course requirements.
 ## Language Context
 
 Infer the course language directive by applying the decision rules from the system prompt. Key reminders:
-- Requirement language = teaching language (unless overridden by explicit request or learner context)
+- Default teaching language is Chinese (中文), unless overridden by explicit request or learner context
 - Foreign language learning → teach in user's native language, not the target language
 - PDF language does NOT override teaching language — translate/explain document content instead
 

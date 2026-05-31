@@ -649,7 +649,7 @@ export const useSettingsStore = create<SettingsState>()(
         ...defaultVideoConfig,
 
         // Media generation toggles (off by default)
-        imageGenerationEnabled: false,
+        imageGenerationEnabled: true,
         videoGenerationEnabled: false,
 
         // Audio feature toggles (on by default)
@@ -812,19 +812,9 @@ export const useSettingsStore = create<SettingsState>()(
 
         // Media generation toggle actions
         setImageGenerationEnabled: (enabled) => {
-          if (enabled) {
-            const cfg = get().imageProvidersConfig;
-            const hasUsable = Object.values(cfg).some((c) => c.isServerConfigured || c.apiKey);
-            if (!hasUsable) return;
-          }
           set({ imageGenerationEnabled: enabled });
         },
         setVideoGenerationEnabled: (enabled) => {
-          if (enabled) {
-            const cfg = get().videoProvidersConfig;
-            const hasUsable = Object.values(cfg).some((c) => c.isServerConfigured || c.apiKey);
-            if (!hasUsable) return;
-          }
           set({ videoGenerationEnabled: enabled });
         },
         setTTSEnabled: (enabled) => set({ ttsEnabled: enabled }),
@@ -1201,10 +1191,6 @@ export const useSettingsStore = create<SettingsState>()(
                   ? DEFAULT_TTS_VOICES[validTTSProvider as BuiltInTTSProviderId] || 'default'
                   : state.ttsVoice;
 
-              // Auto-disable image/video generation when no provider is usable
-              const shouldDisableImage = !validImageProvider && state.imageGenerationEnabled;
-              const shouldDisableVideo = !validVideoProvider && state.videoGenerationEnabled;
-
               // === Auto-select / auto-enable (only on first run) ===
               let autoTtsProvider: TTSProviderId | undefined;
               let autoTtsVoice: string | undefined;
@@ -1274,6 +1260,14 @@ export const useSettingsStore = create<SettingsState>()(
                 if (serverVideoIds.length > 0 && !state.videoGenerationEnabled) {
                   autoVideoEnabled = true;
                 }
+
+                // On first run, if no server provider at all, disable generation
+                if (serverImageIds.length === 0 && state.imageGenerationEnabled) {
+                  autoImageEnabled = false;
+                }
+                if (serverVideoIds.length === 0 && state.videoGenerationEnabled) {
+                  autoVideoEnabled = false;
+                }
               }
 
               // LLM auto-select: only on true first load (no provider selected yet)
@@ -1332,8 +1326,6 @@ export const useSettingsStore = create<SettingsState>()(
                 ...(validVideoModel !== state.videoModelId && {
                   videoModelId: validVideoModel,
                 }),
-                ...(shouldDisableImage && { imageGenerationEnabled: false }),
-                ...(shouldDisableVideo && { videoGenerationEnabled: false }),
                 // First-run auto-select overrides validation (autoConfigApplied guard).
                 // On first sync, auto-select picks the best provider. On subsequent syncs,
                 // auto* variables stay undefined so only validation spreads take effect.
@@ -1463,7 +1455,7 @@ export const useSettingsStore = create<SettingsState>()(
 
         // Add default media generation toggles if missing
         if (state.imageGenerationEnabled === undefined) {
-          state.imageGenerationEnabled = false;
+          state.imageGenerationEnabled = true;
         }
         if (state.videoGenerationEnabled === undefined) {
           state.videoGenerationEnabled = false;
