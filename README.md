@@ -1,82 +1,116 @@
-# LearnGenie（比赛改造版）
+# LearnGenie
 
-本仓库基于 LearnGenie 二次开发，面向比赛场景，目标是快速完成可演示、可评审、可复现实验结果的智能教学系统。
+AI 互动课堂生成系统 —— 输入主题或上传资料，一键生成包含幻灯片、测验、互动实验、PBL 项目的完整课堂，多 Agent 协作授课。
 
-## 1. 项目定位
+## 功能特点
 
-- 基础能力：多智能体课堂生成、互动式教学内容、白板与语音交互。
-- 比赛目标：围绕特定赛题做功能聚焦与效果提升，不追求保留全部原始能力。
-- 交付优先级：可运行 > 可演示 > 可解释 > 可扩展。
+- **一键生成课堂**：输入主题描述或上传 PDF 资料，自动生成结构化课堂（大纲 → 场景内容 → 讲稿动作 → 媒体资源）
+- **多 Agent 协作教学**：AI 教师与 AI 同学分工协作，支持讲解、讨论、追问、圆桌对话
+- **多形态场景**：幻灯片、测验、交互式可视化（模拟/图表/代码/游戏/3D）、PBL 项目式学习
+- **多媒体生成**：课堂配图自动生成、视频生成、TTS 语音合成（支持多种 Provider）
+- **知识库检索（RAG）**：向量搜索 + 概念术语匹配，支持上传文档入库、自动关联课堂
+- **白板与公式**：支持公式（LaTeX）、图表（ECharts）、代码块、形状、表格等内容表达
+- **历史课堂管理**：书架收藏、分组管理、错题本
+- **用户画像**：8 维度学习能力评估雷达图，个性化学习路径推荐
+- **PPTX / ZIP 导出**：课堂内容导出为 PPTX 或 HTML ZIP 包
+- **多语言支持**：中文、English、日本語、Русский、العربية 等 7 种语言
+- **多模型支持**：可接入 OpenAI、Anthropic、Google、DeepSeek、Qwen、GLM、Kimi、MiniMax、Doubao、Grok、Ollama 等 12 种 LLM Provider
 
-## 2. 原项目特色（保留用于比赛展示）
+## 本地启动
 
-- 一键生成课堂：输入主题或上传资料后，可自动生成课堂结构与教学流程。
-- 多智能体协作：AI 教师与 AI 同学在课堂中分工协作，支持讲解、讨论与追问。
-- 多形态内容输出：支持幻灯片、测验、互动页面等多种教学内容形态。
-- 白板与表达能力：支持公式、图表、代码片段等内容表达，便于技术类赛题演示。
-- 沉浸与交互模式：可构建探索式学习体验（如可视化、模拟、互动任务）。
-- 可扩展模型与服务商：支持多种 LLM/TTS/ASR 提供商，便于按比赛预算和效果切换。
-- 本地可部署：支持本地开发运行，便于做受控演示与隐私数据实验。
+### 环境要求
 
-## 3. 当前仓库状态（已做精简）
+- Node.js >= 22
+- pnpm >= 10
 
-- 已保留：核心 Web 应用代码与本地开发所需配置。
-- 已移除：非必要的部署辅助文件与重复说明文档（例如 Docker 相关文件、额外 README）。
-- README 仅保留当前这一份，且为中文版本。
-
-## 4. 本地启动（开发环境）
-
-### 4.1 环境要求
-
-- Node.js >= 20
-- pnpm（推荐通过 Corepack 使用）
-
-### 4.2 安装依赖
+### 安装依赖
 
 ```bash
-corepack pnpm install
+pnpm install
 ```
 
-### 4.3 配置环境变量
+### 配置环境变量
 
 ```bash
 cp .env.example .env.local
 ```
 
-至少配置一个模型提供商 API Key（例如 OpenAI / Gemini / Anthropic / GLM 等），否则仅能启动页面，无法正常生成课堂内容。
-
-### 4.4 启动项目
+编辑 `.env.local`，至少配置一个 LLM Provider 的 API Key：
 
 ```bash
-corepack pnpm dev
+# 示例：使用 OpenAI
+OPENAI_API_KEY=sk-xxx
+
+# 或使用其他 Provider，参考 .env.example 中的完整列表
 ```
 
-默认访问：
+未配置 Provider 时仅能启动页面，无法生成课堂内容。
 
-- http://localhost:3000
+### 启动开发服务器
 
-## 5. 比赛改造建议（建议优先做）
+```bash
+pnpm dev
+```
 
-- 主题聚焦：仅保留赛题相关入口与能力路径，减少无关功能分散评委注意力。
-- 结果可解释：在关键页面增加“生成依据/步骤/引用来源”展示。
-- 稳定性优先：对外部 API 调用增加重试、超时与降级策略。
-- 演示友好：准备固定示例输入与预置素材，确保现场演示稳定复现。
-- 指标量化：沉淀可比较指标（生成时延、成功率、学习效果反馈等）。
+访问 http://localhost:3000
 
-## 6. 推荐提交材料结构
+### 构建生产版本
 
-- 项目简介：解决什么问题、相比基线提升点。
-- 技术方案：系统架构、核心算法或 Agent 协作机制。
-- 创新点：与原版 LearnGenie 的关键差异。
-- 演示视频：完整任务链路（输入 -> 生成 -> 互动 -> 结果）。
-- 复现说明：环境、命令、配置项、已知限制。
+```bash
+pnpm build
+pnpm start
+```
 
-## 7. 提交前自检清单
+## 项目结构
 
-- 能在全新环境按文档成功启动。
-- 核心流程在 3 次重复演示中稳定成功。
-- 失败场景有提示、有回退，不会卡死。
-- 说明文档与实际代码一致。
-- 敏感信息（API Key、隐私数据）未提交到仓库。
+```
+app/             页面路由 + API Route（Next.js App Router）
+├── api/         服务端 API（聊天、生成、认证、知识库、媒体等）
+├── classroom/   课堂播放页
+├── generation-preview/ 生成进度页
+├── bookshelf/   历史课堂
+├── knowledge/   知识库
+├── profile/     用户画像
+└── ...
+components/      前端 UI 组件（auth、chat、stage、slide-renderer 等）
+lib/             业务核心（生成流水线、Agent 编排、存储、工具函数）
+packages/        内部 workspace 包（mathml2omml、pptxgenjs）
+configs/         配置常量（图表、字体、主题、快捷键等）
+tests/           单元测试（Vitest）
+e2e/             端到端测试（Playwright）
+eval/            评估实验脚本
+rag/             本地知识库资源与索引
+```
 
+详细架构与文件说明见 [PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md)。
 
+## 可用命令
+
+| 命令 | 说明 |
+|------|------|
+| `pnpm dev` | 启动开发服务器 |
+| `pnpm build` | 生产构建 |
+| `pnpm start` | 启动生产服务 |
+| `pnpm test` | 运行单元测试 |
+| `pnpm test:e2e` | 运行 E2E 测试 |
+| `pnpm lint` | 代码检查 |
+| `pnpm format` | 代码格式化 |
+| `pnpm rag:build-index` | 重建知识库向量索引 |
+
+## 技术栈
+
+- **框架**：Next.js 16 + React 19 + TypeScript
+- **状态管理**：Zustand（persist 中间件）
+- **本地存储**：Dexie / IndexedDB
+- **AI**：Vercel AI SDK + LangGraph + LangChain
+- **UI**：Tailwind CSS v4 + Radix UI + motion（framer-motion）
+- **图表**：ECharts
+- **富文本**：ProseMirror
+- **认证**：JWT（jose）+ bcrypt
+- **国际化**：i18next
+- **测试**：Vitest + Playwright
+- **包管理**：pnpm workspace
+
+## 许可证
+
+AGPL-3.0
