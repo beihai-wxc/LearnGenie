@@ -33,7 +33,7 @@ export interface SearchKnowledgeResult {
   resourceTypes?: NonNullable<KnowledgeDocument['resourceTypes']>;
   estimatedStudyTimeMinutes?: number;
   recommendedTeachingGoals?: string[];
-  matchedBy: 'vector' | 'hybrid';
+  matchedBy: 'vector' | 'hybrid' | 'title' | 'concept' | 'keyword' | 'chunk';
   conceptMatches: string[];
   topChunks: Array<{
     chunkId: string;
