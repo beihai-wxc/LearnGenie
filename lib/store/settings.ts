@@ -1270,10 +1270,10 @@ export const useSettingsStore = create<SettingsState>()(
                 }
               }
 
-              // LLM auto-select: only on true first load (no provider selected yet)
+              // LLM auto-select: on first load when no model selected yet
               let autoProviderId: ProviderId | undefined;
               let autoModelId: string | undefined;
-              if (!state.providerId && !state.modelId) {
+              if (!state.modelId) {
                 for (const [pid, cfg] of Object.entries(newProvidersConfig)) {
                   if (cfg.isServerConfigured) {
                     // Prefer server-restricted models, fall back to built-in list

@@ -20,13 +20,13 @@ AI 互动课堂生成系统 —— 输入主题或上传资料，一键生成包
 
 ### 环境要求
 
-- Node.js >= 22
-- pnpm >= 10
+- Node.js >= 20
+- pnpm（推荐通过 Corepack 使用）
 
 ### 安装依赖
 
 ```bash
-pnpm install
+corepack pnpm install
 ```
 
 ### 配置环境变量
@@ -49,7 +49,7 @@ OPENAI_API_KEY=sk-xxx
 ### 启动开发服务器
 
 ```bash
-pnpm dev
+corepack pnpm dev
 ```
 
 访问 http://localhost:3000
@@ -57,8 +57,8 @@ pnpm dev
 ### 构建生产版本
 
 ```bash
-pnpm build
-pnpm start
+corepack pnpm build
+corepack pnpm start
 ```
 
 ## 项目结构
@@ -88,14 +88,14 @@ rag/             本地知识库资源与索引
 
 | 命令 | 说明 |
 |------|------|
-| `pnpm dev` | 启动开发服务器 |
-| `pnpm build` | 生产构建 |
-| `pnpm start` | 启动生产服务 |
-| `pnpm test` | 运行单元测试 |
-| `pnpm test:e2e` | 运行 E2E 测试 |
-| `pnpm lint` | 代码检查 |
-| `pnpm format` | 代码格式化 |
-| `pnpm rag:build-index` | 重建知识库向量索引 |
+| `corepack pnpm dev` | 启动开发服务器 |
+| `corepack pnpm build` | 生产构建 |
+| `corepack pnpm start` | 启动生产服务 |
+| `corepack pnpm test` | 运行单元测试 |
+| `corepack pnpm test:e2e` | 运行 E2E 测试 |
+| `corepack pnpm lint` | 代码检查 |
+| `corepack pnpm format` | 代码格式化 |
+| `corepack pnpm rag:build-index` | 重建知识库向量索引 |
 
 ## 技术栈
 
