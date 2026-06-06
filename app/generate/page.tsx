@@ -239,7 +239,13 @@ function GenerateContent() {
   };
 
   const handleGenerate = async () => {
-    if (!currentModelId) {
+    // Check if model is configured either locally or via server
+    const settings = useSettingsStore.getState();
+    const hasServerConfiguredProvider = Object.values(settings.providersConfig).some(
+      (cfg) => cfg.isServerConfigured,
+    );
+    
+    if (!currentModelId && !hasServerConfiguredProvider) {
       showSetupToast(
         <BotOff className="size-4.5 text-amber-600" />,
         t('settings.modelNotConfigured'),

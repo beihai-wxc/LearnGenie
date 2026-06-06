@@ -6,10 +6,10 @@ import { Play, Pause, ChevronLeft, ChevronRight, ImageOff } from 'lucide-react';
 import { useReducedMotion } from '@/lib/hooks/use-reduced-motion';
 
 const IMAGES = [
-  '/carousel/屏幕截图 2026-05-30 215716.png',
-  '/carousel/屏幕截图 2026-05-30 220545.png',
-  '/carousel/屏幕截图 2026-05-30 220712.png',
-  '/carousel/屏幕截图 2026-05-30 221610.png',
+  '/carousel/屏幕截图 2026-05-30 215716.webp',
+  '/carousel/屏幕截图 2026-05-30 220545.webp',
+  '/carousel/屏幕截图 2026-05-30 220712.webp',
+  '/carousel/屏幕截图 2026-05-30 221610.webp',
 ];
 
 const INTERVAL = 2500;
