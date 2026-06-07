@@ -39,6 +39,7 @@ export const IMAGE_PROVIDERS: Record<ImageProviderId, ImageProviderConfig> = {
     defaultBaseUrl: 'https://dashscope.aliyuncs.com',
     models: [
       { id: 'wan2.7-image-pro', name: 'Wan 2.7 Image Pro (4K, Best)' },
+      { id: 'qwen-image-2.0-pro', name: 'Qwen Image 2.0 Pro (Latest)' },
       { id: 'wan2.7-image', name: 'Wan 2.7 Image (Fast)' },
     ],
     supportedAspectRatios: ['16:9', '4:3', '1:1', '9:16'],
