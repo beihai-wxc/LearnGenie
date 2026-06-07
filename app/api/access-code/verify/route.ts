@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
 
@@ -51,14 +50,19 @@ export async function POST(request: Request) {
   }
 
   const token = createAccessToken(accessCode);
-  const cookieStore = await cookies();
-  cookieStore.set('openmaic_access', token, {
+
+  const isSecure = request.headers.get('x-forwarded-proto') === 'https'
+    || request.url.startsWith('https://');
+
+  const response = apiSuccess({ valid: true });
+
+  response.cookies.set('openmaic_access', token, {
     httpOnly: true,
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-    secure: process.env.NODE_ENV === 'production',
+    maxAge: 60 * 60 * 24 * 7,
+    secure: isSecure,
   });
 
-  return apiSuccess({ valid: true });
+  return response;
 }

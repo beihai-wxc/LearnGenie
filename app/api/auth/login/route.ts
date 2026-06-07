@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { getUserByEmailWithPassword } from '@/lib/server/user-store';
 import { verifyPassword, createToken } from '@/lib/server/auth-utils';
@@ -35,16 +34,7 @@ export async function POST(request: Request) {
 
   const token = await createToken({ email: user.email });
 
-  const cookieStore = await cookies();
-  cookieStore.set('auth_token', token, {
-    httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 7,
-    secure: process.env.NODE_ENV === 'production',
-  });
-
-  return apiSuccess({
+  const response = apiSuccess({
     token,
     user: {
       email: user.email,
@@ -52,4 +42,17 @@ export async function POST(request: Request) {
       avatar: user.avatar,
     },
   });
+
+  const isSecure = request.headers.get('x-forwarded-proto') === 'https'
+    || request.url.startsWith('https://');
+
+  response.cookies.set('auth_token', token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 7,
+    secure: isSecure,
+  });
+
+  return response;
 }

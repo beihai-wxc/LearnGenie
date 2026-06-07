@@ -4,11 +4,14 @@
  * Uses DashScope multimodal generation API (synchronous, no polling needed).
  * Endpoint: https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation
  *
- * Supported models:
- * - qwen-image-max     (highest quality)
- * - z-image-turbo      (fast, good quality)
+ * Supported models (Wan 2.7 series, updated 2026-05):
+ * - wan2.7-image-pro     (highest quality, supports 4K)
+ * - wan2.7-image         (faster generation speed)
  *
- * API docs: https://help.aliyun.com/zh/model-studio/developer-reference/text-to-image
+ * Legacy Qwen-Image models may also work via this endpoint depending on
+ * account access, but Wan 2.7 is the current recommended series.
+ *
+ * API docs: https://help.aliyun.com/zh/model-studio/wan-image-generation-and-editing-api-reference
  */
 
 import type {
@@ -16,9 +19,32 @@ import type {
   ImageGenerationOptions,
   ImageGenerationResult,
 } from '../types';
+import { createLogger } from '@/lib/logger';
 
-const DEFAULT_MODEL = 'qwen-image-max';
+const log = createLogger('QwenImageAdapter');
+
+const DEFAULT_MODEL = 'wan2.7-image-pro';
 const DEFAULT_BASE_URL = 'https://dashscope.aliyuncs.com';
+
+/**
+ * Legacy model name → current Wan 2.7 model mapping.
+ * Frontend localStorage may cache old model IDs; this maps them
+ * to the current valid names so existing users don't get 404s.
+ */
+const LEGACY_MODEL_MAP: Record<string, string> = {
+  'qwen-image-max': 'wan2.7-image-pro',
+  'qwen-image-max-2025-12-30': 'wan2.7-image-pro',
+  'qwen-image-plus': 'wan2.7-image',
+  'qwen-image-plus-2026-01-09': 'wan2.7-image',
+  'qwen-image': 'wan2.7-image',
+  'z-image-turbo': 'wan2.7-image',
+};
+
+/** Resolve the effective model, translating legacy names */
+function resolveModel(rawModel: string | undefined): string {
+  if (!rawModel) return DEFAULT_MODEL;
+  return LEGACY_MODEL_MAP[rawModel] || rawModel;
+}
 
 /**
  * Map our width x height to DashScope size format "WxH".
@@ -48,7 +74,7 @@ export async function testQwenImageConnectivity(
           Authorization: `Bearer ${config.apiKey}`,
         },
         body: JSON.stringify({
-          model: config.model || DEFAULT_MODEL,
+          model: resolveModel(config.model),
           input: { messages: [{ role: 'user', content: [{ text: '' }] }] },
           parameters: { size: '1*1' },
         }),
@@ -72,15 +98,17 @@ export async function generateWithQwenImage(
   options: ImageGenerationOptions,
 ): Promise<ImageGenerationResult> {
   const baseUrl = config.baseUrl || DEFAULT_BASE_URL;
+  const url = `${baseUrl}/api/v1/services/aigc/multimodal-generation/generation`;
+  log.info(`Calling Qwen Image: model=${resolveModel(config.model)}, url=${url}`);
 
-  const response = await fetch(`${baseUrl}/api/v1/services/aigc/multimodal-generation/generation`, {
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${config.apiKey}`,
     },
     body: JSON.stringify({
-      model: config.model || DEFAULT_MODEL,
+      model: resolveModel(config.model),
       input: {
         messages: [
           {

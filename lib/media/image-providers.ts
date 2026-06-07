@@ -34,19 +34,12 @@ export const IMAGE_PROVIDERS: Record<ImageProviderId, ImageProviderConfig> = {
   },
   'qwen-image': {
     id: 'qwen-image',
-    name: 'Qwen Image',
+    name: 'Qwen Image (Wan 2.7)',
     requiresApiKey: true,
     defaultBaseUrl: 'https://dashscope.aliyuncs.com',
     models: [
-      { id: 'qwen-image-max', name: 'Qwen Image Max' },
-      { id: 'qwen-image-max-2025-12-30', name: 'Qwen Image Max (2025-12-30)' },
-      { id: 'qwen-image-plus', name: 'Qwen Image Plus' },
-      {
-        id: 'qwen-image-plus-2026-01-09',
-        name: 'Qwen Image Plus (2026-01-09)',
-      },
-      { id: 'qwen-image', name: 'Qwen Image' },
-      { id: 'z-image-turbo', name: 'Z-Image Turbo' },
+      { id: 'wan2.7-image-pro', name: 'Wan 2.7 Image Pro (4K, Best)' },
+      { id: 'wan2.7-image', name: 'Wan 2.7 Image (Fast)' },
     ],
     supportedAspectRatios: ['16:9', '4:3', '1:1', '9:16'],
   },
