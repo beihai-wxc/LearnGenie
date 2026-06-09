@@ -8,9 +8,11 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useAuthStore } from '@/lib/store/auth';
 import { AVATAR_OPTIONS } from '@/lib/store/user-profile';
 import { cn } from '@/lib/utils';
-import { X, Settings, UserCircle, LogOut, Upload } from 'lucide-react';
+import { X, Settings, UserCircle, LogOut, Upload, KeyRound } from 'lucide-react';
+import { toast } from 'sonner';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { GeneralSettings } from './general-settings';
+import { hasSavedCredentials, clearCredentials } from '@/lib/utils/credential-storage';
 
 type NavKey = 'account' | 'system';
 
@@ -46,6 +48,11 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     logout();
     onOpenChange(false);
     router.push('/');
+  };
+
+  const handleClearSavedCredentials = () => {
+    clearCredentials();
+    toast.success('已清除保存的登录信息');
   };
 
   const navItems: { key: NavKey; icon: React.ReactNode; label: string }[] = [
@@ -149,10 +156,20 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     </button>
                   </div>
 
-                  <div className="mt-8 pt-6 border-t">
+                  <div className="mt-8 pt-6 border-t space-y-3">
+                    {hasSavedCredentials() && (
+                      <Button
+                        variant="outline"
+                        className="text-muted-foreground hover:text-amber-600 w-full justify-start"
+                        onClick={handleClearSavedCredentials}
+                      >
+                        <KeyRound className="size-4 mr-2" />
+                        清除保存的登录信息
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
-                      className="text-muted-foreground hover:text-destructive"
+                      className="text-muted-foreground hover:text-destructive w-full justify-start"
                       onClick={handleLogout}
                     >
                       <LogOut className="size-4 mr-2" />

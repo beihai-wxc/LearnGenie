@@ -355,7 +355,6 @@ export function MediaPopover({ onSettingsOpen }: MediaPopoverProps) {
           <SlidersHorizontal className="size-3.5" />
           {imageGenerationEnabled && <ImageIcon className="size-3.5" />}
           {videoGenerationEnabled && <Video className="size-3.5" />}
-          {ttsEnabled && <Volume2 className="size-3.5" />}
           {asrEnabled && <Mic className="size-3.5" />}
         </button>
       </PopoverTrigger>

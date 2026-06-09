@@ -1,8 +1,6 @@
 'use client';
 
-import { useEffect, useState, type KeyboardEvent, type ReactNode } from 'react';
-import { BotOff, Settings } from 'lucide-react';
-import { toast } from 'sonner';
+import { useEffect, useState, type KeyboardEvent } from 'react';
 import { nanoid } from 'nanoid';
 import { useRouter } from 'next/navigation';
 import { createLogger } from '@/lib/logger';
@@ -74,7 +72,6 @@ const initialFormState: FormState = {
 function GenerateContent() {
   const { t } = useI18n();
   const router = useRouter();
-  const currentModelId = useSettingsStore((state) => state.modelId);
   const [form, setForm] = useState<FormState>(initialFormState);
   const setSettingsOpen = useUIStore((s) => s.setSettingsOpen);
   const [error, setError] = useState<string | null>(null);
@@ -120,30 +117,6 @@ function GenerateContent() {
     } catch {
       /* localStorage unavailable */
     }
-  };
-
-  const showSetupToast = (icon: ReactNode, title: string, desc: string) => {
-    toast.custom(
-      (id) => (
-        <div
-          className="flex w-[356px] cursor-pointer items-start gap-3 rounded-2xl border border-amber-200/60 bg-gradient-to-r from-amber-50 via-white to-amber-50 p-4 shadow-lg shadow-amber-500/8"
-          onClick={() => {
-            toast.dismiss(id);
-            setSettingsOpen(true);
-          }}
-        >
-          <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 ring-1 ring-amber-200/50">
-            {icon}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-amber-900">{title}</p>
-            <p className="mt-0.5 text-xs leading-relaxed text-amber-700/80">{desc}</p>
-          </div>
-          <Settings className="mt-1 size-3.5 shrink-0 animate-[spin_3s_linear_infinite] text-amber-500" />
-        </div>
-      ),
-      { duration: 4000 },
-    );
   };
 
   const createGenerationSession = async (draft: SessionDraft) => {
@@ -239,21 +212,10 @@ function GenerateContent() {
   };
 
   const handleGenerate = async () => {
-    // Check if model is configured either locally or via server
-    const settings = useSettingsStore.getState();
-    const hasServerConfiguredProvider = Object.values(settings.providersConfig).some(
-      (cfg) => cfg.isServerConfigured,
-    );
-    
-    if (!currentModelId && !hasServerConfiguredProvider) {
-      showSetupToast(
-        <BotOff className="size-4.5 text-amber-600" />,
-        t('settings.modelNotConfigured'),
-        t('settings.setupNeeded'),
-      );
-      setSettingsOpen(true);
-      return;
-    }
+    // Note: We no longer check for model configuration on the client side.
+    // The server has a DEFAULT_MODEL fallback in .env.local, so users with
+    // no local model configured can still generate classrooms seamlessly.
+    // If the server cannot process the request, it will return an error.
 
     if (!form.requirement.trim() && !form.pdfFile) {
       setError(t('upload.requirementRequired'));
