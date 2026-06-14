@@ -292,9 +292,7 @@ function GenerateContent() {
         };
 
         setKnowledgePanel({
-          title: uploadMatchJson.matched
-            ? '发现相似的人工智能课程资料'
-            : '未找到相关知识库资料',
+          title: '发现相关知识',
           query: form.pdfFile.name,
           results: (uploadMatchJson.results as KnowledgeSearchResult[]) ?? [],
           matched: uploadMatchJson.matched,
@@ -303,10 +301,8 @@ function GenerateContent() {
           safetyNote: uploadMatchJson.safetyNote,
           agentWorkflow: workflowJson.workflow as AgentWorkflowSnapshot,
           fallbackSession,
-          fallbackLabel: uploadMatchJson.matched ? '开始智能生成课堂' : '直接生成课堂',
-          fallbackHint: uploadMatchJson.matched
-            ? '系统会保留你的原始主题与上传内容，并在后台自动结合最相关的知识库片段来辅助生成课堂。你可以先浏览这些资料，但不需要手动选择。'
-            : '当前知识库未找到与上传资料足够匹配的内容，系统将基于上传资料主题进行通用生成。',
+          fallbackLabel: '开始智能生成课堂',
+          fallbackHint: '系统不会完全照搬知识库内容，也不会只做通用生成，而是保留你的原始主题，在后台自动带入最相关的知识片段来辅助生成课堂。',
         });
         setKnowledgeDialogOpen(true);
         return;
@@ -354,9 +350,7 @@ function GenerateContent() {
       };
 
       setKnowledgePanel({
-        title: knowledgeJson.matched
-          ? '发现相关的人工智能课程知识'
-          : '未找到相关知识库资料',
+        title: '发现相关知识',
         query: baseRequirements.requirement,
         results: (knowledgeJson.results as KnowledgeSearchResult[]) ?? [],
         matched: knowledgeJson.matched,
@@ -365,10 +359,8 @@ function GenerateContent() {
         safetyNote: knowledgeJson.safetyNote,
         agentWorkflow: workflowJson.workflow as AgentWorkflowSnapshot,
         fallbackSession,
-        fallbackLabel: knowledgeJson.matched ? '开始智能生成课堂' : '直接生成课堂',
-        fallbackHint: knowledgeJson.matched
-          ? '系统不会完全照搬知识库内容，也不会只做通用生成，而是保留你的原始主题，在后台自动带入最相关的知识片段来辅助生成课堂。'
-          : '当前知识库未找到足够强的命中，系统将基于主题进行通用生成。你可以返回修改主题描述，或直接继续生成。',
+        fallbackLabel: '开始智能生成课堂',
+        fallbackHint: '系统不会完全照搬知识库内容，也不会只做通用生成，而是保留你的原始主题，在后台自动带入最相关的知识片段来辅助生成课堂。',
       });
       setKnowledgeDialogOpen(true);
       return;

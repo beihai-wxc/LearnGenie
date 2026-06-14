@@ -57,15 +57,13 @@ export function KnowledgeSearchResults({
               <div>
                 <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300">
                   <BookOpen className="size-3.5" />
-                  {matched ? '知识库命中' : '知识库检索'}
+                  知识库命中
                 </div>
                 <h2 className="mt-3 text-xl font-semibold text-slate-900 dark:text-slate-50">
                   {title}
                 </h2>
                 <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                  {matched
-                    ? `已分析你的主题，并检索到可用于辅助生成课堂的相关知识资料：${query}`
-                    : `已分析你的主题，但未在知识库中找到足够匹配的资料：${query}`}
+                  已分析你的主题，并检索到可用于辅助生成课堂的相关知识资料：{query}
                 </p>
               </div>
               <button
@@ -83,11 +81,9 @@ export function KnowledgeSearchResults({
             {fallbackHint ? (
               <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">{fallbackHint}</p>
             ) : null}
-            {autoContextSources?.length ? (
-              <p className="mt-2 text-xs text-sky-700 dark:text-sky-300">
-                系统将默认结合这些知识片段辅助生成：{autoContextSources.join('、')}
-              </p>
-            ) : null}
+            <p className="mt-2 text-xs text-sky-700 dark:text-sky-300">
+              系统将默认结合这些知识片段辅助生成课堂
+            </p>
             {safetyNote ? (
               <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">{safetyNote}</p>
             ) : null}
