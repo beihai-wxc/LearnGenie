@@ -61,14 +61,14 @@ export function HomePromptBar({
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
-    textarea.style.height = '0px';
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 220)}px`;
+    textarea.style.height = '40px';
+    textarea.style.height = `${Math.max(40, Math.min(textarea.scrollHeight, 220))}px`;
   }, [requirement]);
 
   return (
     <div className="w-full">
       <div className="rounded-[32px] border border-white/80 bg-white/82 p-3 shadow-[0_32px_80px_rgba(160,174,200,0.28)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/72 dark:shadow-[0_35px_80px_rgba(5,12,24,0.5)]">
-        <div className="flex items-end gap-3 rounded-[24px] border border-slate-200/70 bg-white/72 px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] dark:border-white/8 dark:bg-slate-900/70">
+        <div className="flex items-center gap-3 rounded-[24px] border border-slate-200/70 bg-white/72 px-5 py-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] dark:border-white/8 dark:bg-slate-900/70">
           <textarea
             ref={textareaRef}
             value={requirement}
@@ -76,10 +76,10 @@ export function HomePromptBar({
             onKeyDown={onKeyDown}
             rows={1}
             placeholder={t('home.promptPlaceholder')}
-            className="min-h-[30px] max-h-[220px] flex-1 resize-none bg-transparent pt-1 text-[15px] leading-8 text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500"
+            className="h-[40px] max-h-[220px] flex-1 resize-none bg-transparent text-[15px] leading-[40px] text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500"
           />
 
-          <div className="flex items-center gap-2 pb-1">
+          <div className="flex items-center gap-2 py-0">
             {/* PDF Upload */}
             <input
               type="file"
@@ -128,14 +128,14 @@ export function HomePromptBar({
                   disabled={!canSubmit}
                   onClick={onSubmit}
                   className={cn(
-                    'flex h-12 min-w-12 items-center justify-center rounded-full px-4 transition-all',
+                    'flex h-10 min-w-10 items-center justify-center rounded-full px-4 transition-all',
                     canSubmit
                       ? 'bg-slate-900 text-white shadow-[0_16px_40px_rgba(15,23,42,0.3)] hover:-translate-y-0.5 dark:bg-sky-400 dark:text-slate-950'
                       : 'bg-slate-200 text-slate-400 dark:bg-white/10 dark:text-slate-600',
                   )}
                   aria-label={t('home.generateAction')}
                 >
-                  <ArrowRight className="size-5" />
+                  <ArrowRight className="size-4" />
                 </button>
               </TooltipTrigger>
               <TooltipContent>{t('toolbar.generateClassroom')}</TooltipContent>

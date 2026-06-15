@@ -1,10 +1,20 @@
 'use client';
 
-import { useRef, useState, useLayoutEffect } from 'react';
+import { useRef, useState, useLayoutEffect, useEffect } from 'react';
 import type { PPTLatexElement } from '@/lib/types/slides';
 
 export interface BaseLatexElementProps {
   elementInfo: PPTLatexElement;
+}
+
+// 按需加载 KaTeX CSS（与 index.tsx 共享逻辑）
+let katexCSSLoaded = false;
+if (typeof window !== 'undefined' && !katexCSSLoaded) {
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.33/dist/katex.min.css';
+  document.head.appendChild(link);
+  katexCSSLoaded = true;
 }
 
 /**

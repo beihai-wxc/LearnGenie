@@ -1,8 +1,6 @@
 'use client';
 
-import { useEffect, useState, type KeyboardEvent, type ReactNode } from 'react';
-import { BotOff, Settings } from 'lucide-react';
-import { toast } from 'sonner';
+import { useEffect, useState, type KeyboardEvent } from 'react';
 import { nanoid } from 'nanoid';
 import { useRouter } from 'next/navigation';
 import { createLogger } from '@/lib/logger';
@@ -74,7 +72,6 @@ const initialFormState: FormState = {
 function GenerateContent() {
   const { t } = useI18n();
   const router = useRouter();
-  const currentModelId = useSettingsStore((state) => state.modelId);
   const [form, setForm] = useState<FormState>(initialFormState);
   const setSettingsOpen = useUIStore((s) => s.setSettingsOpen);
   const [error, setError] = useState<string | null>(null);
@@ -120,30 +117,6 @@ function GenerateContent() {
     } catch {
       /* localStorage unavailable */
     }
-  };
-
-  const showSetupToast = (icon: ReactNode, title: string, desc: string) => {
-    toast.custom(
-      (id) => (
-        <div
-          className="flex w-[356px] cursor-pointer items-start gap-3 rounded-2xl border border-amber-200/60 bg-gradient-to-r from-amber-50 via-white to-amber-50 p-4 shadow-lg shadow-amber-500/8"
-          onClick={() => {
-            toast.dismiss(id);
-            setSettingsOpen(true);
-          }}
-        >
-          <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 ring-1 ring-amber-200/50">
-            {icon}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-amber-900">{title}</p>
-            <p className="mt-0.5 text-xs leading-relaxed text-amber-700/80">{desc}</p>
-          </div>
-          <Settings className="mt-1 size-3.5 shrink-0 animate-[spin_3s_linear_infinite] text-amber-500" />
-        </div>
-      ),
-      { duration: 4000 },
-    );
   };
 
   const createGenerationSession = async (draft: SessionDraft) => {
@@ -239,15 +212,10 @@ function GenerateContent() {
   };
 
   const handleGenerate = async () => {
-    if (!currentModelId) {
-      showSetupToast(
-        <BotOff className="size-4.5 text-amber-600" />,
-        t('settings.modelNotConfigured'),
-        t('settings.setupNeeded'),
-      );
-      setSettingsOpen(true);
-      return;
-    }
+    // Note: We no longer check for model configuration on the client side.
+    // The server has a DEFAULT_MODEL fallback in .env.local, so users with
+    // no local model configured can still generate classrooms seamlessly.
+    // If the server cannot process the request, it will return an error.
 
     if (!form.requirement.trim() && !form.pdfFile) {
       setError(t('upload.requirementRequired'));
@@ -324,9 +292,7 @@ function GenerateContent() {
         };
 
         setKnowledgePanel({
-          title: uploadMatchJson.matched
-            ? '发现相似的人工智能课程资料'
-            : '未找到相关知识库资料',
+          title: '发现相关知识',
           query: form.pdfFile.name,
           results: (uploadMatchJson.results as KnowledgeSearchResult[]) ?? [],
           matched: uploadMatchJson.matched,
@@ -335,10 +301,8 @@ function GenerateContent() {
           safetyNote: uploadMatchJson.safetyNote,
           agentWorkflow: workflowJson.workflow as AgentWorkflowSnapshot,
           fallbackSession,
-          fallbackLabel: uploadMatchJson.matched ? '开始智能生成课堂' : '直接生成课堂',
-          fallbackHint: uploadMatchJson.matched
-            ? '系统会保留你的原始主题与上传内容，并在后台自动结合最相关的知识库片段来辅助生成课堂。你可以先浏览这些资料，但不需要手动选择。'
-            : '当前知识库未找到与上传资料足够匹配的内容，系统将基于上传资料主题进行通用生成。',
+          fallbackLabel: '开始智能生成课堂',
+          fallbackHint: '系统不会完全照搬知识库内容，也不会只做通用生成，而是保留你的原始主题，在后台自动带入最相关的知识片段来辅助生成课堂。',
         });
         setKnowledgeDialogOpen(true);
         return;
@@ -386,9 +350,7 @@ function GenerateContent() {
       };
 
       setKnowledgePanel({
-        title: knowledgeJson.matched
-          ? '发现相关的人工智能课程知识'
-          : '未找到相关知识库资料',
+        title: '发现相关知识',
         query: baseRequirements.requirement,
         results: (knowledgeJson.results as KnowledgeSearchResult[]) ?? [],
         matched: knowledgeJson.matched,
@@ -397,10 +359,8 @@ function GenerateContent() {
         safetyNote: knowledgeJson.safetyNote,
         agentWorkflow: workflowJson.workflow as AgentWorkflowSnapshot,
         fallbackSession,
-        fallbackLabel: knowledgeJson.matched ? '开始智能生成课堂' : '直接生成课堂',
-        fallbackHint: knowledgeJson.matched
-          ? '系统不会完全照搬知识库内容，也不会只做通用生成，而是保留你的原始主题，在后台自动带入最相关的知识片段来辅助生成课堂。'
-          : '当前知识库未找到足够强的命中，系统将基于主题进行通用生成。你可以返回修改主题描述，或直接继续生成。',
+        fallbackLabel: '开始智能生成课堂',
+        fallbackHint: '系统不会完全照搬知识库内容，也不会只做通用生成，而是保留你的原始主题，在后台自动带入最相关的知识片段来辅助生成课堂。',
       });
       setKnowledgeDialogOpen(true);
       return;

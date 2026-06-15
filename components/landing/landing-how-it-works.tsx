@@ -14,7 +14,7 @@ const steps = [
     step: '01',
     icon: <FileText className="size-6" />,
     title: '输入主题',
-    description: '输入任意学习主题或上传 PDF/Word 资料，AI 自动解析并提取知识点。',
+    description: '输入任意主题或上传PDF资料，AI自动解析并提取知识点',
     color: '#7c3aed',
     bg: 'bg-gradient-to-br from-violet-50 to-fuchsia-50',
   },

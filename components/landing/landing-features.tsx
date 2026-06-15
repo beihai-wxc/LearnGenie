@@ -10,7 +10,7 @@ const FEATURES = [
   { icon: <Library className="size-6" />, title: '知识驱动学习', description: '上传文档或连接知识库，AI 自动提取重点并生成个性化、有据可依的课程内容。', iconColor: 'text-[#6366f1]', cardBg: 'bg-white/70' },
   { icon: <Presentation className="size-6" />, title: '互动式课件', description: '从一段描述或一份 PDF 开始，一键生成包含幻灯片、测验和白板的完整课堂。', iconColor: 'text-[#f59e0b]', cardBg: 'bg-white/70' },
   { icon: <TrendingUp className="size-6" />, title: '学习档案与追踪', description: '每次学习都会更新你的专属学习画像，让 AI 更懂你，课程更精准。', iconColor: 'text-[#f97316]', cardBg: 'bg-white/70' },
-  { icon: <CalendarCheck className="size-6" />, title: '个性化学习计划', description: 'AI 根据你的画像和薄弱点生成专属学习路径和每日任务，逐步达成目标。', iconColor: 'text-[#10b981]', cardBg: 'bg-white/70' },
+  { icon: <CalendarCheck className="size-6" />, title: '个性化学习计划', description: 'AI根据你的画像和薄弱点生成专属的学习路径，逐步达成目标', iconColor: 'text-[#10b981]', cardBg: 'bg-white/70' },
 ];
 
 export function LandingFeatures() {

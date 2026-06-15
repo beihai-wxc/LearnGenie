@@ -30,13 +30,22 @@ export async function resolveModel(params: {
   baseUrl?: string;
   providerType?: string;
 }): Promise<ResolvedModel> {
-  const modelString = params.modelString || process.env.DEFAULT_MODEL || 'gpt-4o-mini';
-  const { providerId, modelId } = parseModelString(modelString);
+  const serverModel = process.env.DEFAULT_MODEL;
+
+  // Use server DEFAULT_MODEL as override when set.
+  // This ensures the app uses the configured server model regardless of
+  // stale client-side config.
+  let resolvedModelString = serverModel || params.modelString || 'gpt-4o-mini';
+  let resolvedApiKey = serverModel ? '' : (params.apiKey || '');
+  let resolvedBaseUrl = serverModel ? undefined : params.baseUrl;
+  let resolvedProviderType = serverModel ? undefined : params.providerType;
+
+  const { providerId, modelId } = parseModelString(resolvedModelString);
 
   // SSRF validation applies only to client-supplied base URLs.
   // Server-configured URLs (e.g. OLLAMA_BASE_URL from env/YAML) flow through
   // resolveBaseUrl() and bypass this check — they're trusted by the operator.
-  const clientBaseUrl = params.baseUrl || undefined;
+  const clientBaseUrl = resolvedBaseUrl || undefined;
   if (clientBaseUrl && process.env.NODE_ENV === 'production') {
     const ssrfError = await validateUrlForSSRF(clientBaseUrl);
     if (ssrfError) {
@@ -44,21 +53,23 @@ export async function resolveModel(params: {
     }
   }
 
-  const apiKey = clientBaseUrl
-    ? params.apiKey || ''
-    : resolveApiKey(providerId, params.apiKey || '');
-  const baseUrl = clientBaseUrl ? clientBaseUrl : resolveBaseUrl(providerId, params.baseUrl);
+  const effectiveApiKey = clientBaseUrl
+    ? resolvedApiKey || ''
+    : resolveApiKey(providerId, resolvedApiKey || '');
+  const effectiveBaseUrl = clientBaseUrl
+    ? clientBaseUrl
+    : resolveBaseUrl(providerId, resolvedBaseUrl);
   const proxy = resolveProxy(providerId);
   const { model, modelInfo } = getModel({
     providerId,
     modelId,
-    apiKey,
-    baseUrl,
+    apiKey: effectiveApiKey,
+    baseUrl: effectiveBaseUrl,
     proxy,
-    providerType: params.providerType as 'openai' | 'anthropic' | 'google' | undefined,
+    providerType: resolvedProviderType as 'openai' | 'anthropic' | 'google' | undefined,
   });
 
-  return { model, modelInfo, modelString, providerId, apiKey };
+  return { model, modelInfo, modelString: resolvedModelString, providerId, apiKey: effectiveApiKey };
 }
 
 /**
@@ -69,6 +80,21 @@ export async function resolveModel(params: {
  * never from client headers, to prevent auth bypass.
  */
 export async function resolveModelFromHeaders(req: NextRequest): Promise<ResolvedModel> {
+  // Use server DEFAULT_MODEL as override when set.
+  // This ensures the app uses the configured server model regardless of
+  // stale client-side localStorage (e.g. cached GLM config after user
+  // deleted the model switcher UI).
+  const serverModel = process.env.DEFAULT_MODEL;
+  if (serverModel) {
+    return resolveModel({
+      modelString: serverModel,
+      apiKey: '', // Let resolveModel fall back to server-side env config
+      baseUrl: undefined, // Let resolveModel use provider default
+      providerType: undefined, // Let resolveModel infer from registry
+    });
+  }
+
+  // Fallback: use client-provided model config
   return resolveModel({
     modelString: req.headers.get('x-model') || undefined,
     apiKey: req.headers.get('x-api-key') || undefined,

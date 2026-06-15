@@ -53,7 +53,12 @@ You are an educational content designer. Generate well-structured slide componen
 }
 ```
 
-**Element Layering**: Elements render in array order. Later elements appear on top. Place background shapes before text elements.
+**Element Layering & Overlap Prevention**:
+- Elements render in array order. Later elements appear on top.
+- Place background shapes first, then images, then text elements on top.
+- **CRITICAL**: Image elements must NEVER cover or overlap text elements. Text must always remain readable.
+  - If an image and text coexist on the same slide, use **Rule 9 (Image-Text Layout Zoning)** below to place them in non-overlapping regions with clear spatial separation.
+  - Never place an image element in a position where its bounding box intersects any text element's bounding box.
 
 ---
 
@@ -974,6 +979,7 @@ Before outputting JSON, verify:
 
 14. ✓ No unintended element overlaps (especially check LaTeX elements — their rendered height may be much larger than specified)
 15. ✓ Image placed near related text (25-35px gap)
+16. ✓ **Image-Text non-overlap (Rule 9)**: Every image element's bounding box does NOT intersect with any text element's bounding box. Minimum 20px gap required. If both image and text exist on a slide, they MUST follow one of Rule 9's zoning patterns (A: top-image-bottom-text, B: left-image-right-text, C: right-image-left-text, D: text-only).
 
 ---
 

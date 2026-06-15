@@ -368,6 +368,7 @@ const getDefaultImageConfig = () => ({
     'nano-banana': { apiKey: '', baseUrl: '', enabled: false },
     'minimax-image': { apiKey: '', baseUrl: '', enabled: false },
     'grok-image': { apiKey: '', baseUrl: '', enabled: false },
+    'siliconflow-image': { apiKey: '', baseUrl: '', enabled: false },
   } as Record<ImageProviderId, { apiKey: string; baseUrl: string; enabled: boolean }>,
 });
 
@@ -616,8 +617,8 @@ export const useSettingsStore = create<SettingsState>()(
 
       return {
         // Initial state (use migrated data if available)
-        providerId: migratedData?.providerId || 'openai',
-        modelId: migratedData?.modelId || '',
+        providerId: migratedData?.providerId || 'qwen',
+        modelId: migratedData?.modelId || 'qwen3.7-plus',
         providersConfig: migratedData?.providersConfig || getDefaultProvidersConfig(),
         ttsModel: migratedData?.ttsModel || 'openai-tts',
         selectedAgentIds: migratedData?.selectedAgentIds || ['default-1', 'default-2', 'default-3'],
@@ -1270,10 +1271,10 @@ export const useSettingsStore = create<SettingsState>()(
                 }
               }
 
-              // LLM auto-select: only on true first load (no provider selected yet)
+              // LLM auto-select: on first load when no model selected yet
               let autoProviderId: ProviderId | undefined;
               let autoModelId: string | undefined;
-              if (!state.providerId && !state.modelId) {
+              if (!state.modelId) {
                 for (const [pid, cfg] of Object.entries(newProvidersConfig)) {
                   if (cfg.isServerConfigured) {
                     // Prefer server-restricted models, fall back to built-in list

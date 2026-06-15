@@ -106,7 +106,7 @@ export type SessionEvent =
       data: { fromAgentId: string | null; toAgentId: string };
     }
   | { type: 'session_status'; data: { status: SessionStatus; reason?: string } }
-  | { type: 'error'; data: { message: string } }
+  | { type: 'error'; data: { message: string; code?: string; recoverable?: boolean } }
   | { type: 'done'; data: SessionSummary }
   | {
       type: 'text_start';
@@ -336,4 +336,4 @@ export type StatelessEvent =
         directorState?: DirectorState;
       };
     }
-  | { type: 'error'; data: { message: string } };
+  | { type: 'error'; data: { message: string; code?: string; recoverable?: boolean } };
