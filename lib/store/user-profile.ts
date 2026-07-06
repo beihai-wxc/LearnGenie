@@ -30,6 +30,7 @@ import {
   type LearningSummary,
   type DimensionKey,
   type ProfileConversationEntry,
+  type ProfileHistorySnapshot,
 } from '@/lib/types/student-profile';
 
 /** Predefined avatar options */
@@ -60,6 +61,8 @@ export interface UserProfileState {
   updatedAt: number;
   /** Profile building conversation history */
   conversationHistory: ProfileConversationEntry[];
+  /** Historical snapshots of learning profile — appended on each update, used for trend charts */
+  profileHistory: ProfileHistorySnapshot[];
   setAvatar: (avatar: string) => void;
   setNickname: (nickname: string) => void;
   setBio: (bio: string) => void;
@@ -84,14 +87,35 @@ export const useUserProfileStore = create<UserProfileState>()(
       conversationCount: 0,
       updatedAt: 0,
       conversationHistory: [],
+      profileHistory: [],
       setAvatar: (avatar) => set({ avatar }),
       setNickname: (nickname) => set({ nickname }),
       setBio: (bio) => set({ bio }),
       setLearningProfile: (partial) =>
-        set((state) => ({
-          learningProfile: mergeProfileDimensions(state.learningProfile, partial),
-          updatedAt: Date.now(),
-        })),
+        set((state) => {
+          const now = Date.now();
+          // Push a snapshot of the CURRENT profile before merging, so the trend
+          // chart can render a real time series. Only snapshot when there is
+          // already meaningful data (skip the very first update from all-zeros).
+          const hasExistingData = Object.values(state.learningProfile).some(
+            (dim) => (dim as { score?: number })?.score ?? 0 > 0,
+          );
+          const nextHistory = hasExistingData
+            ? [
+                ...state.profileHistory,
+                {
+                  dimensions: state.learningProfile,
+                  conversationCount: state.conversationCount,
+                  updatedAt: state.updatedAt || now,
+                },
+              ].slice(-50) // cap to last 50 snapshots to avoid unbounded growth
+            : state.profileHistory;
+          return {
+            learningProfile: mergeProfileDimensions(state.learningProfile, partial),
+            profileHistory: nextHistory,
+            updatedAt: now,
+          };
+        }),
       setIdentity: (identity) => set({ identity }),
       setLearningSummary: (partial) =>
         set((state) => ({
@@ -119,7 +143,7 @@ export const useUserProfileStore = create<UserProfileState>()(
     {
       name: 'user-profile-storage',
       storage: userScopedStorage,
-      version: 3,
+      version: 4,
       migrate: (persistedState: unknown, version: number) => {
         const persisted = persistedState as Record<string, unknown>;
         if (!persisted.learningProfile) {
@@ -140,6 +164,11 @@ export const useUserProfileStore = create<UserProfileState>()(
           }
           if (!persisted.learningSummary) {
             persisted.learningSummary = createDefaultLearningSummary();
+          }
+        }
+        if (version < 4) {
+          if (!persisted.profileHistory) {
+            persisted.profileHistory = [];
           }
         }
         return persisted as unknown as UserProfileState;

@@ -5,14 +5,26 @@
     "course": "人工智能课程",
     "module": "核心知识",
     "summary": "系统介绍人工智能的定义、主要分支、典型任务、能力边界和学习路线。",
-    "keywords": ["人工智能", "AI", "机器学习", "深度学习", "大模型", "智能体"],
+    "keywords": [
+      "人工智能",
+      "AI",
+      "机器学习",
+      "深度学习",
+      "大模型",
+      "智能体"
+    ],
     "content": "人工智能是让机器具备感知、理解、推理、学习、规划和行动能力的一组技术体系。它既包括经典的知识表示与搜索，也包括机器学习、深度学习、自然语言处理、计算机视觉和多模态系统。理解人工智能最重要的是建立层次关系：人工智能是总领域，机器学习是重要方法，深度学习是机器学习中的一类表示学习方法，大语言模型和生成式 AI 是近年的重要应用形态。当前 AI 擅长处理模式清晰、数据充分、评价目标明确的任务，但在事实一致性、长期规划、复杂世界模型和高风险决策可解释性上仍有明显限制。",
     "pdfPath": "core-ai-overview.pdf",
     "sourceType": "seed",
     "sourceLabel": "核心知识",
     "difficulty": "beginner",
-    "recommendedTeachingGoals": ["建立 AI 总体知识地图", "理解 AI 与机器学习、深度学习、大模型的关系"],
-    "references": ["内部结构化教学整理"],
+    "recommendedTeachingGoals": [
+      "建立 AI 总体知识地图",
+      "理解 AI 与机器学习、深度学习、大模型的关系"
+    ],
+    "references": [
+      "内部结构化教学整理"
+    ],
     "createdAt": "2026-05-08T00:00:00.000Z",
     "updatedAt": "2026-05-08T00:00:00.000Z"
   },
@@ -22,14 +34,27 @@
     "course": "人工智能课程",
     "module": "核心知识",
     "summary": "梳理线性代数、概率统计、微积分和优化方法在 AI 中的作用。",
-    "keywords": ["线性代数", "概率统计", "微积分", "优化", "梯度下降", "数学基础"],
+    "keywords": [
+      "线性代数",
+      "概率统计",
+      "微积分",
+      "优化",
+      "梯度下降",
+      "数学基础"
+    ],
     "content": "人工智能并不等于纯编程，它高度依赖数学建模。线性代数帮助我们描述向量、矩阵、特征空间和参数更新，概率统计帮助理解不确定性、分布、采样和评估指标，微积分帮助分析损失函数对参数的变化趋势，优化方法则决定模型如何沿着梯度不断逼近更优解。学习 AI 时不必一开始就把所有证明都掌握，但至少需要建立一个直觉：模型训练本质上是在高维空间中寻找使损失更小的参数组合。",
     "pdfPath": "core-math-foundations.pdf",
     "sourceType": "seed",
     "sourceLabel": "核心知识",
     "difficulty": "beginner",
-    "recommendedTeachingGoals": ["理解数学基础为什么决定 AI 学习上限", "建立梯度、分布、向量空间的基本直觉"],
-    "references": ["内部结构化教学整理", "公开课程资料摘要"],
+    "recommendedTeachingGoals": [
+      "理解数学基础为什么决定 AI 学习上限",
+      "建立梯度、分布、向量空间的基本直觉"
+    ],
+    "references": [
+      "内部结构化教学整理",
+      "公开课程资料摘要"
+    ],
     "createdAt": "2026-05-08T00:00:00.000Z",
     "updatedAt": "2026-05-08T00:00:00.000Z"
   },
@@ -39,14 +64,26 @@
     "course": "人工智能课程",
     "module": "核心知识",
     "summary": "覆盖特征、标签、损失函数、训练集与测试集、过拟合和泛化等机器学习基础概念。",
-    "keywords": ["机器学习", "训练集", "测试集", "损失函数", "过拟合", "泛化"],
+    "keywords": [
+      "机器学习",
+      "训练集",
+      "测试集",
+      "损失函数",
+      "过拟合",
+      "泛化"
+    ],
     "content": "机器学习的目标是从数据中学习一个映射关系，让模型能在新样本上保持稳定表现。训练集用于学习参数，验证集用于调参，测试集用于最终评估。损失函数用于衡量模型预测与真实目标之间的差异，优化算法负责更新参数。过拟合意味着模型记住了训练数据中的噪声，欠拟合意味着模型能力不足。真正重要的是泛化能力，也就是模型在未见样本上的表现。工程上常通过更多高质量数据、正则化、交叉验证和合理的模型复杂度来平衡偏差与方差。",
     "pdfPath": "core-machine-learning-foundations.pdf",
     "sourceType": "seed",
     "sourceLabel": "核心知识",
     "difficulty": "beginner",
-    "recommendedTeachingGoals": ["掌握机器学习训练流程", "理解过拟合、欠拟合与泛化的区别"],
-    "references": ["内部结构化教学整理"],
+    "recommendedTeachingGoals": [
+      "掌握机器学习训练流程",
+      "理解过拟合、欠拟合与泛化的区别"
+    ],
+    "references": [
+      "内部结构化教学整理"
+    ],
     "createdAt": "2026-05-08T00:00:00.000Z",
     "updatedAt": "2026-05-08T00:00:00.000Z"
   },
@@ -56,14 +93,26 @@
     "course": "人工智能课程",
     "module": "核心知识",
     "summary": "介绍神经元、前向传播、反向传播以及 CNN、RNN、Transformer 的基本差异。",
-    "keywords": ["深度学习", "神经网络", "反向传播", "CNN", "RNN", "Transformer"],
+    "keywords": [
+      "深度学习",
+      "神经网络",
+      "反向传播",
+      "CNN",
+      "RNN",
+      "Transformer"
+    ],
     "content": "神经网络通过多层非线性变换，把原始输入逐步转成更适合任务的表示。前向传播负责根据当前参数计算输出和损失，反向传播负责把误差传回前面各层并更新权重。CNN 更适合图像与局部空间结构任务，RNN 更适合时序数据但长距离依赖处理较弱，Transformer 借助自注意力机制更擅长全局关系建模，成为现代大模型的基础。深度学习成功依赖数据规模、算力、网络结构和训练策略的共同作用。",
     "pdfPath": "core-deep-learning-foundations.pdf",
     "sourceType": "seed",
     "sourceLabel": "核心知识",
     "difficulty": "beginner",
-    "recommendedTeachingGoals": ["理解神经网络训练机制", "知道主流深度模型结构的适用场景"],
-    "references": ["内部结构化教学整理"],
+    "recommendedTeachingGoals": [
+      "理解神经网络训练机制",
+      "知道主流深度模型结构的适用场景"
+    ],
+    "references": [
+      "内部结构化教学整理"
+    ],
     "createdAt": "2026-05-08T00:00:00.000Z",
     "updatedAt": "2026-05-08T00:00:00.000Z"
   },
@@ -73,14 +122,28 @@
     "course": "人工智能课程",
     "module": "重点能力",
     "summary": "讲解自注意力、预训练、指令微调、对齐和幻觉问题。",
-    "keywords": ["Transformer", "大语言模型", "LLM", "自注意力", "预训练", "对齐", "幻觉"],
+    "keywords": [
+      "Transformer",
+      "大语言模型",
+      "LLM",
+      "自注意力",
+      "预训练",
+      "对齐",
+      "幻觉"
+    ],
     "content": "Transformer 的关键突破是自注意力机制，它允许序列中的每个位置直接关注其他位置，因此更擅长建模长距离依赖。大语言模型通常先进行海量文本预训练，再通过指令微调和偏好优化适应交互场景。模型之所以表现出摘要、翻译、问答和生成能力，本质上来自规模化模式学习，但这并不等于它总能给出事实正确答案。幻觉来自训练数据覆盖不足、上下文缺失以及生成目标与事实真实性不完全一致，因此高准确率场景往往需要 RAG、工具调用和外部校验。",
     "pdfPath": "capability-llm-transformer.pdf",
     "sourceType": "seed",
     "sourceLabel": "核心知识",
     "difficulty": "intermediate",
-    "recommendedTeachingGoals": ["理解 Transformer 与 LLM 的工作机制", "解释大模型幻觉的来源"],
-    "references": ["内部结构化教学整理", "公开技术资料摘要"],
+    "recommendedTeachingGoals": [
+      "理解 Transformer 与 LLM 的工作机制",
+      "解释大模型幻觉的来源"
+    ],
+    "references": [
+      "内部结构化教学整理",
+      "公开技术资料摘要"
+    ],
     "createdAt": "2026-05-08T00:00:00.000Z",
     "updatedAt": "2026-05-08T00:00:00.000Z"
   },
@@ -90,14 +153,28 @@
     "course": "人工智能课程",
     "module": "重点能力",
     "summary": "从问题重写、切块、召回、重排到引用展示，完整介绍 RAG 链路。",
-    "keywords": ["RAG", "检索增强生成", "切块", "召回", "重排", "知识库", "引用"],
+    "keywords": [
+      "RAG",
+      "检索增强生成",
+      "切块",
+      "召回",
+      "重排",
+      "知识库",
+      "引用"
+    ],
     "content": "RAG 的核心思想是先从外部知识库中找到相关内容，再把检索结果注入生成上下文，让回答更可控、更贴近资料来源。一个完整的 RAG 流程通常包括问题理解与重写、文档切块、索引构建、召回、重排、上下文拼接、答案生成和引用展示。切块既不能太小，也不能太大；太小会丢失语义完整性，太大则会把噪声带进上下文。召回负责把候选片段找出来，重排负责把最相关内容放到前面。好的 RAG 系统输出的不只是答案，还包括来源和限制说明。",
     "pdfPath": "capability-rag-systems.pdf",
     "sourceType": "seed",
     "sourceLabel": "核心知识",
     "difficulty": "intermediate",
-    "recommendedTeachingGoals": ["理解 RAG 的完整系统链路", "掌握切块、召回、重排的作用"],
-    "references": ["内部结构化教学整理", "公开技术资料摘要"],
+    "recommendedTeachingGoals": [
+      "理解 RAG 的完整系统链路",
+      "掌握切块、召回、重排的作用"
+    ],
+    "references": [
+      "内部结构化教学整理",
+      "公开技术资料摘要"
+    ],
     "createdAt": "2026-05-08T00:00:00.000Z",
     "updatedAt": "2026-05-08T00:00:00.000Z"
   },
@@ -107,14 +184,27 @@
     "course": "人工智能课程",
     "module": "重点能力",
     "summary": "解释 Agent 与普通问答模型的差异，介绍计划、工具调用、记忆和状态管理。",
-    "keywords": ["Agent", "智能体", "计划", "工具调用", "记忆", "多智能体"],
+    "keywords": [
+      "Agent",
+      "智能体",
+      "计划",
+      "工具调用",
+      "记忆",
+      "多智能体"
+    ],
     "content": "普通问答模型更像单轮生成器，而 Agent 是围绕目标、状态、行动和反馈循环组织起来的系统。一个完整的智能体通常包含任务目标管理、上下文记忆、计划模块、工具调用、结果观察和错误恢复。工具调用的价值在于让模型能够访问真实世界数据、执行命令和完成结构化操作。多智能体适合复杂角色分工，例如教师 Agent 讲解、助教 Agent 提问、评测 Agent 校验，但角色越多也意味着协调成本越高。设计 Agent 系统时要特别重视可观察性、状态清晰和失败可恢复。",
     "pdfPath": "capability-agent-systems.pdf",
     "sourceType": "seed",
     "sourceLabel": "核心知识",
     "difficulty": "intermediate",
-    "recommendedTeachingGoals": ["区分 Agent 系统与普通模型问答", "理解工具调用和状态管理的价值"],
-    "references": ["内部结构化教学整理", "公开技术资料摘要"],
+    "recommendedTeachingGoals": [
+      "区分 Agent 系统与普通模型问答",
+      "理解工具调用和状态管理的价值"
+    ],
+    "references": [
+      "内部结构化教学整理",
+      "公开技术资料摘要"
+    ],
     "createdAt": "2026-05-08T00:00:00.000Z",
     "updatedAt": "2026-05-08T00:00:00.000Z"
   },
@@ -124,14 +214,26 @@
     "course": "人工智能课程",
     "module": "重点能力",
     "summary": "覆盖图像分类、目标检测、分割、OCR 与视觉理解。",
-    "keywords": ["计算机视觉", "图像分类", "目标检测", "分割", "OCR", "视觉理解"],
+    "keywords": [
+      "计算机视觉",
+      "图像分类",
+      "目标检测",
+      "分割",
+      "OCR",
+      "视觉理解"
+    ],
     "content": "计算机视觉试图让机器从图像和视频中理解对象、场景、关系和行为。典型任务包括图像分类、目标检测、语义分割和 OCR。CNN 曾长期是视觉任务主力，后来 Vision Transformer 和多模态模型逐渐成为重要方向。真正的视觉系统上线时，不仅要关注离线精度，还要考虑误检漏检代价、算力成本、数据标注质量和复杂环境鲁棒性。随着多模态模型发展，视觉能力越来越多地融入通用智能系统。",
     "pdfPath": "capability-computer-vision.pdf",
     "sourceType": "seed",
     "sourceLabel": "核心知识",
     "difficulty": "intermediate",
-    "recommendedTeachingGoals": ["理解视觉任务的主要类别", "认识视觉系统在工程落地中的难点"],
-    "references": ["内部结构化教学整理"],
+    "recommendedTeachingGoals": [
+      "理解视觉任务的主要类别",
+      "认识视觉系统在工程落地中的难点"
+    ],
+    "references": [
+      "内部结构化教学整理"
+    ],
     "createdAt": "2026-05-08T00:00:00.000Z",
     "updatedAt": "2026-05-08T00:00:00.000Z"
   },
@@ -141,14 +243,27 @@
     "course": "人工智能课程",
     "module": "重点能力",
     "summary": "介绍分词、表示学习、分类、信息抽取、问答和文本生成。",
-    "keywords": ["自然语言处理", "NLP", "分词", "文本分类", "信息抽取", "问答"],
+    "keywords": [
+      "自然语言处理",
+      "NLP",
+      "分词",
+      "文本分类",
+      "信息抽取",
+      "问答"
+    ],
     "content": "自然语言处理关注机器如何理解和生成人类语言。早期 NLP 依赖词袋、n-gram 和规则系统，后来逐步转向词向量、预训练模型和生成式模型。典型任务包括文本分类、命名实体识别、情感分析、信息抽取、机器翻译、问答和摘要。随着大语言模型发展，很多任务被统一到一个生成接口中，但在企业落地时仍然需要考虑术语一致性、领域数据、知识时效性和输出可控性。",
     "pdfPath": "capability-nlp.pdf",
     "sourceType": "seed",
     "sourceLabel": "核心知识",
     "difficulty": "intermediate",
-    "recommendedTeachingGoals": ["建立 NLP 任务全景视图", "理解传统 NLP 与大模型 NLP 的关系"],
-    "references": ["内部结构化教学整理", "公开技术资料摘要"],
+    "recommendedTeachingGoals": [
+      "建立 NLP 任务全景视图",
+      "理解传统 NLP 与大模型 NLP 的关系"
+    ],
+    "references": [
+      "内部结构化教学整理",
+      "公开技术资料摘要"
+    ],
     "createdAt": "2026-05-08T00:00:00.000Z",
     "updatedAt": "2026-05-08T00:00:00.000Z"
   },
@@ -158,14 +273,27 @@
     "course": "人工智能课程",
     "module": "重点能力",
     "summary": "说明状态、动作、奖励和策略优化在序列决策中的作用。",
-    "keywords": ["强化学习", "状态", "动作", "奖励", "策略", "决策"],
+    "keywords": [
+      "强化学习",
+      "状态",
+      "动作",
+      "奖励",
+      "策略",
+      "决策"
+    ],
     "content": "强化学习适合解决需要长期回报权衡的序列决策问题。智能体在环境中观察状态、执行动作、接收奖励，并通过反复试错优化策略。相比监督学习，强化学习的反馈往往更稀疏，训练更不稳定，对探索与利用的平衡要求更高。它被广泛用于游戏对弈、机器人控制、推荐排序和资源调度。理解强化学习的关键不在公式记忆，而在于看清决策过程为什么必须依赖环境反馈。",
     "pdfPath": "capability-reinforcement-learning.pdf",
     "sourceType": "seed",
     "sourceLabel": "核心知识",
     "difficulty": "intermediate",
-    "recommendedTeachingGoals": ["理解强化学习与监督学习的差异", "建立状态-动作-奖励的决策思维"],
-    "references": ["内部结构化教学整理", "公开课程资料摘要"],
+    "recommendedTeachingGoals": [
+      "理解强化学习与监督学习的差异",
+      "建立状态-动作-奖励的决策思维"
+    ],
+    "references": [
+      "内部结构化教学整理",
+      "公开课程资料摘要"
+    ],
     "createdAt": "2026-05-08T00:00:00.000Z",
     "updatedAt": "2026-05-08T00:00:00.000Z"
   },
@@ -175,14 +303,27 @@
     "course": "人工智能课程",
     "module": "实战专题",
     "summary": "面向工程实践说明如何组织数据、模型、训练循环、验证和保存权重。",
-    "keywords": ["PyTorch", "训练循环", "Dataset", "DataLoader", "验证", "权重保存"],
+    "keywords": [
+      "PyTorch",
+      "训练循环",
+      "Dataset",
+      "DataLoader",
+      "验证",
+      "权重保存"
+    ],
     "content": "一个典型的 PyTorch 项目至少包含数据集定义、数据加载器、模型结构、损失函数、优化器、训练循环和验证循环。训练时要完成前向传播、损失计算、梯度清零、反向传播和参数更新；验证时则要关闭梯度计算，只关注模型在未见数据上的表现。真正的实战不是把代码跑通，而是让实验可复现、可解释、可对比，因此记录配置、固定随机种子、保存最佳权重和输出验证曲线非常重要。",
     "pdfPath": "practice-pytorch-workflow.pdf",
     "sourceType": "seed",
     "sourceLabel": "实战专题",
     "difficulty": "intermediate",
-    "recommendedTeachingGoals": ["掌握 PyTorch 训练闭环", "建立可复现实验的基本习惯"],
-    "references": ["公开技术资料摘要", "内部实战整理"],
+    "recommendedTeachingGoals": [
+      "掌握 PyTorch 训练闭环",
+      "建立可复现实验的基本习惯"
+    ],
+    "references": [
+      "公开技术资料摘要",
+      "内部实战整理"
+    ],
     "createdAt": "2026-05-08T00:00:00.000Z",
     "updatedAt": "2026-05-08T00:00:00.000Z"
   },
@@ -192,14 +333,27 @@
     "course": "人工智能课程",
     "module": "实战专题",
     "summary": "聚焦数据清洗、标注、指令数据构造和微调评估的实战方法。",
-    "keywords": ["微调", "数据集", "标注", "指令数据", "评测", "训练样本"],
+    "keywords": [
+      "微调",
+      "数据集",
+      "标注",
+      "指令数据",
+      "评测",
+      "训练样本"
+    ],
     "content": "模型微调的成败往往不取决于训练命令本身，而取决于数据集质量、任务定义是否清晰以及评估标准是否可靠。实战中需要先明确目标任务，再构造有代表性的训练样本和验证样本。分类任务要关注类别均衡，生成任务要关注样本风格一致性、答案质量和错误边界。微调后不能只看损失下降，还要通过人工抽检、基准集对比和真实业务场景验证模型是否真的更有用。",
     "pdfPath": "practice-model-finetuning.pdf",
     "sourceType": "seed",
     "sourceLabel": "实战专题",
     "difficulty": "advanced",
-    "recommendedTeachingGoals": ["理解微调成败首先取决于数据", "掌握训练前定义评测标准的思路"],
-    "references": ["公开技术资料摘要", "内部实战整理"],
+    "recommendedTeachingGoals": [
+      "理解微调成败首先取决于数据",
+      "掌握训练前定义评测标准的思路"
+    ],
+    "references": [
+      "公开技术资料摘要",
+      "内部实战整理"
+    ],
     "createdAt": "2026-05-08T00:00:00.000Z",
     "updatedAt": "2026-05-08T00:00:00.000Z"
   },
@@ -209,15 +363,403 @@
     "course": "人工智能课程",
     "module": "实战专题",
     "summary": "聚焦 AI 产品上线后的真实问题，包括接口设计、延迟、成本、评测、监控和反馈闭环。",
-    "keywords": ["部署", "评测", "监控", "延迟", "成本", "上线", "反馈闭环"],
+    "keywords": [
+      "部署",
+      "评测",
+      "监控",
+      "延迟",
+      "成本",
+      "上线",
+      "反馈闭环"
+    ],
     "content": "很多 AI 项目在离线指标上表现不错，但上线后却因为时延、成本、稳定性、上下文管理或用户预期不匹配而失败。部署阶段需要平衡模型大小、响应速度、并发能力和单位成本。生成式 AI 的评测不仅要看相关性和流畅度，还要看事实性、结构完整度、引用质量和用户满意度。上线后还要监控失败率、超时率、空结果率和用户负反馈，并把这些真实使用数据回流到评测和提示优化中，系统才会越来越稳。",
     "pdfPath": "practice-ai-app-deployment.pdf",
     "sourceType": "seed",
     "sourceLabel": "实战专题",
     "difficulty": "advanced",
-    "recommendedTeachingGoals": ["理解 AI 系统从实验到产品的关键差距", "建立部署、评测、监控一体化视角"],
-    "references": ["公开技术资料摘要", "内部实战整理"],
+    "recommendedTeachingGoals": [
+      "理解 AI 系统从实验到产品的关键差距",
+      "建立部署、评测、监控一体化视角"
+    ],
+    "references": [
+      "公开技术资料摘要",
+      "内部实战整理"
+    ],
     "createdAt": "2026-05-08T00:00:00.000Z",
     "updatedAt": "2026-05-08T00:00:00.000Z"
+  },
+  {
+    "docId": "capability-prompt-engineering",
+    "title": "Prompt 工程与提示技术",
+    "course": "人工智能课程",
+    "module": "重点能力",
+    "summary": "Prompt 工程与提示技术——知识库扩展文档",
+    "keywords": [
+      "Prompt工程",
+      "提示设计",
+      "Few-shot",
+      "CoT",
+      "ReAct",
+      "提示注入"
+    ],
+    "content": "",
+    "pdfPath": "capability-prompt-engineering.pdf",
+    "sourceType": "seed",
+    "sourceLabel": "重点能力",
+    "difficulty": "intermediate",
+    "recommendedTeachingGoals": [
+      "掌握Prompt 工程与提示技术的核心概念与实践方法"
+    ],
+    "references": [
+      "内部结构化教学整理"
+    ],
+    "createdAt": "2026-07-06T00:00:00.000Z",
+    "updatedAt": "2026-07-06T00:00:00.000Z"
+  },
+  {
+    "docId": "capability-vector-database",
+    "title": "向量数据库与 Embedding 技术",
+    "course": "人工智能课程",
+    "module": "重点能力",
+    "summary": "向量数据库与 Embedding 技术——知识库扩展文档",
+    "keywords": [
+      "Embedding",
+      "向量数据库",
+      "FAISS",
+      "Milvus",
+      "HNSW",
+      "ANN",
+      "混合检索"
+    ],
+    "content": "",
+    "pdfPath": "capability-vector-database.pdf",
+    "sourceType": "seed",
+    "sourceLabel": "重点能力",
+    "difficulty": "intermediate",
+    "recommendedTeachingGoals": [
+      "掌握向量数据库与 Embedding 技术的核心概念与实践方法"
+    ],
+    "references": [
+      "内部结构化教学整理"
+    ],
+    "createdAt": "2026-07-06T00:00:00.000Z",
+    "updatedAt": "2026-07-06T00:00:00.000Z"
+  },
+  {
+    "docId": "capability-quantization-inference",
+    "title": "模型量化与推理优化",
+    "course": "人工智能课程",
+    "module": "重点能力",
+    "summary": "模型量化与推理优化——知识库扩展文档",
+    "keywords": [
+      "量化",
+      "INT8",
+      "GPTQ",
+      "AWQ",
+      "Flash Attention",
+      "vLLM",
+      "蒸馏",
+      "推理优化"
+    ],
+    "content": "",
+    "pdfPath": "capability-quantization-inference.pdf",
+    "sourceType": "seed",
+    "sourceLabel": "重点能力",
+    "difficulty": "advanced",
+    "recommendedTeachingGoals": [
+      "掌握模型量化与推理优化的核心概念与实践方法"
+    ],
+    "references": [
+      "内部结构化教学整理"
+    ],
+    "createdAt": "2026-07-06T00:00:00.000Z",
+    "updatedAt": "2026-07-06T00:00:00.000Z"
+  },
+  {
+    "docId": "capability-multimodal",
+    "title": "多模态大模型原理",
+    "course": "人工智能课程",
+    "module": "重点能力",
+    "summary": "多模态大模型原理——知识库扩展文档",
+    "keywords": [
+      "多模态",
+      "CLIP",
+      "LLaVA",
+      "视觉语言模型",
+      "模态对齐",
+      "Whisper"
+    ],
+    "content": "",
+    "pdfPath": "capability-multimodal.pdf",
+    "sourceType": "seed",
+    "sourceLabel": "重点能力",
+    "difficulty": "advanced",
+    "recommendedTeachingGoals": [
+      "掌握多模态大模型原理的核心概念与实践方法"
+    ],
+    "references": [
+      "内部结构化教学整理"
+    ],
+    "createdAt": "2026-07-06T00:00:00.000Z",
+    "updatedAt": "2026-07-06T00:00:00.000Z"
+  },
+  {
+    "docId": "capability-ai-safety",
+    "title": "AI 安全与对齐技术",
+    "course": "人工智能课程",
+    "module": "重点能力",
+    "summary": "AI 安全与对齐技术——知识库扩展文档",
+    "keywords": [
+      "对齐",
+      "RLHF",
+      "DPO",
+      "Constitutional AI",
+      "红队测试",
+      "越狱",
+      "AI安全"
+    ],
+    "content": "",
+    "pdfPath": "capability-ai-safety.pdf",
+    "sourceType": "seed",
+    "sourceLabel": "重点能力",
+    "difficulty": "advanced",
+    "recommendedTeachingGoals": [
+      "掌握AI 安全与对齐技术的核心概念与实践方法"
+    ],
+    "references": [
+      "内部结构化教学整理"
+    ],
+    "createdAt": "2026-07-06T00:00:00.000Z",
+    "updatedAt": "2026-07-06T00:00:00.000Z"
+  },
+  {
+    "docId": "capability-aigc-generative",
+    "title": "AIGC 与生成模型",
+    "course": "人工智能课程",
+    "module": "重点能力",
+    "summary": "AIGC 与生成模型——知识库扩展文档",
+    "keywords": [
+      "AIGC",
+      "GAN",
+      "扩散模型",
+      "Stable Diffusion",
+      "ControlNet",
+      "Sora",
+      "生成式AI"
+    ],
+    "content": "",
+    "pdfPath": "capability-aigc-generative.pdf",
+    "sourceType": "seed",
+    "sourceLabel": "重点能力",
+    "difficulty": "intermediate",
+    "recommendedTeachingGoals": [
+      "掌握AIGC 与生成模型的核心概念与实践方法"
+    ],
+    "references": [
+      "内部结构化教学整理"
+    ],
+    "createdAt": "2026-07-06T00:00:00.000Z",
+    "updatedAt": "2026-07-06T00:00:00.000Z"
+  },
+  {
+    "docId": "capability-tool-calling",
+    "title": "工具调用与函数调用",
+    "course": "人工智能课程",
+    "module": "重点能力",
+    "summary": "工具调用与函数调用——知识库扩展文档",
+    "keywords": [
+      "工具调用",
+      "Function Calling",
+      "MCP",
+      "LangChain",
+      "Agent",
+      "工具编排"
+    ],
+    "content": "",
+    "pdfPath": "capability-tool-calling.pdf",
+    "sourceType": "seed",
+    "sourceLabel": "重点能力",
+    "difficulty": "intermediate",
+    "recommendedTeachingGoals": [
+      "掌握工具调用与函数调用的核心概念与实践方法"
+    ],
+    "references": [
+      "内部结构化教学整理"
+    ],
+    "createdAt": "2026-07-06T00:00:00.000Z",
+    "updatedAt": "2026-07-06T00:00:00.000Z"
+  },
+  {
+    "docId": "core-classic-ml-algorithms",
+    "title": "经典机器学习算法详解",
+    "course": "人工智能课程",
+    "module": "核心知识",
+    "summary": "经典机器学习算法详解——知识库扩展文档",
+    "keywords": [
+      "机器学习算法",
+      "决策树",
+      "随机森林",
+      "SVM",
+      "K-Means",
+      "PCA",
+      "集成学习",
+      "Scikit-learn"
+    ],
+    "content": "",
+    "pdfPath": "core-classic-ml-algorithms.pdf",
+    "sourceType": "seed",
+    "sourceLabel": "核心知识",
+    "difficulty": "intermediate",
+    "recommendedTeachingGoals": [
+      "掌握经典机器学习算法详解的核心概念与实践方法"
+    ],
+    "references": [
+      "内部结构化教学整理"
+    ],
+    "createdAt": "2026-07-06T00:00:00.000Z",
+    "updatedAt": "2026-07-06T00:00:00.000Z"
+  },
+  {
+    "docId": "core-data-feature-engineering",
+    "title": "数据工程与特征工程",
+    "course": "人工智能课程",
+    "module": "核心知识",
+    "summary": "数据工程与特征工程——知识库扩展文档",
+    "keywords": [
+      "数据工程",
+      "特征工程",
+      "特征编码",
+      "特征选择",
+      "数据清洗",
+      "Feature Store"
+    ],
+    "content": "",
+    "pdfPath": "core-data-feature-engineering.pdf",
+    "sourceType": "seed",
+    "sourceLabel": "核心知识",
+    "difficulty": "intermediate",
+    "recommendedTeachingGoals": [
+      "掌握数据工程与特征工程的核心概念与实践方法"
+    ],
+    "references": [
+      "内部结构化教学整理"
+    ],
+    "createdAt": "2026-07-06T00:00:00.000Z",
+    "updatedAt": "2026-07-06T00:00:00.000Z"
+  },
+  {
+    "docId": "core-distributed-training",
+    "title": "分布式训练与加速",
+    "course": "人工智能课程",
+    "module": "核心知识",
+    "summary": "分布式训练与加速——知识库扩展文档",
+    "keywords": [
+      "分布式训练",
+      "数据并行",
+      "模型并行",
+      "ZeRO",
+      "DeepSpeed",
+      "Megatron",
+      "混合精度"
+    ],
+    "content": "",
+    "pdfPath": "core-distributed-training.pdf",
+    "sourceType": "seed",
+    "sourceLabel": "核心知识",
+    "difficulty": "advanced",
+    "recommendedTeachingGoals": [
+      "掌握分布式训练与加速的核心概念与实践方法"
+    ],
+    "references": [
+      "内部结构化教学整理"
+    ],
+    "createdAt": "2026-07-06T00:00:00.000Z",
+    "updatedAt": "2026-07-06T00:00:00.000Z"
+  },
+  {
+    "docId": "practice-mlops",
+    "title": "MLOps 与模型生命周期",
+    "course": "人工智能课程",
+    "module": "实战专题",
+    "summary": "MLOps 与模型生命周期——知识库扩展文档",
+    "keywords": [
+      "MLOps",
+      "模型生命周期",
+      "MLflow",
+      "CI/CD",
+      "模型监控",
+      "数据漂移",
+      "A/B测试"
+    ],
+    "content": "",
+    "pdfPath": "practice-mlops.pdf",
+    "sourceType": "seed",
+    "sourceLabel": "实战专题",
+    "difficulty": "advanced",
+    "recommendedTeachingGoals": [
+      "掌握MLOps 与模型生命周期的核心概念与实践方法"
+    ],
+    "references": [
+      "内部结构化教学整理"
+    ],
+    "createdAt": "2026-07-06T00:00:00.000Z",
+    "updatedAt": "2026-07-06T00:00:00.000Z"
+  },
+  {
+    "docId": "practice-ai-product-design",
+    "title": "AI 产品设计方法论",
+    "course": "人工智能课程",
+    "module": "实战专题",
+    "summary": "AI 产品设计方法论——知识库扩展文档",
+    "keywords": [
+      "AI产品",
+      "产品设计",
+      "人机协作",
+      "用户体验",
+      "评估指标",
+      "降级策略"
+    ],
+    "content": "",
+    "pdfPath": "practice-ai-product-design.pdf",
+    "sourceType": "seed",
+    "sourceLabel": "实战专题",
+    "difficulty": "intermediate",
+    "recommendedTeachingGoals": [
+      "掌握AI 产品设计方法论的核心概念与实践方法"
+    ],
+    "references": [
+      "内部结构化教学整理"
+    ],
+    "createdAt": "2026-07-06T00:00:00.000Z",
+    "updatedAt": "2026-07-06T00:00:00.000Z"
+  },
+  {
+    "docId": "practice-ai-ethics",
+    "title": "AI 伦理治理与合规",
+    "course": "人工智能课程",
+    "module": "实战专题",
+    "summary": "AI 伦理治理与合规——知识库扩展文档",
+    "keywords": [
+      "AI伦理",
+      "公平性",
+      "差分隐私",
+      "联邦学习",
+      "EU AI Act",
+      "合规",
+      "治理"
+    ],
+    "content": "",
+    "pdfPath": "practice-ai-ethics.pdf",
+    "sourceType": "seed",
+    "sourceLabel": "实战专题",
+    "difficulty": "intermediate",
+    "recommendedTeachingGoals": [
+      "掌握AI 伦理治理与合规的核心概念与实践方法"
+    ],
+    "references": [
+      "内部结构化教学整理"
+    ],
+    "createdAt": "2026-07-06T00:00:00.000Z",
+    "updatedAt": "2026-07-06T00:00:00.000Z"
   }
 ]

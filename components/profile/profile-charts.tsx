@@ -70,6 +70,7 @@ export default function ProfileCharts() {
   const chartInstances = useRef<Record<string, ECharts | null>>({});
   const [ready, setReady] = useState(false);
   const learningProfile = useUserProfileStore((s) => s.learningProfile);
+  const profileHistory = useUserProfileStore((s) => s.profileHistory);
 
   const dimensionKeys = Object.keys(DIMENSION_META) as DimensionKey[];
 
@@ -111,16 +112,62 @@ export default function ProfileCharts() {
         } as EChartsOption;
       }
       if (type === 'line') {
-        const hasData = values.some((v) => v > 0);
+        const state = useUserProfileStore.getState();
+        const history = state.profileHistory || [];
+        const hasData = values.some((v) => v > 0) || history.length > 0;
+
+        if (!hasData) {
+          return {
+            backgroundColor: 'transparent',
+            tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+            legend: { data: labels, top: 0, type: 'scroll', textStyle: { fontSize: 11 }, itemWidth: 16, itemHeight: 10 },
+            grid: { left: '3%', right: '4%', bottom: '3%', top: '12%', containLabel: true },
+            xAxis: { type: 'category', boundaryGap: false, data: ['暂无数据'], axisLine: { lineStyle: { color: 'rgba(100, 116, 139, 0.3)' } }, axisLabel: { color: '#64748b', fontSize: 10 } },
+            yAxis: { type: 'value', max: 100, axisLine: { lineStyle: { color: 'rgba(100, 116, 139, 0.3)' } }, axisLabel: { color: '#64748b', fontSize: 10 }, splitLine: { lineStyle: { color: 'rgba(100, 116, 139, 0.1)' } } },
+            series: labels.map((label, i) => ({ name: label, type: 'line', data: [0], smooth: true, symbol: 'circle', symbolSize: 6, lineStyle: { width: 2.5, color: colors[i] }, itemStyle: { color: colors[i] } })),
+            graphic: [{ type: 'text', left: 'center', top: 'center', style: { text: '暂无学习数据，开始对话后自动生成', fill: '#94a3b8', fontSize: 14 } }],
+          } as EChartsOption;
+        }
+
+        // Build a real time series from profileHistory + current snapshot.
+        const timePoints = [
+          ...history.map((s) => s.updatedAt),
+          state.updatedAt || Date.now(),
+        ];
+        const xAxisLabels = timePoints.map((ts) => {
+          const d = new Date(ts);
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          const hh = String(d.getHours()).padStart(2, '0');
+          const mi = String(d.getMinutes()).padStart(2, '0');
+          return `${mm}-${dd} ${hh}:${mi}`;
+        });
+
+        const seriesData = dimensionKeys.map((key, dimIdx) => {
+          const data = [
+            ...history.map((s) => ((s.dimensions[key] as { score?: number } | undefined)?.score) ?? 0),
+            values[dimIdx], // current snapshot
+          ];
+          return {
+            name: labels[dimIdx],
+            type: 'line',
+            data,
+            smooth: true,
+            symbol: 'circle',
+            symbolSize: 6,
+            lineStyle: { width: 2.5, color: colors[dimIdx] },
+            itemStyle: { color: colors[dimIdx] },
+          };
+        });
+
         return {
           backgroundColor: 'transparent',
           tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
           legend: { data: labels, top: 0, type: 'scroll', textStyle: { fontSize: 11 }, itemWidth: 16, itemHeight: 10 },
           grid: { left: '3%', right: '4%', bottom: '3%', top: '12%', containLabel: true },
-          xAxis: { type: 'category', boundaryGap: false, data: hasData ? ['当前'] : ['暂无数据'], axisLine: { lineStyle: { color: 'rgba(100, 116, 139, 0.3)' } }, axisLabel: { color: '#64748b', fontSize: 10 } },
+          xAxis: { type: 'category', boundaryGap: false, data: xAxisLabels, axisLine: { lineStyle: { color: 'rgba(100, 116, 139, 0.3)' } }, axisLabel: { color: '#64748b', fontSize: 10 } },
           yAxis: { type: 'value', max: 100, axisLine: { lineStyle: { color: 'rgba(100, 116, 139, 0.3)' } }, axisLabel: { color: '#64748b', fontSize: 10 }, splitLine: { lineStyle: { color: 'rgba(100, 116, 139, 0.1)' } } },
-          series: labels.map((label, i) => ({ name: label, type: 'line', data: hasData ? [values[i]] : [0], smooth: true, symbol: 'circle', symbolSize: 8, lineStyle: { width: 2.5, color: colors[i] }, itemStyle: { color: colors[i] } })),
-          graphic: !hasData ? [{ type: 'text', left: 'center', top: 'center', style: { text: '暂无学习数据，开始对话后自动生成', fill: '#94a3b8', fontSize: 14 } }] : [],
+          series: seriesData,
         } as EChartsOption;
       }
       return {
@@ -213,7 +260,7 @@ export default function ProfileCharts() {
       window.removeEventListener('resize', handleResize);
       Object.values(chartInstances.current).forEach((inst) => inst?.dispose());
     };
-  }, [ready]);
+  }, [ready, learningProfile, profileHistory]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">

@@ -16,8 +16,8 @@ export const KNOWLEDGE_INDEX_VERSION = 3;
 
 export const KNOWLEDGE_SEARCH_MATCH_THRESHOLD = 0.1;
 export const KNOWLEDGE_SEARCH_TOP_K = 5;
-export const KNOWLEDGE_CHUNK_SIZE = 560;
-export const KNOWLEDGE_CHUNK_OVERLAP = 80;
+export const KNOWLEDGE_CHUNK_SIZE = 800;
+export const KNOWLEDGE_CHUNK_OVERLAP = 120;
 
 // Embedding defaults
 export const DEFAULT_EMBEDDING_BINDING = 'openai';

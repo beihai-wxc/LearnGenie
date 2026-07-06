@@ -1,6 +1,8 @@
 /**
  * Local JSON-persisted vector store with in-memory cosine similarity search.
- * No external database required — embeds persisted as versioned JSON files.
+ * Uses HNSW (via hnswlib-node) for approximate nearest neighbor search when
+ * the chunk count exceeds ANN_THRESHOLD, falling back to O(n) brute force
+ * for small indexes. No external database required.
  * Patterned after DeepTutor's LlamaIndex storage layer.
  */
 
@@ -19,6 +21,36 @@ import type {
 
 const log = createLogger('LocalVectorStore');
 const CURRENT_VERSION = KNOWLEDGE_INDEX_VERSION;
+
+// Enable HNSW ANN search when chunk count exceeds this threshold.
+// Below this, O(n) brute force is faster (no index build overhead).
+const ANN_THRESHOLD = 500;
+
+// HNSW parameters tuned for recall/speed balance:
+// M = 32 (max connections per node), efConstruction = 200, efSearch = 100
+const HNSW_M = 32;
+const HNSW_EF_CONSTRUCTION = 200;
+const HNSW_EF_SEARCH = 100;
+
+// Lazy-load hnswlib-node (native addon may not be available in all envs)
+type HnswlibModule = typeof import('hnswlib-node');
+let hnswlib: HnswlibModule | null = null;
+let hnswlibLoadFailed = false;
+async function getHnswlib(): Promise<HnswlibModule | null> {
+  if (hnswlibLoadFailed) return null;
+  if (hnswlib) return hnswlib;
+  try {
+    const mod = await import('hnswlib-node');
+    // Handle both ESM and CJS module shapes
+    hnswlib = (mod as HnswlibModule & { default?: HnswlibModule }).default ?? mod;
+    log.info('hnswlib-node loaded successfully — ANN search enabled');
+    return hnswlib;
+  } catch (err) {
+    log.warn('hnswlib-node not available, falling back to brute force search:', err);
+    hnswlibLoadFailed = true;
+    return null;
+  }
+}
 
 function getStorePath(signature: string): string {
   return path.join(KNOWLEDGE_INDEX_DIR, `vectors-${signature}.json`);
@@ -80,6 +112,8 @@ function hybridScore(
 export class LocalVectorStore {
   private index: VectorStoreIndexData | null = null;
   private loadedSignature: string | null = null;
+  // HNSW index for ANN search (built lazily when chunk count > ANN_THRESHOLD)
+  private hnswIndex: import('hnswlib-node').HierarchicalNSW | null = null;
 
   get signature(): string | null {
     return this.loadedSignature;
@@ -87,6 +121,35 @@ export class LocalVectorStore {
 
   get chunkCount(): number {
     return this.index?.chunks.length ?? 0;
+  }
+
+  /**
+   * Build an HNSW index from the current embeddings if the chunk count
+   * exceeds ANN_THRESHOLD. Called automatically after createIndex/loadIndex/insertChunks.
+   * Silently falls back to brute force if hnswlib-node is unavailable.
+   */
+  private async maybeBuildHnsw(): Promise<void> {
+    if (!this.index || this.index.chunks.length < ANN_THRESHOLD) {
+      return;
+    }
+    const lib = await getHnswlib();
+    if (!lib) return;
+
+    try {
+      const dim = this.index.embeddingDimensions;
+      const numElements = this.index.embeddings.length;
+      const hnsw = new lib.HierarchicalNSW('cosine', dim);
+      hnsw.initIndex(numElements, HNSW_M, HNSW_EF_CONSTRUCTION);
+      for (let i = 0; i < numElements; i++) {
+        hnsw.addPoint(this.index.embeddings[i]!, i);
+      }
+      hnsw.setEf(HNSW_EF_SEARCH);
+      this.hnswIndex = hnsw;
+      log.info(`HNSW index built: ${numElements} vectors, dim=${dim}`);
+    } catch (err) {
+      log.warn('Failed to build HNSW index, falling back to brute force:', err);
+      this.hnswIndex = null;
+    }
   }
 
   async createIndex(
@@ -123,6 +186,7 @@ export class LocalVectorStore {
 
     this.index = data;
     this.loadedSignature = signature;
+    await this.maybeBuildHnsw();
 
     log.info(`Created vector index: ${chunks.length} chunks, dim=${dimensions}, signature=${signature}`);
     return signature;
@@ -155,6 +219,7 @@ export class LocalVectorStore {
 
       this.index = data;
       this.loadedSignature = signature;
+      await this.maybeBuildHnsw();
       log.info(`Loaded vector index: ${data.chunks.length} chunks, signature=${signature}`);
       return true;
     } catch (err) {
@@ -163,18 +228,41 @@ export class LocalVectorStore {
     }
   }
 
-  search(
+  /**
+   * Search for the top-K most similar chunks.
+   * Uses HNSW ANN search when available (chunk count > ANN_THRESHOLD and
+   * hnswlib-node loaded), otherwise falls back to O(n) brute force.
+   */
+  async search(
     queryEmbedding: number[],
     topK: number,
     queryTokens?: Set<string>,
-  ): ScoredChunk[] {
+  ): Promise<ScoredChunk[]> {
     if (!this.index) {
       throw new Error('Vector store not loaded. Call loadIndex() first.');
     }
 
-    const results: ScoredChunk[] = [];
+    // Candidate indices to score
+    let candidateIndices: number[];
 
-    for (let i = 0; i < this.index.embeddings.length; i++) {
+    if (this.hnswIndex) {
+      // ANN path: HNSW returns approximate nearest neighbors
+      try {
+        const searchK = Math.min(topK * 4, this.index.chunks.length);
+        const result = this.hnswIndex.searchKnn(queryEmbedding, searchK);
+        candidateIndices = Array.from(result.neighbors);
+        log.debug(`HNSW search returned ${candidateIndices.length} candidates`);
+      } catch (err) {
+        log.warn('HNSW search failed, falling back to brute force:', err);
+        candidateIndices = this.index.embeddings.map((_, i) => i);
+      }
+    } else {
+      // Brute force path: scan all embeddings
+      candidateIndices = this.index.embeddings.map((_, i) => i);
+    }
+
+    const results: ScoredChunk[] = [];
+    for (const i of candidateIndices) {
       const vecSim = cosineSimilarity(queryEmbedding, this.index.embeddings[i]!);
       const chunk = this.index.chunks[i]!;
       const score = queryTokens
@@ -222,6 +310,9 @@ export class LocalVectorStore {
       const storePath = getStorePath(this.loadedSignature);
       await fs.writeFile(storePath, JSON.stringify(this.index), 'utf8');
     }
+
+    // Rebuild HNSW index if we've crossed the threshold
+    await this.maybeBuildHnsw();
 
     log.info(`Inserted ${chunks.length} chunks, total=${this.index.chunks.length}`);
   }

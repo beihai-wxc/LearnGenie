@@ -15,6 +15,7 @@ import {
 import { getEmbeddingClient, resetEmbeddingClient } from '@/lib/rag/embedding/client';
 import type { EmbeddingConfig } from '@/lib/rag/embedding/types';
 import { LocalVectorStore } from '@/lib/rag/vector-store/local-store';
+import type { ChunkMetadata } from '@/lib/rag/vector-store/types';
 import {
   KNOWLEDGE_COURSE_STRUCTURE_FILE,
   KNOWLEDGE_PDF_DIR,
@@ -484,6 +485,26 @@ async function ensureVectorIndexReady(embeddingConfig: EmbeddingConfig) {
 }
 
 function getEmbeddingConfig(): EmbeddingConfig | null {
+  // Priority 1: environment variables (set in .env.local)
+  const envModel = process.env.EMBEDDING_MODEL;
+  const envBaseUrl = process.env.EMBEDDING_BASE_URL;
+  const envApiKey = process.env.EMBEDDING_API_KEY;
+  const envDimensions = parseInt(process.env.EMBEDDING_DIMENSIONS || '0', 10);
+  const envBinding = (process.env.EMBEDDING_BINDING || 'openai') as EmbeddingConfig['binding'];
+  if (envModel && envBaseUrl && envDimensions) {
+    return {
+      model: envModel,
+      apiKey: envApiKey || '',
+      baseUrl: envBaseUrl,
+      binding: envBinding,
+      dimensions: envDimensions,
+      batchSize: DEFAULT_EMBEDDING_BATCH_SIZE,
+      batchDelay: DEFAULT_EMBEDDING_BATCH_DELAY,
+      requestTimeout: 60,
+    };
+  }
+
+  // Priority 2: settings store (configured via UI)
   try {
     const { useSettingsStore } = require('@/lib/store/settings');
     const settings = useSettingsStore.getState();
@@ -661,6 +682,62 @@ function createUploadDocId(title: string) {
   return normalized ? `upload-${normalized}-${Date.now()}` : `upload-${Date.now()}`;
 }
 
+/**
+ * Incrementally insert a newly ingested document's chunks into the existing
+ * vector index, without rebuilding the whole index. Falls back silently if
+ * embedding is not configured or the vector index does not exist yet.
+ */
+async function incrementallyUpdateVectorIndex(document: KnowledgeDocument) {
+  const embedConfig = getEmbeddingConfig();
+  if (!embedConfig) return; // embedding not configured, skip
+
+  try {
+    const signature = LocalVectorStore.resolveSignature(
+      embedConfig.model,
+      embedConfig.dimensions || DEFAULT_EMBEDDING_DIMENSIONS,
+      embedConfig.baseUrl,
+    );
+    const store = new LocalVectorStore();
+    const exists = await store.loadIndex(signature);
+    if (!exists) {
+      // No existing vector index — the next search will trigger a full build,
+      // so we don't need to do anything here.
+      log.info('Vector index not yet built, skipping incremental insert');
+      return;
+    }
+
+    // Chunk the new document using the same chunking strategy as the indexer.
+    // We import buildKnowledgeIndex's internal chunker indirectly by reading
+    // the freshly-built lexical index and filtering by docId.
+    const lexicalIndex = await buildKnowledgeIndex({ ensurePdfFiles: false });
+    const newChunks = lexicalIndex.chunks.filter((c) => c.docId === document.docId);
+    if (newChunks.length === 0) {
+      log.warn(`No chunks found for ingested document ${document.docId}`);
+      return;
+    }
+
+    // Generate embeddings for the new chunks only
+    const client = getEmbeddingClient(embedConfig);
+    const texts = newChunks.map((c) => c.text);
+    log.info(`Incrementally embedding ${texts.length} new chunks for ${document.docId}...`);
+    const embeddings = await client.embed(texts);
+
+    // Convert to ChunkMetadata and insert
+    const chunkMetadata: ChunkMetadata[] = newChunks.map((c) => ({
+      chunkId: c.chunkId,
+      docId: c.docId,
+      text: c.text.trim(),
+      section: c.section,
+      keywords: c.keywords || [],
+    }));
+
+    await store.insertChunks(chunkMetadata, embeddings);
+    log.info(`Incrementally inserted ${chunkMetadata.length} chunks into vector index`);
+  } catch (err) {
+    log.warn('Failed to incrementally update vector index (non-fatal):', err);
+  }
+}
+
 export async function ingestUploadedKnowledge(
   input: UploadKnowledgeIngestInput,
 ): Promise<KnowledgeDocument> {
@@ -711,6 +788,11 @@ export async function ingestUploadedKnowledge(
   resetRetrieverCache();
   searchCache.clear();
   await buildKnowledgeIndex({ ensurePdfFiles: true, force: true });
+
+  // Incrementally update the vector index (if embedding is configured) so the
+  // newly ingested document is immediately searchable via vector search.
+  await incrementallyUpdateVectorIndex(record);
+
   log.info(`Knowledge document ingested: ${record.docId}`);
   return record;
 }

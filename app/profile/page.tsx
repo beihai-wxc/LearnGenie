@@ -175,18 +175,37 @@ export default function ProfilePage() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {dimensionKeys.map((key) => {
                 const DimensionIcon = DIMENSION_META[key].icon;
+                const dim = learningProfile?.[key];
+                const score = dim?.score ?? 0;
+                const description = dim?.description || '暂无数据，请通过对话构建画像';
+                const hasData = score > 0;
                 return (
-                  <div key={key} className="flex items-center gap-3 rounded-xl border border-slate-200/60 p-4 dark:border-slate-700/50">
-                    <div
-                      className="flex size-9 shrink-0 items-center justify-center rounded-lg"
-                      style={{ backgroundColor: `${DIMENSION_META[key].color}1a`, color: DIMENSION_META[key].color }}
-                    >
-                      <DimensionIcon className="size-5" />
+                  <div key={key} className="flex flex-col gap-3 rounded-xl border border-slate-200/60 p-4 dark:border-slate-700/50">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="flex size-9 shrink-0 items-center justify-center rounded-lg"
+                        style={{ backgroundColor: `${DIMENSION_META[key].color}1a`, color: DIMENSION_META[key].color }}
+                      >
+                        <DimensionIcon className="size-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{DIMENSION_META[key].label}</p>
+                        <p className="mt-0.5 text-xs font-semibold" style={{ color: hasData ? DIMENSION_META[key].color : undefined }}>
+                          {hasData ? `${score} 分` : '待了解'}
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{DIMENSION_META[key].label}</p>
-                      <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">待了解</p>
-                    </div>
+                    {hasData && (
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{ width: `${score}%`, backgroundColor: DIMENSION_META[key].color }}
+                        />
+                      </div>
+                    )}
+                    <p className="text-xs leading-relaxed text-slate-500 line-clamp-2 dark:text-slate-400" title={description}>
+                      {description}
+                    </p>
                   </div>
                 );
               })}

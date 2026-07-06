@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import {
   KNOWLEDGE_CHUNK_OVERLAP,
   KNOWLEDGE_CHUNK_SIZE,
@@ -129,6 +130,7 @@ function isKnowledgeDocument(value: unknown): value is KnowledgeDocument {
     (record.sourceType === 'seed' || record.sourceType === 'upload') &&
     (record.sourceLabel == null ||
       record.sourceLabel === '核心知识' ||
+      record.sourceLabel === '重点能力' ||
       record.sourceLabel === '实战专题' ||
       record.sourceLabel === '用户上传') &&
     (record.difficulty == null ||
@@ -327,38 +329,198 @@ function inferSection(doc: KnowledgeDocument): string | undefined {
   return undefined;
 }
 
+/**
+ * Split content into sections by markdown headings (##, ###, ####).
+ * Each section starts with its heading line and includes all content until
+ * the next heading of the same or higher level.
+ */
+function splitByMarkdownHeadings(content: string): { heading: string | undefined; text: string }[] {
+  const lines = content.split('\n');
+  const sections: { heading: string | undefined; text: string }[] = [];
+  let currentHeading: string | undefined;
+  let currentLines: string[] = [];
+
+  const flush = () => {
+    const text = currentLines.join('\n').trim();
+    if (text) {
+      sections.push({ heading: currentHeading, text });
+    }
+    currentLines = [];
+  };
+
+  for (const line of lines) {
+    const headingMatch = line.match(/^(#{1,4})\s+(.+)$/);
+    if (headingMatch) {
+      flush();
+      currentHeading = headingMatch[2]!.trim();
+      currentLines.push(line);
+    } else {
+      currentLines.push(line);
+    }
+  }
+  flush();
+
+  // If no headings found, return the whole content as one section
+  if (sections.length === 0 && content.trim()) {
+    return [{ heading: undefined, text: content.trim() }];
+  }
+  return sections;
+}
+
+/**
+ * Estimate page number based on character offset (rough heuristic:
+ * ~1800 characters per page for mixed Chinese/English content).
+ */
+const CHARS_PER_PAGE = 1800;
+
+function estimatePage(charOffset: number): number {
+  return Math.floor(charOffset / CHARS_PER_PAGE) + 1;
+}
+
 function chunkDocument(doc: KnowledgeDocument): KnowledgeChunk[] {
   const content = doc.content.replace(/\r/g, '').trim();
   if (!content) return [];
 
-  const section = inferSection(doc);
+  const defaultSection = inferSection(doc);
   const chunks: KnowledgeChunk[] = [];
-  let start = 0;
   let index = 0;
+  let globalCharOffset = 0;
 
-  while (start < content.length) {
-    const end = Math.min(start + KNOWLEDGE_CHUNK_SIZE, content.length);
-    const text = content.slice(start, end).trim();
-    if (text) {
-      chunks.push({
-        chunkId: `${doc.docId}::chunk-${index + 1}`,
-        docId: doc.docId,
-        text,
-        section,
-        keywords: doc.keywords,
-        tokenSet: [
-          ...new Set(
-            tokenizeText(
-              `${doc.title}\n${doc.summary}\n${doc.keywords.join(' ')}\n${(doc.conceptTerms ?? []).join(' ')}\n${text}`,
-            ),
-          ),
-        ],
-      });
-      index += 1;
+  // Split by markdown headings first, then by paragraph boundaries within
+  // each section. This preserves semantic coherence within each chunk.
+  const sections = splitByMarkdownHeadings(content);
+
+  for (const section of sections) {
+    const sectionHeading = section.heading || defaultSection;
+    const sectionText = section.text;
+    const sectionStartOffset = globalCharOffset;
+    globalCharOffset += sectionText.length + 1; // +1 for the newline between sections
+
+    // Split by paragraphs while tracking each paragraph's start offset within
+    // sectionText. Using indexOf would be wrong for repeated paragraphs.
+    const paragraphs: { text: string; startOffset: number }[] = [];
+    {
+      const remaining = sectionText;
+      let match: RegExpExecArray | null;
+      let lastIdx = 0;
+      // Use a manual scan to record offsets precisely
+      const regex = /\n\s*\n/g;
+      while ((match = regex.exec(remaining)) !== null) {
+        const piece = remaining.slice(lastIdx, match.index);
+        const trimmed = piece.trim();
+        if (trimmed) {
+          paragraphs.push({
+            text: trimmed,
+            startOffset: lastIdx + (piece.length - piece.trimStart().length),
+          });
+        }
+        lastIdx = regex.lastIndex;
+      }
+      const tail = remaining.slice(lastIdx);
+      const trimmedTail = tail.trim();
+      if (trimmedTail) {
+        paragraphs.push({
+          text: trimmedTail,
+          startOffset: lastIdx + (tail.length - tail.trimStart().length),
+        });
+      }
     }
 
-    if (end >= content.length) break;
-    start = Math.max(end - KNOWLEDGE_CHUNK_OVERLAP, start + 1);
+    // Greedily merge paragraphs into chunks up to KNOWLEDGE_CHUNK_SIZE
+    let currentChunk = '';
+    let currentChunkStart = 0;
+
+    const flushChunk = () => {
+      const text = currentChunk.trim();
+      if (text) {
+        const pageOffset = sectionStartOffset + currentChunkStart;
+        chunks.push({
+          chunkId: `${doc.docId}::chunk-${index + 1}`,
+          docId: doc.docId,
+          text,
+          section: sectionHeading,
+          page: estimatePage(pageOffset),
+          keywords: doc.keywords,
+          tokenSet: [
+            ...new Set(
+              tokenizeText(
+                `${doc.title}\n${doc.summary}\n${doc.keywords.join(' ')}\n${(doc.conceptTerms ?? []).join(' ')}\n${text}`,
+              ),
+            ),
+          ],
+        });
+        index += 1;
+      }
+      currentChunk = '';
+    };
+
+    for (const { text: para, startOffset: paraStartOffset } of paragraphs) {
+      // If a single paragraph exceeds chunk size, split it by sentences
+      if (para.length > KNOWLEDGE_CHUNK_SIZE) {
+        flushChunk();
+        // Sentence-level splitting for very long paragraphs.
+        // sentenceChunkStart tracks the char offset of sentenceChunk within
+        // the paragraph so page numbers stay accurate after overlap slicing.
+        const sentenceSep = /(?<=[。！？.!?])\s*/;
+        const sentences = para.split(sentenceSep).filter(Boolean);
+        let sentenceChunk = '';
+        let sentenceChunkStart = 0;
+        for (const sentence of sentences) {
+          if ((sentenceChunk + sentence).length > KNOWLEDGE_CHUNK_SIZE && sentenceChunk) {
+            const text = sentenceChunk.trim();
+            if (text) {
+              const pageOffset = sectionStartOffset + paraStartOffset + sentenceChunkStart;
+              chunks.push({
+                chunkId: `${doc.docId}::chunk-${index + 1}`,
+                docId: doc.docId,
+                text,
+                section: sectionHeading,
+                page: estimatePage(pageOffset),
+                keywords: doc.keywords,
+                tokenSet: [
+                  ...new Set(
+                    tokenizeText(
+                      `${doc.title}\n${doc.summary}\n${doc.keywords.join(' ')}\n${(doc.conceptTerms ?? []).join(' ')}\n${text}`,
+                    ),
+                  ),
+                ],
+              });
+              index += 1;
+            }
+            // Add overlap: carry last KNOWLEDGE_CHUNK_OVERLAP chars.
+            // Advance sentenceChunkStart by the number of dropped chars so the
+            // page offset stays accurate (avoids indexOf which can return -1).
+            const oldLen = sentenceChunk.length;
+            sentenceChunk = sentenceChunk.slice(-KNOWLEDGE_CHUNK_OVERLAP);
+            sentenceChunkStart += oldLen - sentenceChunk.length;
+          }
+          sentenceChunk += sentence;
+        }
+        if (sentenceChunk.trim()) {
+          currentChunk = sentenceChunk;
+          currentChunkStart = paraStartOffset + sentenceChunkStart;
+        }
+        continue;
+      }
+
+      // Normal case: merge paragraphs into chunk
+      if ((currentChunk + '\n\n' + para).length > KNOWLEDGE_CHUNK_SIZE && currentChunk) {
+        flushChunk();
+        // Overlap: carry the last paragraph if it's within overlap size
+        if (currentChunk.length <= KNOWLEDGE_CHUNK_OVERLAP) {
+          // keep currentChunk as overlap seed
+        } else {
+          currentChunk = '';
+        }
+      }
+      if (currentChunk) {
+        currentChunk += '\n\n' + para;
+      } else {
+        currentChunk = para;
+        currentChunkStart = paraStartOffset;
+      }
+    }
+    flushChunk();
   }
 
   return chunks;
@@ -474,7 +636,10 @@ async function loadDocumentsFromStore() {
 }
 
 function computeSourceSignature(documents: KnowledgeDocument[]) {
-  return JSON.stringify(
+  // Use SHA-256 hash instead of raw JSON to keep metadata.json small.
+  // Previously this returned the full JSON.stringify of all documents (821KB
+  // for 27 docs), now it returns a 64-character hex digest.
+  const payload = JSON.stringify(
     documents.map((doc) => ({
       docId: doc.docId,
       title: doc.title,
@@ -500,6 +665,7 @@ function computeSourceSignature(documents: KnowledgeDocument[]) {
       updatedAt: doc.updatedAt,
     })),
   );
+  return crypto.createHash('sha256').update(payload, 'utf8').digest('hex');
 }
 
 function buildChunkMap(chunks: KnowledgeChunk[]) {

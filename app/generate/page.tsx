@@ -240,6 +240,30 @@ function GenerateContent() {
         interactiveMode: form.interactiveMode,
       };
 
+      // Use the real LLM-backed /api/profile/extract to build the 8-dimension
+      // learning profile, replacing the keyword-matching profile-agent stub.
+      // Falls back silently — session-plan still returns its own (rule-based)
+      // profile as a last resort if the LLM call fails.
+      const extractProfileWithLLM = async (userMessage: string) => {
+        if (!userMessage.trim()) return;
+        try {
+          const response = await fetch('/api/profile/extract', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              messages: [{ role: 'user', content: userMessage }],
+              existingProfile: userProfile.learningProfile,
+            }),
+          });
+          const json = await response.json();
+          if (response.ok && json.success && json.data?.profile) {
+            updateLearningProfile(json.data.profile);
+          }
+        } catch (err) {
+          log.error('LLM profile extraction failed, falling back to session-plan profile', err);
+        }
+      };
+
       if (form.pdfFile) {
         const parsedPdf = await parsePdfForKnowledge(form.pdfFile);
         const workflowResponse = await fetch('/api/agent/session-plan', {
@@ -260,6 +284,8 @@ function GenerateContent() {
         if (workflowJson.workflow.profile?.data?.dimensions) {
           updateLearningProfile(workflowJson.workflow.profile.data.dimensions);
         }
+        // Override the rule-based profile with a real LLM extraction.
+        await extractProfileWithLLM(form.requirement || form.pdfFile.name);
         const uploadMatchResponse = await fetch('/api/knowledge/match-upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -326,6 +352,8 @@ function GenerateContent() {
       if (workflowJson.workflow.profile?.data?.dimensions) {
         updateLearningProfile(workflowJson.workflow.profile.data.dimensions);
       }
+      // Override the rule-based profile with a real LLM extraction.
+      await extractProfileWithLLM(baseRequirements.requirement);
 
       const knowledgeResponse = await fetch('/api/knowledge/search', {
         method: 'POST',

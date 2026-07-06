@@ -93,7 +93,7 @@ export async function searchKnowledgeIndex(
 
   // 3. Vector search with optional hybrid scoring
   const queryTokenSet = new Set(queryTokens.map((t) => t.toLowerCase()));
-  const results = vectorStore.search(queryEmbedding, topK * 3, queryTokenSet);
+  const results = await vectorStore.search(queryEmbedding, topK * 3, queryTokenSet);
 
   if (results.length === 0) {
     return [];
