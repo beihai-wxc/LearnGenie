@@ -656,19 +656,19 @@ export function AgentBar() {
     return (
       <div
         key={agent.id}
-        onClick={isTeacher ? undefined : () => toggleAgent(agent.id)}
+        onClick={(e) => {
+          if (isTeacher) return;
+          e.stopPropagation();
+          toggleAgent(agent.id);
+        }}
         className={cn(
           'w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors',
-          isTeacher ? 'bg-primary/5' : 'cursor-pointer',
+          isTeacher ? 'bg-primary/5 cursor-default' : 'cursor-pointer',
           !isTeacher && isSelected && 'bg-primary/5',
           !isTeacher && !isSelected && 'hover:bg-muted/50',
         )}
       >
-        <Checkbox
-          checked={isSelected}
-          disabled={isTeacher}
-          className={cn('pointer-events-none', isTeacher && 'opacity-50')}
-        />
+        <Checkbox checked={isSelected} disabled={isTeacher} />
         <div
           className="size-7 rounded-full overflow-hidden shrink-0 ring-1 ring-border/40"
           style={{ boxShadow: isSelected ? `0 0 0 2px ${agent.color}30` : undefined }}
