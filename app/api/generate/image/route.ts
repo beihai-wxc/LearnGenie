@@ -47,9 +47,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const apiKey = clientBaseUrl
-      ? clientApiKey || ''
-      : resolveImageApiKey(providerId, clientApiKey);
+    const apiKey = clientApiKey || resolveImageApiKey(providerId, undefined);
     if (!apiKey) {
       return apiError(
         'MISSING_API_KEY',
@@ -58,7 +56,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const baseUrl = clientBaseUrl ? clientBaseUrl : resolveImageBaseUrl(providerId, clientBaseUrl);
+    const baseUrl = clientBaseUrl || resolveImageBaseUrl(providerId, clientBaseUrl);
 
     // Resolve dimensions from aspect ratio if not explicitly set
     if (!body.width && !body.height && body.aspectRatio) {
