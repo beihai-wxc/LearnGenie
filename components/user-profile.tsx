@@ -86,10 +86,10 @@ export function UserProfileCard() {
         }),
       });
       const json = await response.json();
-      if (response.ok && json.success && json.data?.profile) {
-        setLearningProfile(json.data.profile as Partial<StudentProfileDimensions>);
+      if (response.ok && json.success && json.profile) {
+        setLearningProfile(json.profile as Partial<StudentProfileDimensions>);
         incrementConversationCount();
-        const updatedCount = json.data.updatedFields?.length ?? 0;
+        const updatedCount = json.updatedFields?.length ?? 0;
         setFeedback({
           type: 'success',
           text: updatedCount > 0 ? `画像已更新（${updatedCount} 个维度有变化）` : '已分析，暂无新变化',

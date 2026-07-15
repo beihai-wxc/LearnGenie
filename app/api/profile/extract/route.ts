@@ -23,7 +23,7 @@
  */
 
 import { NextRequest } from 'next/server';
-import { generateObject } from 'ai';
+import { generateText } from 'ai';
 import { z } from 'zod';
 import { resolveModel } from '@/lib/server/resolve-model';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
@@ -175,12 +175,16 @@ export async function POST(req: NextRequest) {
       .map((m: { role: string; content: string }) => `${m.role}: ${m.content}`)
       .join('\n');
 
-    const { object: extractedProfile } = await generateObject({
+    const { text } = await generateText({
       model: languageModel,
-      schema: PROFILE_EXTRACTION_SCHEMA,
       system: SYSTEM_PROMPT,
-      prompt: `以下是学生与教师的对话记录：\n\n${conversationText}\n\n请根据上述对话内容，分析并提取学生的8维度学习画像。`,
+      prompt: `以下是学生与教师的对话记录：\n\n${conversationText}\n\n请根据上述对话内容，分析并提取学生的8维度学习画像。请严格按照JSON格式输出，不要包含任何解释性文字。`,
     });
+
+    // Extract JSON from the response (LLM may wrap it in markdown code blocks)
+    const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/) || text.match(/\{[\s\S]*\}/);
+    const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]).trim() : text;
+    const extractedProfile = PROFILE_EXTRACTION_SCHEMA.parse(JSON.parse(jsonStr));
 
     const profileWithTimestamp = addTimestampsToProfile(extractedProfile as StudentProfileDimensions);
 

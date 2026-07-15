@@ -457,7 +457,7 @@ function GenerateContent() {
           </div>
         </main>
 
-        <footer className="relative z-10 px-4 pb-6 pt-6 text-center text-xs text-slate-400 md:px-8 dark:text-slate-500">
+        <footer className="relative z-0 px-4 pb-6 pt-6 text-center text-xs text-slate-400 md:px-8 dark:text-slate-500">
           LearnGenie - immersive AI classroom
         </footer>
       </div>
