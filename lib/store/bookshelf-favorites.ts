@@ -149,3 +149,20 @@ export async function addGroup(name: string): Promise<void> {
     });
   }
 }
+
+export async function deleteGroup(name: string): Promise<void> {
+  const userId = getCurrentUserId();
+  if (!userId) return;
+
+  // Delete the category record
+  await db.categories.delete(name);
+
+  // Delete all favorites that belong to this group
+  const records = await db.bookshelf
+    .where({ userId, type: 'classroom' as const })
+    .toArray();
+  const toDelete = records.filter((r) => r.category === name);
+  if (toDelete.length > 0) {
+    await db.bookshelf.bulkDelete(toDelete.map((r) => r.id));
+  }
+}

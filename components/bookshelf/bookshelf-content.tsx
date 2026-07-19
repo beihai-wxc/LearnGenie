@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, FolderPlus, FolderOpen, X, ArrowLeft } from 'lucide-react';
+import { Search, FolderPlus, FolderOpen, X, ArrowLeft, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { BookshelfTabs } from '@/components/bookshelf/bookshelf-tabs';
@@ -20,6 +20,7 @@ import {
   removeFavorite,
   ensureDefaultGroup,
   addGroup,
+  deleteGroup,
   getGroups,
   type FavoriteItem,
 } from '@/lib/store/bookshelf-favorites';
@@ -111,6 +112,11 @@ export default function BookshelfContent() {
     try {
       await deleteStageData(id);
       setClassrooms((prev) => prev.filter((c) => c.id !== id));
+      // Also remove the favorite record so group count updates
+      await removeFavorite(id);
+      const favs = await getFavorites();
+      setFavorites(favs);
+      setFavoritedIds(new Set(favs.map((f) => f.stageId)));
       toast.success('课堂已删除');
     } catch {
       toast.error('删除失败');
@@ -169,6 +175,23 @@ export default function BookshelfContent() {
     await handleAddGroup(name);
     setNewGroupName('');
     setShowNewGroup(false);
+  };
+
+  const [deletingGroup, setDeletingGroup] = useState<string | null>(null);
+
+  const handleDeleteGroup = async (name: string) => {
+    try {
+      await deleteGroup(name);
+      setGroups(await getGroups());
+      const favs = await getFavorites();
+      setFavorites(favs);
+      setFavoritedIds(new Set(favs.map((f) => f.stageId)));
+      if (selectedGroup === name) setSelectedGroup(null);
+      toast.success('分组已删除');
+    } catch {
+      toast.error('删除分组失败');
+    }
+    setDeletingGroup(null);
   };
 
   const getFavoriteInfo = (stageId: string) => {
@@ -365,21 +388,62 @@ export default function BookshelfContent() {
               ) : (
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {groups.map((group) => (
-                    <button
+                    <div
                       key={group}
-                      onClick={() => setSelectedGroup(group)}
-                      className="group rounded-2xl border border-slate-200/60 bg-white/80 p-6 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-700/60 dark:bg-slate-900/80"
+                      className="group relative rounded-2xl border border-slate-200/60 bg-white/80 p-6 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-700/60 dark:bg-slate-900/80"
                     >
-                      <div className="mb-3 inline-flex size-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400">
-                        <FolderOpen className="size-6" />
+                      <button
+                        onClick={() => setSelectedGroup(group)}
+                        className="w-full text-left"
+                      >
+                        <div className="mb-3 inline-flex size-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400">
+                          <FolderOpen className="size-6" />
+                        </div>
+                        <h3 className="text-base font-medium text-slate-900 dark:text-white">
+                          {group}
+                        </h3>
+                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                          {getGroupCount(group)} 个课堂
+                        </p>
+                      </button>
+
+                      {/* Delete button - visible on hover */}
+                      <div className="absolute right-3 top-3 opacity-0 transition-opacity group-hover:opacity-100">
+                        {deletingGroup === group ? (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteGroup(group);
+                              }}
+                              className="rounded-full bg-rose-500 px-2 py-1 text-xs font-medium text-white hover:bg-rose-400"
+                            >
+                              确认
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeletingGroup(null);
+                              }}
+                              className="rounded-full border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+                            >
+                              取消
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeletingGroup(group);
+                            }}
+                            className="size-7 rounded-full bg-white/80 text-slate-400 shadow-sm backdrop-blur-sm hover:bg-rose-50 hover:text-rose-500 dark:bg-slate-800/80 dark:hover:bg-rose-500/10"
+                            title="删除分组"
+                          >
+                            <Trash2 className="mx-auto size-3.5" />
+                          </button>
+                        )}
                       </div>
-                      <h3 className="text-base font-medium text-slate-900 dark:text-white">
-                        {group}
-                      </h3>
-                      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                        {getGroupCount(group)} 个课堂
-                      </p>
-                    </button>
+                    </div>
                   ))}
                 </div>
               )}

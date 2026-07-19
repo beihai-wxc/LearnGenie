@@ -100,15 +100,22 @@ export function patchHtmlForIframe(html: string): string {
     );
 
     // Inject runtime safety net: convert any remaining inline handlers to
-    // addEventListener bindings. The handler code is wrapped in a function
-    // created with `new Function`, which runs in the global scope and can
-    // therefore see any `window.NAME` assignments made above. `with(this)`
-    // and `with(document)` emulate the inline-handler scope chain so that
-    // bare property accesses (e.g. `value`, `getElementById(...)`) still work.
-    const safetyNet = `\n;(function(){
-  if (window.__iframeHandlersBound) return;
+    // addEventListener bindings. Uses `eval` (NOT `new Function`) so the
+    // created handler runs in this script's lexical scope and can see
+    // top-level `const`/`let` declarations from the AI-generated code.
+    // `with(this)` and `with(document)` emulate the inline-handler scope
+    // chain so bare property accesses (e.g. `value`, `getElementById`) work.
+    const safetyNet = `\nif (!window.__iframeHandlersBound) {
   window.__iframeHandlersBound = true;
-  function bindInlineHandlers(root){
+  const __iframeCreateHandler = function(code) {
+    try {
+      return eval('(function(event){with(this){with(document){' + code + '}}})');
+    } catch(err) {
+      console.error('[iframe handler] failed to compile "' + code + '":', err);
+      return null;
+    }
+  };
+  const __iframeBindHandlers = function(root) {
     var events = ['click','input','change','keydown','keyup','keypress','submit','reset','load','error','mousedown','mouseup','mousemove','touchstart','touchend','touchmove','wheel','dblclick','focus','blur'];
     events.forEach(function(evt){
       var attr = 'on' + evt;
@@ -117,35 +124,37 @@ export function patchHtmlForIframe(html: string): string {
         var code = el.getAttribute(attr);
         if (!code) return;
         el.removeAttribute(attr);
-        try {
-          var fn = new Function('event', 'with(this){with(document){' + code + '}}');
+        var fn = __iframeCreateHandler(code);
+        if (fn) {
           el.addEventListener(evt, function(e){ try { fn.call(el, e); } catch(err){ console.error('[iframe handler] ' + evt + ' failed:', err); } });
-        } catch(err){
-          console.error('[iframe handler] failed to compile ' + attr + '="' + code + '":', err);
         }
       });
     });
-  }
+  };
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function(){ bindInlineHandlers(document); });
+    document.addEventListener('DOMContentLoaded', function(){ __iframeBindHandlers(document); });
   } else {
-    bindInlineHandlers(document);
+    __iframeBindHandlers(document);
   }
-  var observer = new MutationObserver(function(mutations){
-    mutations.forEach(function(m){
-      m.addedNodes.forEach(function(node){
-        if (node.nodeType === 1) {
-          if (node.hasAttribute && (node.hasAttribute('onclick') || node.hasAttribute('oninput') || node.hasAttribute('onchange'))) {
-            bindInlineHandlers(node.parentElement || document);
-          } else if (node.querySelectorAll) {
-            bindInlineHandlers(node);
+  try {
+    var observer = new MutationObserver(function(mutations){
+      mutations.forEach(function(m){
+        m.addedNodes.forEach(function(node){
+          if (node.nodeType === 1) {
+            if (node.hasAttribute && (node.hasAttribute('onclick') || node.hasAttribute('oninput') || node.hasAttribute('onchange'))) {
+              __iframeBindHandlers(node.parentElement || document);
+            } else if (node.querySelectorAll) {
+              __iframeBindHandlers(node);
+            }
           }
-        }
+        });
       });
     });
-  });
-  observer.observe(document.documentElement, { childList: true, subtree: true });
-})();`;
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+  } catch(err) {
+    console.error('[iframe] MutationObserver setup failed:', err);
+  }
+}`;
 
     return `<script${newAttrs}>${transformed}${safetyNet}</script>`;
   });
