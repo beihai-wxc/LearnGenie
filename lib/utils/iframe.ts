@@ -3,7 +3,23 @@
  *
  * Injects CSS that ensures proper sizing and scrolling behavior
  * when HTML content is rendered via srcDoc in an iframe.
- * Also fixes AI-generated code issues (module scope, IIFE, const functions).
+ *
+ * Also fixes AI-generated code issues so inline event handlers (onclick,
+ * oninput, ...) actually fire. Two complementary mechanisms are used:
+ *
+ * 1. Static transform of <script> bodies:
+ *    - module scripts without imports/exports are converted to regular scripts
+ *    - IIFEs are unwrapped so their inner declarations leak to script top level
+ *    - top-level `function`, `async function`, `function*`, `const|let = <fn>`
+ *      declarations are rewritten as `window.NAME = ...` assignments so inline
+ *      handlers (which can only resolve names on the global object) can find them
+ *
+ * 2. Runtime safety net injected at the end of every script:
+ *    - converts any remaining `onclick/oninput/onchange/...` attributes into
+ *      `addEventListener` bindings, with the handler code re-evaluated through
+ *      a closure that can still see the script's top-level lexical environment
+ *    - this catches cases the static transform misses (class instances, object
+ *      methods, nested closures, async/generator patterns we failed to rewrite)
  */
 export function patchHtmlForIframe(html: string): string {
   const iframeCss = `<style data-iframe-patch>
@@ -47,8 +63,12 @@ export function patchHtmlForIframe(html: string): string {
     const hasImports = /^\s*import\s+/m.test(body);
     const hasExports = /^\s*export\s+/m.test(body);
 
-    // Keep module scripts that have imports/exports (e.g. Three.js visualizations)
-    if (isModule && (hasImports || hasExports)) return match;
+    // Keep module scripts that have imports/exports (e.g. Three.js visualizations).
+    // These typically use addEventListener instead of inline handlers, so the
+    // runtime safety net is not needed and module scope must be preserved.
+    if (isModule && (hasImports || hasExports)) {
+      return match;
+    }
 
     // Convert module → regular script (removes module scope)
     let newAttrs = attrs;
@@ -58,29 +78,76 @@ export function patchHtmlForIframe(html: string): string {
 
     let transformed = body;
 
-    // Unwrap IIFEs with proper brace matching
+    // Unwrap IIFEs with proper brace matching.
+    // Note: async IIFEs are intentionally NOT unwrapped, because their body may
+    // contain `await` which would break at top level of a regular script.
     transformed = unwrapIife(transformed);
 
-    // Transform const/let function expressions to window assignments
-    // const handleMainButton = () => { ... }  →  window.handleMainButton = () => { ... }
+    // Transform const/let function expressions to window assignments.
+    // Covers: () => {}, async () => {}, (a) => {}, (a,b) => {}, a => {},
+    //         function () {}, function* () {}, async function () {}
     transformed = transformed.replace(
-      /\b(?:const|let)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*(?:function\s*\([^)]*\)|\([^)]*\)\s*=>|\w+\s*=>)/g,
-      (m, name) => {
-        if (m.includes('function') || m.includes('=>')) {
-          return `window.${name} = `;
+      /\b(?:const|let)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*(?:async\s+)?(?:function\s*\*?\s*\([^)]*\)|(?:async\s+)?\([^)]*\)\s*=>|[\w$]+\s*=>)/g,
+      (_m, name) => `window.${name} = `,
+    );
+
+    // Transform function declarations to window assignments.
+    // Covers: function foo() {}, async function foo() {}, function* foo() {},
+    //         async function* foo() {}  (the generator * is preserved)
+    transformed = transformed.replace(
+      /^\s*((?:async\s+)?function\s*\*?)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/gm,
+      (_m, fnKeyword, name) => `window.${name} = ${fnKeyword} ${name}(`,
+    );
+
+    // Inject runtime safety net: convert any remaining inline handlers to
+    // addEventListener bindings. The handler code is wrapped in a function
+    // created with `new Function`, which runs in the global scope and can
+    // therefore see any `window.NAME` assignments made above. `with(this)`
+    // and `with(document)` emulate the inline-handler scope chain so that
+    // bare property accesses (e.g. `value`, `getElementById(...)`) still work.
+    const safetyNet = `\n;(function(){
+  if (window.__iframeHandlersBound) return;
+  window.__iframeHandlersBound = true;
+  function bindInlineHandlers(root){
+    var events = ['click','input','change','keydown','keyup','keypress','submit','reset','load','error','mousedown','mouseup','mousemove','touchstart','touchend','touchmove','wheel','dblclick','focus','blur'];
+    events.forEach(function(evt){
+      var attr = 'on' + evt;
+      var els = root.querySelectorAll('[' + attr + ']');
+      els.forEach(function(el){
+        var code = el.getAttribute(attr);
+        if (!code) return;
+        el.removeAttribute(attr);
+        try {
+          var fn = new Function('event', 'with(this){with(document){' + code + '}}');
+          el.addEventListener(evt, function(e){ try { fn.call(el, e); } catch(err){ console.error('[iframe handler] ' + evt + ' failed:', err); } });
+        } catch(err){
+          console.error('[iframe handler] failed to compile ' + attr + '="' + code + '":', err);
         }
-        return m;
-      },
-    );
+      });
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){ bindInlineHandlers(document); });
+  } else {
+    bindInlineHandlers(document);
+  }
+  var observer = new MutationObserver(function(mutations){
+    mutations.forEach(function(m){
+      m.addedNodes.forEach(function(node){
+        if (node.nodeType === 1) {
+          if (node.hasAttribute && (node.hasAttribute('onclick') || node.hasAttribute('oninput') || node.hasAttribute('onchange'))) {
+            bindInlineHandlers(node.parentElement || document);
+          } else if (node.querySelectorAll) {
+            bindInlineHandlers(node);
+          }
+        }
+      });
+    });
+  });
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+})();`;
 
-    // Transform function declarations to window assignments
-    // function handleMainButton() { ... }  →  window.handleMainButton = function handleMainButton() { ... }
-    transformed = transformed.replace(
-      /^\s*function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/gm,
-      (_m, name) => `window.${name} = function ${name}(`,
-    );
-
-    return `<script${newAttrs}>${transformed}</script>`;
+    return `<script${newAttrs}>${transformed}${safetyNet}</script>`;
   });
 
   return patched;
@@ -89,11 +156,12 @@ export function patchHtmlForIframe(html: string): string {
 /**
  * Unwrap IIFEs using proper brace matching.
  * Handles: (function(){...})(), (function(a,b){...})(args), (()=>{...})()
+ * Does NOT unwrap async IIFEs (their body may use await).
  */
 function unwrapIife(code: string): string {
   // Match pattern: ( function(...) { ... }) (...)
   // The key is finding the matching } for the opening { of the function body
-  const iifeRegex = /\(\s*(?:function\s*\([^)]*\)|\([^)]*\)\s*=>)\s*\{/g;
+  const iifeRegex = /\(\s*(?:function\s*\*?\s*\([^)]*\)|\([^)]*\)\s*=>)\s*\{/g;
 
   let result = '';
   let lastIndex = 0;
