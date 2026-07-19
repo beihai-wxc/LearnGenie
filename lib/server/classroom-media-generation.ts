@@ -84,15 +84,25 @@ export async function generateMediaForClassroom(
 
   const mediaMap: Record<string, string> = {};
 
+  // Prefer minimax-image when multiple providers are configured, so classroom
+  // generation defaults to a fast, stable image provider (image-01) regardless
+  // of the order in which providers were registered.
+  const DEFAULT_IMAGE_PROVIDER_ID = 'minimax-image' as ImageProviderId;
+  const defaultImageProviderId = imageProviderIds.includes(DEFAULT_IMAGE_PROVIDER_ID)
+    ? DEFAULT_IMAGE_PROVIDER_ID
+    : (imageProviderIds[0] as ImageProviderId | undefined);
+
   // Separate image and video requests, generate each type sequentially
   // but run the two types in parallel (providers often have limited concurrency).
-  const imageRequests = requests.filter((r) => r.type === 'image' && imageProviderIds.length > 0);
+  const imageRequests = requests.filter(
+    (r) => r.type === 'image' && !!defaultImageProviderId,
+  );
   const videoRequests = requests.filter((r) => r.type === 'video' && videoProviderIds.length > 0);
 
   const generateImages = async () => {
     for (const req of imageRequests) {
       try {
-        const providerId = imageProviderIds[0] as ImageProviderId;
+        const providerId = defaultImageProviderId as ImageProviderId;
         const apiKey = resolveImageApiKey(providerId);
         if (!apiKey) {
           log.warn(`No API key for image provider "${providerId}", skipping ${req.elementId}`);

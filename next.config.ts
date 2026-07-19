@@ -3,10 +3,11 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   output: process.env.VERCEL ? undefined : 'standalone',
   transpilePackages: ['mathml2omml', 'pptxgenjs'],
-  serverExternalPackages: [],
+  serverExternalPackages: ['hnswlib-node'],
   experimental: {
     proxyClientMaxBodySize: '200mb',
   },
+  turbopack: {},
   async headers() {
     const extraAncestors = process.env.ALLOWED_FRAME_ANCESTORS?.trim();
     const frameAncestors = extraAncestors ? `'self' ${extraAncestors}` : "'self'";

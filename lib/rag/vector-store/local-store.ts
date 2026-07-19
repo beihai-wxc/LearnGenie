@@ -33,6 +33,7 @@ const HNSW_EF_CONSTRUCTION = 200;
 const HNSW_EF_SEARCH = 100;
 
 // Lazy-load hnswlib-node (native addon may not be available in all envs)
+// Uses createRequire to bypass Turbopack/Webpack static analysis
 type HnswlibModule = typeof import('hnswlib-node');
 let hnswlib: HnswlibModule | null = null;
 let hnswlibLoadFailed = false;
@@ -40,13 +41,15 @@ async function getHnswlib(): Promise<HnswlibModule | null> {
   if (hnswlibLoadFailed) return null;
   if (hnswlib) return hnswlib;
   try {
-    const mod = await import('hnswlib-node');
-    // Handle both ESM and CJS module shapes
-    hnswlib = (mod as HnswlibModule & { default?: HnswlibModule }).default ?? mod;
+    // Use createRequire to load native modules — bypasses bundler static analysis
+    const { createRequire } = await import('node:module');
+    const require = createRequire(import.meta.url);
+    const mod = require('hnswlib-node') as HnswlibModule;
+    hnswlib = mod;
     log.info('hnswlib-node loaded successfully — ANN search enabled');
     return hnswlib;
   } catch (err) {
-    log.warn('hnswlib-node not available, falling back to brute force search:', err);
+    log.warn('hnswlib-node not available, falling back to brute force search');
     hnswlibLoadFailed = true;
     return null;
   }

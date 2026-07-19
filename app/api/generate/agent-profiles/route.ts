@@ -35,6 +35,53 @@ function stripCodeFences(text: string): string {
   return cleaned.trim();
 }
 
+/**
+ * Attempt to repair truncated JSON by closing open structures.
+ * Handles cases where LLM output is cut off mid-field.
+ */
+function repairTruncatedJson(text: string): string | null {
+  let s = text.trim();
+
+  // Remove trailing partial field (e.g., `"voice": "minimax-tts::male-qn-jingy`)
+  // Find the last complete key-value pair boundary
+  const lastComma = s.lastIndexOf(',');
+  const lastColon = s.lastIndexOf(':');
+
+  // If we're in the middle of a value (after a colon but before closing quote/brace)
+  if (lastColon > lastComma) {
+    // Check if there's an unclosed string after the colon
+    const afterColon = s.substring(lastColon + 1).trim();
+    if (afterColon.startsWith('"') && !afterColon.endsWith('"')) {
+      // Unclosed string - truncate to before this field
+      s = s.substring(0, lastComma + 1).trimEnd();
+      if (s.endsWith(',')) s = s.slice(0, -1);
+    }
+  }
+
+  // Close open structures
+  const openBraces = (s.match(/\{/g) || []).length;
+  const closeBraces = (s.match(/\}/g) || []).length;
+  const openBrackets = (s.match(/\[/g) || []).length;
+  const closeBrackets = (s.match(/\]/g) || []).length;
+
+  // Close brackets first (inner structure)
+  for (let i = 0; i < openBrackets - closeBrackets; i++) {
+    s += ']';
+  }
+  // Close braces (outer structure)
+  for (let i = 0; i < openBraces - closeBraces; i++) {
+    s += '}';
+  }
+
+  // Validate it's actually valid JSON now
+  try {
+    JSON.parse(s);
+    return s;
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(req: NextRequest) {
   let stageName: string | undefined;
   let modelString: string | undefined;
@@ -161,8 +208,20 @@ Return a JSON object with this exact structure:
     try {
       parsed = JSON.parse(rawText);
     } catch {
-      log.error('Failed to parse LLM response as JSON:', rawText.substring(0, 500));
-      return apiError('PARSE_FAILED', 500, 'Failed to parse agent profiles from LLM response');
+      // Try to repair truncated JSON (LLM output may be cut off mid-field)
+      const repaired = repairTruncatedJson(rawText);
+      if (repaired) {
+        try {
+          parsed = JSON.parse(repaired);
+          log.warn('Agent profiles JSON was truncated, repaired successfully');
+        } catch {
+          log.error('Failed to parse LLM response as JSON (repair also failed):', rawText.substring(0, 500));
+          return apiError('PARSE_FAILED', 500, 'Failed to parse agent profiles from LLM response');
+        }
+      } else {
+        log.error('Failed to parse LLM response as JSON:', rawText.substring(0, 500));
+        return apiError('PARSE_FAILED', 500, 'Failed to parse agent profiles from LLM response');
+      }
     }
 
     // ── Validate parsed structure ──

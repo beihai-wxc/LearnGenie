@@ -653,9 +653,10 @@ export const useSettingsStore = create<SettingsState>()(
         imageGenerationEnabled: true,
         videoGenerationEnabled: false,
 
-        // Audio feature toggles (on by default)
+        // Audio feature toggles (TTS for AI playback on, ASR for user input off —
+        // voice input disabled because the deployment URL is HTTP/non-secure-context).
         ttsEnabled: true,
-        asrEnabled: true,
+        asrEnabled: false,
 
         autoConfigApplied: false,
 
@@ -1475,7 +1476,9 @@ export const useSettingsStore = create<SettingsState>()(
           (state as Record<string, unknown>).ttsEnabled = true;
         }
         if ((state as Record<string, unknown>).asrEnabled === undefined) {
-          (state as Record<string, unknown>).asrEnabled = true;
+          // Voice input is disabled by default — the HTTP deployment makes
+          // getUserMedia unavailable, so we never enable ASR on init.
+          (state as Record<string, unknown>).asrEnabled = false;
         }
 
         // Existing users already have their config set up — mark auto-config as done

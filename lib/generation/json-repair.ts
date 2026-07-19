@@ -98,81 +98,108 @@ export function parseJsonResponse<T>(response: string): T | null {
  * Try to parse JSON with various fixes for common AI response issues
  */
 export function tryParseJson<T>(jsonStr: string): T | null {
-  // Attempt 1: Try parsing as-is
+  // Attempt 0: Try parsing as-is first (fast path for valid JSON)
   try {
     return JSON.parse(jsonStr) as T;
   } catch {
     // Continue to fix attempts
   }
 
-  // Attempt 2: Fix common JSON issues from AI responses
+  // Attempt 1: Fix truncated JSON FIRST (before any other transformations)
+  // This must happen before LaTeX fixing, because truncation repair needs
+  // accurate string boundary detection which gets mangled by escape doubling.
+  try {
+    let fixed = jsonStr.trim();
+
+    // Detect if we're inside an unclosed string at the end of the JSON
+    let inString = false;
+    let escape = false;
+    for (let i = 0; i < fixed.length; i++) {
+      const ch = fixed[i];
+      if (escape) { escape = false; continue; }
+      if (ch === '\\' && inString) { escape = true; continue; }
+      if (ch === '"') { inString = !inString; continue; }
+    }
+
+    if (inString) {
+      // We're inside an unclosed string — truncate back to last complete key-value pair
+      // Find the last field start pattern: ,"key":
+      // Walk backwards to find a clean field boundary
+      let cutPoint = -1;
+      // Look for the pattern ,"<key>": starting from the end
+      for (let i = fixed.length - 1; i >= 0; i--) {
+        if (fixed[i] === ',' && i + 1 < fixed.length && fixed[i + 1] === '"') {
+          // Found a potential field start — verify it has a colon after the key
+          const rest = fixed.substring(i + 2);
+          const colonIdx = rest.indexOf('":');
+          if (colonIdx > 0 && colonIdx < 200) { // key length sanity check
+            cutPoint = i;
+            break;
+          }
+        }
+      }
+      if (cutPoint > 0) {
+        fixed = fixed.substring(0, cutPoint);
+      } else {
+        // No clean field boundary found — just remove the incomplete trailing string
+        // Find the last " that closes a value (not part of a key)
+        fixed = fixed.substring(0, fixed.lastIndexOf(',"'));
+      }
+    }
+
+    // Close open structures
+    const openBraces = (fixed.match(/{/g) || []).length;
+    const closeBraces = (fixed.match(/}/g) || []).length;
+    const openBrackets = (fixed.match(/\[/g) || []).length;
+    const closeBrackets = (fixed.match(/\]/g) || []).length;
+
+    if (openBrackets > closeBrackets) {
+      fixed += ']'.repeat(openBrackets - closeBrackets);
+    }
+    if (openBraces > closeBraces) {
+      fixed += '}'.repeat(openBraces - closeBraces);
+    }
+
+    // Try parsing the repaired JSON
+    try {
+      return JSON.parse(fixed) as T;
+    } catch {
+      // If still failing, fall through to other fix strategies
+      jsonStr = fixed;
+    }
+  } catch {
+    // Truncation fix failed, fall through
+  }
+
+  // Attempt 2: Fix common JSON issues from AI responses (LaTeX escapes, etc.)
   try {
     let fixed = jsonStr;
 
-    // Fix 1: Handle LaTeX-style escapes that break JSON (e.g., \frac, \left, \right, \times, etc.)
+    // Fix LaTeX-style escapes that break JSON (e.g., \frac, \left, \right, \times)
     // These are common in math content and need to be double-escaped
-    // Match backslash followed by letters (LaTeX commands) inside strings,
-    // but skip valid JSON escape sequences (\b, \f, \n, \r, \t, \u)
+    // IMPORTANT: Only process if we haven't already fixed truncation above
     fixed = fixed.replace(/"([^"\\]*(?:\\.[^"\\]*)*)"/g, (_match, content) => {
-      // Double-escape backslash+letter ONLY for non-JSON-escape letters
       const fixedContent = content.replace(/\\([a-zA-Z])/g, (_m: string, ch: string) => {
-        // Preserve valid JSON escape sequences
         if ('bfnrtu'.includes(ch)) return `\\${ch}`;
         return `\\\\${ch}`;
       });
       return `"${fixedContent}"`;
     });
 
-    // Fix 2: Fix other invalid escape sequences (e.g., \S, \L, etc.)
-    // Valid JSON escapes: \", \\, \/, \b, \f, \n, \r, \t, \uXXXX
+    // Fix other invalid escape sequences
     fixed = fixed.replace(/\\([^"\\\/bfnrtu\n\r])/g, (match, char) => {
-      // If it's a letter, it's likely a LaTeX command
       if (/[a-zA-Z]/.test(char)) {
         return '\\\\' + char;
       }
       return match;
     });
 
-    // Fix 3: Try to fix truncated JSON arrays/objects
-    const trimmed = fixed.trim();
-    if (trimmed.startsWith('[') && !trimmed.endsWith(']')) {
-      // String-aware last '}' search to avoid matching braces inside string values
-      let depth = 0;
-      let lastCompleteObj = -1;
-      let inString = false;
-      let escape = false;
-      for (let i = 0; i < fixed.length; i++) {
-        const ch = fixed[i];
-        if (escape) { escape = false; continue; }
-        if (ch === '\\' && inString) { escape = true; continue; }
-        if (ch === '"') { inString = !inString; continue; }
-        if (inString) continue;
-        if (ch === '{') depth++;
-        else if (ch === '}') {
-          depth--;
-          if (depth === 0) lastCompleteObj = i;
-        }
-      }
-      if (lastCompleteObj > 0) {
-        fixed = fixed.substring(0, lastCompleteObj + 1) + ']';
-        log.warn('Fixed truncated JSON array');
-      }
-    } else if (trimmed.startsWith('{') && !trimmed.endsWith('}')) {
-      // Try to close incomplete object
-      const openBraces = (fixed.match(/{/g) || []).length;
-      const closeBraces = (fixed.match(/}/g) || []).length;
-      if (openBraces > closeBraces) {
-        fixed += '}'.repeat(openBraces - closeBraces);
-        log.warn('Fixed truncated JSON object');
-      }
-    }
-
     return JSON.parse(fixed) as T;
   } catch {
     // Continue to next attempt
   }
 
-  // Attempt 3: Use jsonrepair to fix malformed JSON (e.g. unescaped quotes in Chinese text)
+  // Attempt 3: Use jsonrepair library
   try {
     const repaired = jsonrepair(jsonStr);
     return JSON.parse(repaired) as T;
@@ -180,24 +207,17 @@ export function tryParseJson<T>(jsonStr: string): T | null {
     // Continue to next attempt
   }
 
-  // Attempt 4: More aggressive fixing - remove control characters
+  // Attempt 4: Remove control characters
   try {
     let fixed = jsonStr;
-
-    // Remove or escape control characters
     fixed = fixed.replace(/[\x00-\x1F\x7F]/g, (char) => {
       switch (char) {
-        case '\n':
-          return '\\n';
-        case '\r':
-          return '\\r';
-        case '\t':
-          return '\\t';
-        default:
-          return '';
+        case '\n': return '\\n';
+        case '\r': return '\\r';
+        case '\t': return '\\t';
+        default: return '';
       }
     });
-
     return JSON.parse(fixed) as T;
   } catch {
     return null;

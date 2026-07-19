@@ -3,8 +3,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  Mic,
-  MicOff,
   Send,
   MessageSquare,
   Pause,
@@ -19,9 +17,7 @@ import {
 import { cn } from '@/lib/utils';
 import type { AudioIndicatorState } from './audio-indicator';
 import { CanvasToolbar } from '@/components/canvas/canvas-toolbar';
-import { useAudioRecorder } from '@/lib/hooks/use-audio-recorder';
 import { useI18n } from '@/lib/hooks/use-i18n';
-import { toast } from 'sonner';
 import { useSettingsStore, PLAYBACK_SPEEDS } from '@/lib/store/settings';
 import { ProactiveCard } from '@/components/chat/proactive-card';
 import { PresentationSpeechOverlay } from '@/components/roundtable/presentation-speech-overlay';
@@ -179,7 +175,6 @@ export function Roundtable({
   const ttsMuted = useSettingsStore((s) => s.ttsMuted);
   const setTTSMuted = useSettingsStore((s) => s.setTTSMuted);
   const ttsEnabled = useSettingsStore((state) => state.ttsEnabled);
-  const asrEnabled = useSettingsStore((state) => state.asrEnabled);
   const chatAreaWidth = useSettingsStore((s) => s.chatAreaWidth);
   const ttsVolume = useSettingsStore((s) => s.ttsVolume);
   const setTTSVolume = useSettingsStore((s) => s.setTTSVolume);
@@ -188,7 +183,6 @@ export function Roundtable({
   const playbackSpeed = useSettingsStore((s) => s.playbackSpeed);
   const setPlaybackSpeed = useSettingsStore((s) => s.setPlaybackSpeed);
   const [isInputOpen, setIsInputOpen] = useState(false);
-  const [isVoiceOpen, setIsVoiceOpen] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [userMessage, setUserMessage] = useState<string | null>(null);
   const agentScrollRef = useRef<HTMLDivElement>(null);
@@ -329,31 +323,7 @@ export function Roundtable({
   const teacherName = teacherParticipant?.name || t('roundtable.teacher');
   const userAvatar = userParticipant?.avatar || DEFAULT_USER_AVATAR;
 
-  // Audio recording
-  const { isRecording, isProcessing, startRecording, stopRecording, cancelRecording } =
-    useAudioRecorder({
-      onTranscription: (text) => {
-        if (!text.trim()) {
-          toast.info(t('roundtable.noSpeechDetected'));
-          setIsVoiceOpen(false);
-          return;
-        }
-        // Block if in send cooldown (e.g. text was sent while voice was processing)
-        if (isSendCooldownRef.current) {
-          setIsVoiceOpen(false);
-          return;
-        }
-        showLocalUserMessage(text);
-        onMessageSend?.(text);
-        setIsSendCooldown(true);
-        isSendCooldownRef.current = true;
-        setIsVoiceOpen(false);
-      },
-      onError: (error) => {
-        toast.error(error);
-        setIsVoiceOpen(false);
-      },
-    });
+  // Audio recording removed — only text input is supported in classroom discussions.
 
   const handleSendMessage = () => {
     if (!inputValue.trim() || isSendCooldown) return;
@@ -372,41 +342,19 @@ export function Roundtable({
       onInputActivate?.();
     }
     setIsInputOpen(!isInputOpen);
-    // Cancel any in-flight ASR to prevent ghost auto-sends
-    if (isVoiceOpen || isProcessing) {
-      cancelRecording();
-      setIsVoiceOpen(false);
-    }
-  };
-
-  const handleToggleVoice = () => {
-    if (isVoiceOpen) {
-      if (isRecording) {
-        stopRecording();
-      }
-      setIsVoiceOpen(false);
-    } else {
-      if (isSendCooldown || isProcessing) return;
-      onInputActivate?.();
-      setIsVoiceOpen(true);
-      setIsInputOpen(false);
-      startRecording();
-    }
   };
 
   // Keyboard shortcuts for roundtable interaction (#255)
-  // T = toggle text input, V = toggle voice input, Escape = dismiss panels,
+  // T = toggle text input, Escape = dismiss panels,
   // Space = discussion pause/resume (during live flow)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Escape should always work, even when typing in an input
       if (e.key === 'Escape') {
-        if (isInputOpen || isVoiceOpen) {
+        if (isInputOpen) {
           e.preventDefault();
           e.stopPropagation(); // Prevent fullscreen exit when panels are open
           setIsInputOpen(false);
-          setIsVoiceOpen(false);
-          if (isRecording || isProcessing) cancelRecording();
         }
         return;
       }
@@ -437,12 +385,6 @@ export function Roundtable({
           handleToggleInput();
           break;
 
-        case 'v':
-        case 'V':
-          e.preventDefault();
-          if (asrEnabled) handleToggleVoice();
-          break;
-
         default:
           break;
       }
@@ -457,14 +399,10 @@ export function Roundtable({
     currentSpeech,
     onDiscussionPause,
     onDiscussionResume,
-    asrEnabled,
     isInputOpen,
-    isVoiceOpen,
-    isRecording,
-    isProcessing,
+    onPlayPause,
   ]);
-
-  const isPresentationInteractionActive = isInputOpen || isVoiceOpen || isRecording || isProcessing;
+  const isPresentationInteractionActive = isInputOpen;
 
   useEffect(() => {
     onPresentationInteractionChange?.(isPresentationInteractionActive);
@@ -609,10 +547,7 @@ export function Roundtable({
     !!controlsVisible ||
     !!discussionRequest ||
     isCueUser ||
-    isInputOpen ||
-    isVoiceOpen ||
-    isRecording ||
-    isProcessing;
+    isInputOpen;
   const toolbar = (
     <CanvasToolbar
       className="shrink-0 h-8 px-3 border-b border-gray-100/40 dark:border-gray-700/30"
@@ -667,14 +602,12 @@ export function Roundtable({
           isPaused={isDiscussionPaused || engineMode === 'paused'}
         />
 
-        {/* Click-outside backdrop to dismiss input/voice */}
-        {(isInputOpen || isVoiceOpen) && (
+        {/* Click-outside backdrop to dismiss input */}
+        {isInputOpen && (
           <div
             className="fixed top-0 left-0 right-0 bottom-14 z-[45] pointer-events-auto"
             onClick={() => {
               setIsInputOpen(false);
-              setIsVoiceOpen(false);
-              cancelRecording();
             }}
           />
         )}
@@ -774,46 +707,11 @@ export function Roundtable({
             )}
           </AnimatePresence>
 
-          {/* Voice panel */}
-          <AnimatePresence>
-            {isVoiceOpen && (
-              <motion.div
-                key="presentation-voice-stage"
-                initial={{ opacity: 0, scale: 0.9, y: 20, filter: 'blur(4px)' }}
-                animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, scale: 0.9, y: 20, filter: 'blur(4px)' }}
-                className="pointer-events-auto"
-              >
-                <div className="flex items-center gap-4 bg-white/70 dark:bg-black/60 backdrop-blur-xl rounded-full px-5 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] border border-gray-200/60 dark:border-white/10">
-                  {/* Waveform bars */}
-                  <div className="flex items-center gap-0.5 h-8">
-                    <VoiceWaveformBars barClassName="bg-gradient-to-t from-purple-400 to-indigo-400" />
-                  </div>
-                  <span className="text-[11px] font-semibold tracking-wider text-purple-600 dark:text-purple-300 uppercase">
-                    {isProcessing ? t('roundtable.processing') : t('roundtable.listening')}
-                  </span>
-                  {/* Mic button */}
-                  <button
-                    type="button"
-                    aria-label={
-                      isRecording ? t('roundtable.stopRecording') : t('roundtable.startRecording')
-                    }
-                    className="relative group cursor-pointer bg-transparent border-none p-0"
-                    onClick={handleToggleVoice}
-                  >
-                    <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-indigo-700 shadow-[0_4px_20px_rgba(147,51,234,0.3)] flex items-center justify-center group-hover:scale-105 transition-transform duration-300 border border-white/20">
-                      <Mic className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="absolute inset-0 rounded-full border-2 border-purple-500 opacity-40 animate-[ping_2s_ease-in-out_infinite]" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Voice panel removed — only text input is supported. */}
 
           {/* "Your turn" cue prompt — clickable, opens input panel */}
           <AnimatePresence>
-            {isCueUser && !bubbleRole && !thinkingState && !isInputOpen && !isVoiceOpen && (
+            {isCueUser && !bubbleRole && !thinkingState && !isInputOpen && (
               <motion.div
                 key="presentation-cue-user"
                 initial={{ opacity: 0, scale: 0.92, y: 8 }}
@@ -823,10 +721,10 @@ export function Roundtable({
                 className="pointer-events-auto"
               >
                 <button
-                  onClick={() => (asrEnabled ? handleToggleVoice() : handleToggleInput())}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 dark:bg-black/50 backdrop-blur-xl border border-amber-400/50 dark:border-amber-500/50 shadow-[0_0_16px_rgba(245,158,11,0.2),0_8px_32px_rgba(0,0,0,0.06)] dark:shadow-[0_0_16px_rgba(245,158,11,0.25),0_8px_32px_rgba(0,0,0,0.4)] text-amber-600 dark:text-amber-400 text-sm font-semibold tracking-wide hover:bg-gray-100/80 dark:hover:bg-black/60 hover:border-amber-500/70 dark:hover:border-amber-400/70 hover:shadow-[0_0_24px_rgba(245,158,11,0.25)] dark:hover:shadow-[0_0_24px_rgba(245,158,11,0.35)] transition-all active:scale-95 animate-pulse"
+                  onClick={() => handleToggleInput()}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 dark:bg-black/50 backdrop-blur-xl border border-purple-400/50 dark:border-purple-500/50 shadow-[0_0_16px_rgba(168,85,247,0.2),0_8px_32px_rgba(0,0,0,0.06)] dark:shadow-[0_0_16px_rgba(168,85,247,0.25),0_8px_32px_rgba(0,0,0,0.4)] text-purple-600 dark:text-purple-400 text-sm font-semibold tracking-wide hover:bg-gray-100/80 dark:hover:bg-black/60 hover:border-purple-500/70 dark:hover:border-purple-400/70 hover:shadow-[0_0_24px_rgba(168,85,247,0.25)] dark:hover:shadow-[0_0_24px_rgba(168,85,247,0.35)] transition-all active:scale-95 animate-pulse"
                 >
-                  {asrEnabled ? <Mic className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
+                  <MessageSquare className="w-4 h-4" />
                   {t('roundtable.yourTurn')}
                 </button>
               </motion.div>
@@ -945,28 +843,6 @@ export function Roundtable({
                     </div>
                   ) : (
                     <>
-                      <button
-                        aria-label={
-                          asrEnabled
-                            ? t('roundtable.voiceInput')
-                            : t('roundtable.voiceInputDisabled')
-                        }
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (asrEnabled) handleToggleVoice();
-                        }}
-                        disabled={!asrEnabled}
-                        className={cn(
-                          'w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-95',
-                          !asrEnabled
-                            ? 'text-gray-500 cursor-not-allowed'
-                            : isVoiceOpen
-                              ? 'bg-purple-600 text-white'
-                              : 'text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-white hover:bg-gray-200/50 dark:hover:bg-white/10',
-                        )}
-                      >
-                        {asrEnabled ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
-                      </button>
                       <button
                         aria-label={t('roundtable.textInput')}
                         onClick={(e) => {
@@ -1226,10 +1102,8 @@ export function Roundtable({
 
           <div
             onClick={() => {
-              if (isInputOpen || isVoiceOpen) {
+              if (isInputOpen) {
                 setIsInputOpen(false);
-                setIsVoiceOpen(false);
-                if (isRecording || isProcessing) cancelRecording();
               }
             }}
             className="relative w-full h-full rounded-[2.5rem] bg-gradient-to-b from-white/40 to-white/80 dark:from-gray-800/40 dark:to-gray-800/80 backdrop-blur-xl border border-white/50 dark:border-gray-700/50 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05),inset_0_1px_0_0_rgba(255,255,255,0.9)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] flex flex-col justify-center px-6 overflow-hidden group transition-all duration-700 cursor-default"
@@ -1288,47 +1162,7 @@ export function Roundtable({
                 </motion.div>
               )}
 
-              {/* Audio recording status */}
-              {isVoiceOpen && (
-                <motion.div
-                  key="voice-stage"
-                  initial={{
-                    opacity: 0,
-                    scale: 0.9,
-                    x: 20,
-                    filter: 'blur(4px)',
-                  }}
-                  animate={{ opacity: 1, scale: 1, x: 0, filter: 'blur(0px)' }}
-                  exit={{ opacity: 0, scale: 0.9, x: 20, filter: 'blur(4px)' }}
-                  onClick={(e) => e.stopPropagation()}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 z-30 flex items-center gap-4 pr-2 pointer-events-none"
-                >
-                  <div className="flex flex-col-reverse items-end gap-1 mr-[-10px] relative z-20">
-                    <div className="flex items-center gap-0.5 h-8 px-2 py-1.5 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl border border-purple-100 dark:border-purple-800 shadow-sm">
-                      <VoiceWaveformBars barClassName="bg-gradient-to-t from-purple-500 to-indigo-600 dark:from-purple-400 dark:to-indigo-500" />
-                    </div>
-                    <motion.div
-                      initial={{ opacity: 0, x: 10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="text-[10px] font-bold tracking-widest text-purple-600 dark:text-purple-400 uppercase bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm px-2 py-0.5 rounded-full shadow-sm border border-purple-100/50 dark:border-purple-800/50 mr-1"
-                    >
-                      {isProcessing ? t('roundtable.processing') : t('roundtable.listening')}
-                    </motion.div>
-                  </div>
-
-                  <div
-                    className="pointer-events-auto relative group cursor-pointer"
-                    onClick={handleToggleVoice}
-                  >
-                    <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-purple-600 to-indigo-700 dark:from-purple-500 dark:to-indigo-600 shadow-[0_4px_20px_rgba(147,51,234,0.3)] flex items-center justify-center z-20 group-hover:scale-105 transition-transform duration-300 border border-white/20 dark:border-white/10">
-                      <Mic className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="absolute inset-0 rounded-full border-2 border-purple-500 dark:border-purple-400 opacity-40 animate-[ping_2s_ease-in-out_infinite] z-10" />
-                    <div className="absolute inset-0 rounded-full border border-indigo-400 dark:border-indigo-300 opacity-20 animate-[ping_3s_ease-in-out_infinite_0.5s] z-10" />
-                    <div className="absolute inset-0 bg-purple-600 dark:bg-purple-500 blur-2xl opacity-20 group-hover:opacity-40 transition-opacity z-0" />
-                  </div>
-                </motion.div>
-              )}
+              {/* Voice-input UI removed — only text input is supported. */}
             </AnimatePresence>
 
             {/* Thinking dots (Issue 5) */}
@@ -1378,7 +1212,7 @@ export function Roundtable({
 
             {/* Cue user: centered indicator when waiting for user input */}
             <AnimatePresence>
-              {isCueUser && !bubbleRole && !thinkingState && !isInputOpen && !isVoiceOpen && (
+              {isCueUser && !bubbleRole && !thinkingState && !isInputOpen && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.85 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -1391,10 +1225,7 @@ export function Roundtable({
                     {/* Soft background glow */}
                     <div
                       className={cn(
-                        'absolute w-24 h-24 rounded-full blur-2xl',
-                        asrEnabled
-                          ? 'bg-amber-400/[0.08] dark:bg-amber-500/[0.06]'
-                          : 'bg-purple-400/[0.08] dark:bg-purple-500/[0.06]',
+                        'absolute w-24 h-24 rounded-full blur-2xl bg-purple-400/[0.08] dark:bg-purple-500/[0.06]',
                       )}
                     />
 
@@ -1407,10 +1238,7 @@ export function Roundtable({
                         ease: 'easeOut',
                       }}
                       className={cn(
-                        'absolute w-11 h-11 rounded-full border',
-                        asrEnabled
-                          ? 'border-amber-400/50 dark:border-amber-500/35'
-                          : 'border-purple-400/50 dark:border-purple-500/35',
+                        'absolute w-11 h-11 rounded-full border border-purple-400/50 dark:border-purple-500/35',
                       )}
                     />
                     {/* Expanding ripple 2 */}
@@ -1423,19 +1251,15 @@ export function Roundtable({
                         delay: 0.7,
                       }}
                       className={cn(
-                        'absolute w-11 h-11 rounded-full border',
-                        asrEnabled
-                          ? 'border-amber-300/40 dark:border-amber-400/25'
-                          : 'border-purple-300/40 dark:border-purple-400/25',
+                        'absolute w-11 h-11 rounded-full border border-purple-300/40 dark:border-purple-400/25',
                       )}
                     />
 
-                    {/* Action circle — voice (ASR on) or text input (ASR off) */}
+                    {/* Action circle — always text input (voice input removed) */}
                     <motion.button
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (asrEnabled) handleToggleVoice();
-                        else handleToggleInput();
+                        handleToggleInput();
                       }}
                       animate={{ scale: [1, 1.05, 1] }}
                       transition={{
@@ -1444,60 +1268,32 @@ export function Roundtable({
                         ease: 'easeInOut',
                       }}
                       className={cn(
-                        'relative w-11 h-11 rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:shadow-xl active:scale-95 z-10 bg-gradient-to-br',
-                        asrEnabled
-                          ? 'from-amber-400 to-orange-500 dark:from-amber-500 dark:to-orange-600 shadow-amber-400/30 dark:shadow-amber-600/20 hover:shadow-amber-400/40 dark:hover:shadow-amber-600/30'
-                          : 'from-purple-400 to-indigo-500 dark:from-purple-500 dark:to-indigo-600 shadow-purple-400/30 dark:shadow-purple-600/20 hover:shadow-purple-400/40 dark:hover:shadow-purple-600/30',
+                        'relative w-11 h-11 rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:shadow-xl active:scale-95 z-10 bg-gradient-to-br from-purple-400 to-indigo-500 dark:from-purple-500 dark:to-indigo-600 shadow-purple-400/30 dark:shadow-purple-600/20 hover:shadow-purple-400/40 dark:hover:shadow-purple-600/30',
                       )}
                     >
-                      {asrEnabled ? (
-                        <Mic className="w-[18px] h-[18px] text-white drop-shadow-sm" />
-                      ) : (
-                        <MessageSquare className="w-[18px] h-[18px] text-white drop-shadow-sm" />
-                      )}
+                      <MessageSquare className="w-[18px] h-[18px] text-white drop-shadow-sm" />
                     </motion.button>
                   </div>
 
                   {/* Visual indicator below button */}
-                  {asrEnabled ? (
-                    <div className="flex items-center justify-center gap-[3px] h-3">
-                      {[0, 1, 2, 3, 4, 3, 2, 1, 0].map((intensity, i) => (
-                        <motion.div
-                          key={i}
-                          animate={{
-                            scaleY: [0.3, 0.5 + intensity * 0.15, 0.3],
-                            opacity: [0.3, 0.7, 0.3],
-                          }}
-                          transition={{
-                            repeat: Infinity,
-                            duration: 0.8 + (i % 3) * 0.1,
-                            delay: i * 0.08,
-                            ease: 'easeInOut',
-                          }}
-                          className="w-[2.5px] h-full origin-center rounded-full bg-amber-400/70 dark:bg-amber-500/60"
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center gap-[3px] h-3">
-                      {[0, 1, 2, 3, 2, 1, 0].map((intensity, i) => (
-                        <motion.div
-                          key={i}
-                          animate={{
-                            scaleY: [0.3, 0.45 + intensity * 0.15, 0.3],
-                            opacity: [0.25, 0.6, 0.25],
-                          }}
-                          transition={{
-                            repeat: Infinity,
-                            duration: 1.0 + (i % 3) * 0.15,
-                            delay: i * 0.12,
-                            ease: 'easeInOut',
-                          }}
-                          className="w-[2.5px] h-full origin-center rounded-full bg-purple-400/60 dark:bg-purple-500/50"
-                        />
-                      ))}
-                    </div>
-                  )}
+                  <div className="flex items-center justify-center gap-[3px] h-3">
+                    {[0, 1, 2, 3, 2, 1, 0].map((intensity, i) => (
+                      <motion.div
+                        key={i}
+                        animate={{
+                          scaleY: [0.3, 0.45 + intensity * 0.15, 0.3],
+                          opacity: [0.25, 0.6, 0.25],
+                        }}
+                        transition={{
+                          repeat: Infinity,
+                          duration: 1.0 + (i % 3) * 0.15,
+                          delay: i * 0.12,
+                          ease: 'easeInOut',
+                        }}
+                        className="w-[2.5px] h-full origin-center rounded-full bg-purple-400/60 dark:bg-purple-500/50"
+                      />
+                    ))}
+                  </div>
 
                   {/* Label */}
                   <motion.span
@@ -1507,12 +1303,7 @@ export function Roundtable({
                       duration: 2.5,
                       ease: 'easeInOut',
                     }}
-                    className={cn(
-                      'text-[10px] font-medium tracking-wider',
-                      asrEnabled
-                        ? 'text-amber-600/70 dark:text-amber-400/60'
-                        : 'text-purple-600/70 dark:text-purple-400/60',
-                    )}
+                    className="text-[10px] font-medium tracking-wider text-purple-600/70 dark:text-purple-400/60"
                   >
                     {t('roundtable.yourTurn')}
                   </motion.span>
@@ -1527,9 +1318,9 @@ export function Roundtable({
                   key={bubbleKey}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{
-                    opacity: isInputOpen || isVoiceOpen ? 0.4 : 1,
+                    opacity: isInputOpen ? 0.4 : 1,
                     y: 0,
-                    filter: isInputOpen || isVoiceOpen ? 'blur(1px) grayscale(0.2)' : 'none',
+                    filter: isInputOpen ? 'blur(1px) grayscale(0.2)' : 'none',
                   }}
                   exit={{ opacity: 0, y: -8, transition: { duration: 0.12 } }}
                   transition={{ duration: 0.2, ease: [0.21, 1, 0.36, 1] }}
@@ -1991,43 +1782,21 @@ export function Roundtable({
                   </div>
                 </div>
               ) : (
-                <>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (asrEnabled) handleToggleVoice();
-                    }}
-                    disabled={!asrEnabled}
-                    className={cn(
-                      'w-8 h-8 rounded-full border flex items-center justify-center transition-all active:scale-95 shadow-sm',
-                      !asrEnabled
-                        ? 'bg-gray-100 dark:bg-gray-800/50 text-gray-300 dark:text-gray-600 border-gray-200 dark:border-gray-700 cursor-not-allowed'
-                        : isVoiceOpen
-                          ? 'bg-purple-600 dark:bg-purple-500 border-purple-600 dark:border-purple-500 text-white shadow-purple-200 dark:shadow-purple-800'
-                          : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-200 dark:hover:border-purple-700',
-                    )}
-                  >
-                    {asrEnabled ? (
-                      <Mic className="w-3.5 h-3.5" />
-                    ) : (
-                      <MicOff className="w-3.5 h-3.5" />
-                    )}
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleToggleInput();
-                    }}
-                    className={cn(
-                      'w-8 h-8 rounded-full border flex items-center justify-center transition-all active:scale-95 shadow-sm',
-                      isInputOpen
-                        ? 'bg-purple-600 dark:bg-purple-500 border-purple-600 dark:border-purple-500 text-white shadow-purple-200 dark:shadow-purple-800'
-                        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-200 dark:hover:border-purple-700',
-                    )}
-                  >
-                    <MessageSquare className="w-3.5 h-3.5" />
-                  </button>
-                </>
+                /* Text input button (voice input removed) */
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleInput();
+                  }}
+                  className={cn(
+                    'w-8 h-8 rounded-full border flex items-center justify-center transition-all active:scale-95 shadow-sm',
+                    isInputOpen
+                      ? 'bg-purple-600 dark:bg-purple-500 border-purple-600 dark:border-purple-500 text-white shadow-purple-200 dark:shadow-purple-800'
+                      : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-200 dark:hover:border-purple-700',
+                  )}
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                </button>
               )}
             </div>
 
