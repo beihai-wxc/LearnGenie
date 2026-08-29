@@ -267,6 +267,34 @@ function updateButton(text) {
 - Don't create objects in render loop
 - Throttle slider input events if needed
 
+### 12. Global Scope for Event Handlers (CRITICAL)
+
+**All functions referenced by inline `onclick`, `oninput`, `onchange`, etc. MUST be attached to `window`.**
+
+This is because the HTML runs inside a sandboxed iframe where inline event handlers can only access global-scope functions.
+
+```javascript
+// BAD: Function defined but not on window — onclick will fail with "not defined"
+<script>
+  function handleMainButton() { ... }
+  // or worse: const handleMainButton = () => { ... }
+</script>
+<button onclick="handleMainButton()">Start</button>  // ❌ ReferenceError!
+
+// GOOD: Explicitly attach to window
+<script>
+  function handleMainButton() { ... }
+  window.handleMainButton = handleMainButton;
+</script>
+<button onclick="handleMainButton()">Start</button>  // ✅ Works!
+```
+
+**Rules:**
+- Do NOT use `<script type="module">` — it creates its own scope
+- Do NOT wrap code in IIFE `(function(){ ... })()` unless you expose handlers to `window`
+- Every function used in `onclick="..."`, `oninput="..."`, `onchange="..."` must have a corresponding `window.funcName = funcName;` line
+- Alternative: use `addEventListener` instead of inline handlers (also acceptable)
+
 ## Common Bugs to Avoid
 
 | Bug | Cause | Solution |
@@ -276,6 +304,7 @@ function updateButton(text) {
 | Simulation stuck | Missing `ended` state | Track `ended` separately from `running` |
 | Button does nothing | State logic error | Clear state machine with defined transitions |
 | Touch issues | Small touch targets | Min 44px touch targets, larger sliders |
+| **onclick "not defined"** | Function not in global scope | Attach all event handlers to `window` |
 
 ## Output Format
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { nanoid } from 'nanoid';
 import { db, type VoiceProfileRecord } from '@/lib/utils/database';
 import { getCurrentUserId } from '@/lib/utils/user-context';
 import type { TTSVoiceInfo } from '@/lib/audio/types';
@@ -26,10 +27,9 @@ function notifyVoiceProfilesChanged(): void {
 }
 
 function createId(): string {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID();
-  }
-  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  // Use nanoid for cross-environment reliability (crypto.randomUUID requires
+  // a secure context, which is unavailable on some HTTP deployments).
+  return nanoid();
 }
 
 function requireUserId(): string {

@@ -928,8 +928,8 @@ function extractHtml(response: string): string | null {
     }
   }
 
-  // Strategy 2: Extract from code block
-  const codeBlockMatch = response.match(/```(?:html)?\s*([\s\S]*?)```/);
+  // Strategy 2: Extract from code block (may be unclosed if response was truncated)
+  const codeBlockMatch = response.match(/```(?:html)?\s*\n?([\s\S]*?)(?:```|$)/);
   if (codeBlockMatch) {
     const content = codeBlockMatch[1].trim();
     if (content.includes('<html') || content.includes('<!DOCTYPE')) {
@@ -937,7 +937,19 @@ function extractHtml(response: string): string | null {
     }
   }
 
-  // Strategy 3: If response itself looks like HTML
+  // Strategy 3: Strip leading ```html fence if response starts with it (truncated code block)
+  const stripped = response.replace(/^```(?:html)?\s*\n?/, '').trim();
+  if (stripped.includes('<html') || stripped.includes('<!DOCTYPE')) {
+    const htmlStart = stripped.indexOf('<!DOCTYPE') !== -1 ? stripped.indexOf('<!DOCTYPE') : stripped.indexOf('<html');
+    const htmlEnd = stripped.lastIndexOf('</html>');
+    if (htmlEnd !== -1) {
+      return stripped.substring(htmlStart, htmlEnd + 7);
+    }
+    // Return what we have even if </html> is missing (truncated response)
+    return stripped.substring(htmlStart);
+  }
+
+  // Strategy 4: If response itself looks like HTML
   const trimmed = response.trim();
   if (trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html')) {
     return trimmed;

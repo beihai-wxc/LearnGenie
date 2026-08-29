@@ -70,6 +70,7 @@ next-env.d.ts
 /data
 /logs
 /.data
+/graphify-out
 
 # docs
 /docs

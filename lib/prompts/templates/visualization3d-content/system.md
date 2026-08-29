@@ -661,3 +661,68 @@ Return ONLY the HTML document, no markdown fences or explanations.
 - Do NOT duplicate content
 - Do NOT include multiple `<!DOCTYPE html>` tags
 - The output must end with exactly one `</html>` tag
+
+## JavaScript Safety Rules (CRITICAL)
+
+### 1. Three.js Object Type Checks
+
+**NEVER call `.traverse()`, `.add()`, `.remove()`, or other Object3D methods on variables without verifying they are Three.js objects first.**
+
+```javascript
+// BAD: Assumes oldLines is always a Three.js Object3D
+function updateVisualization() {
+  oldLines.traverse(child => scene.remove(child));  // ❌ Crashes if oldLines is undefined/array
+}
+
+// GOOD: Always check type before calling Object3D methods
+function updateVisualization() {
+  if (oldLines && typeof oldLines.traverse === 'function') {
+    oldLines.traverse(child => scene.remove(child));
+  }
+  // Or if oldLines is an array:
+  if (Array.isArray(oldLines)) {
+    oldLines.forEach(line => scene.remove(line));
+  }
+}
+```
+
+### 2. Safe Object Storage Pattern
+
+When storing Three.js objects for later cleanup/reference, ALWAYS use a consistent pattern:
+
+```javascript
+// Store objects in a plain object map
+const sceneObjects = {
+  lines: [],        // Array for multiple objects of same type
+  meshes: {},       // Map for named objects
+  groups: new THREE.Group(),  // Group for related objects
+};
+
+// When adding:
+sceneObjects.lines.push(newLine);
+scene.add(newLine);
+
+// When cleaning up:
+function clearLines() {
+  sceneObjects.lines.forEach(line => {
+    if (line && line.parent) line.parent.remove(line);
+    if (line.geometry) line.geometry.dispose();
+    if (line.material) line.material.dispose();
+  });
+  sceneObjects.lines = [];
+}
+```
+
+### 3. Initialization Order
+
+**All variables referenced in update/cleanup functions MUST be initialized before those functions are called.**
+
+```javascript
+// BAD: updateAttentionVisualization called before oldLines is defined
+let oldLines;  // undefined
+updateAttentionVisualization();  // ❌ oldLines.traverse is not a function
+
+// GOOD: Initialize with proper default
+let oldLines = new THREE.Group();  // or null, with null check in functions
+// OR ensure init runs before any update calls
+```

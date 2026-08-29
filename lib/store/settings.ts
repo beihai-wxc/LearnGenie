@@ -360,8 +360,8 @@ const getDefaultPDFConfig = () => ({
 
 // Initialize default Image config
 const getDefaultImageConfig = () => ({
-  imageProviderId: 'seedream' as ImageProviderId,
-  imageModelId: 'doubao-seedream-5-0-260128',
+  imageProviderId: 'minimax-image' as ImageProviderId,
+  imageModelId: 'image-01',
   imageProvidersConfig: {
     seedream: { apiKey: '', baseUrl: '', enabled: false },
     'qwen-image': { apiKey: '', baseUrl: '', enabled: false },
@@ -653,9 +653,10 @@ export const useSettingsStore = create<SettingsState>()(
         imageGenerationEnabled: true,
         videoGenerationEnabled: false,
 
-        // Audio feature toggles (on by default)
+        // Audio feature toggles (TTS for AI playback on, ASR for user input off —
+        // voice input disabled because the deployment URL is HTTP/non-secure-context).
         ttsEnabled: true,
-        asrEnabled: true,
+        asrEnabled: false,
 
         autoConfigApplied: false,
 
@@ -1112,7 +1113,12 @@ export const useSettingsStore = create<SettingsState>()(
               const ttsFallback = buildFallback<TTSProviderId>(newTTSConfig);
               const asrFallback = buildFallback<ASRProviderId>(newASRConfig);
               const pdfFallback = buildFallback<PDFProviderId>(newPDFConfig);
-              const imageFallback = buildFallback<ImageProviderId>(newImageConfig);
+              const imageFallbackRaw = buildFallback<ImageProviderId>(newImageConfig);
+              // Prefer minimax-image when available
+              const imageFallback = [
+                ...imageFallbackRaw.filter((id) => id === 'minimax-image'),
+                ...imageFallbackRaw.filter((id) => id !== 'minimax-image'),
+              ];
               const videoFallback = buildFallback<VideoProviderId>(newVideoConfig);
 
               const validLLMProvider = validateProvider(
@@ -1234,13 +1240,16 @@ export const useSettingsStore = create<SettingsState>()(
                   autoAsrProvider = serverAsrIds[0];
                 }
 
-                // Image: first server provider
+                // Image: prefer minimax-image, then first server provider
                 const serverImageIds = Object.keys(data.image) as ImageProviderId[];
                 if (
                   serverImageIds.length > 0 &&
                   !newImageConfig[state.imageProviderId]?.isServerConfigured
                 ) {
-                  autoImageProvider = serverImageIds[0];
+                  autoImageProvider =
+                    serverImageIds.includes('minimax-image' as ImageProviderId)
+                      ? ('minimax-image' as ImageProviderId)
+                      : serverImageIds[0];
                   const models = IMAGE_PROVIDERS[autoImageProvider]?.models;
                   if (models?.length) autoImageModel = models[0].id;
                 }
@@ -1467,7 +1476,9 @@ export const useSettingsStore = create<SettingsState>()(
           (state as Record<string, unknown>).ttsEnabled = true;
         }
         if ((state as Record<string, unknown>).asrEnabled === undefined) {
-          (state as Record<string, unknown>).asrEnabled = true;
+          // Voice input is disabled by default — the HTTP deployment makes
+          // getUserMedia unavailable, so we never enable ASR on init.
+          (state as Record<string, unknown>).asrEnabled = false;
         }
 
         // Existing users already have their config set up — mark auto-config as done

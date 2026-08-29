@@ -5,6 +5,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { nanoid } from 'nanoid';
 import { useAuthStore } from '@/lib/store/auth';
 
 const getUserId = () => useAuthStore.getState().user?.email ?? 'anonymous';
@@ -134,7 +135,7 @@ export const useUserProfileStore = create<UserProfileState>()(
         set((state) => ({
           conversationHistory: [
             ...state.conversationHistory.slice(-49),
-            { ...entry, id: crypto.randomUUID(), timestamp: Date.now() },
+            { ...entry, id: nanoid(), timestamp: Date.now() },
           ],
         })),
       clearConversationHistory: () => set({ conversationHistory: [] }),
